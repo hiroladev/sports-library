@@ -8,12 +8,11 @@ import com.onyx.persistence.annotations.values.CascadePolicy;
 import com.onyx.persistence.annotations.values.FetchPolicy;
 import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.database.PersistentObject;
+import de.hirola.sportslibrary.util.DateUtil;
 import de.hirola.sportslibrary.util.UUIDFactory;
 
 import java.time.DayOfWeek;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -52,7 +51,7 @@ public class RunningPlan extends PersistentObject {
     @Relationship(type = RelationshipType.ONE_TO_MANY,
             inverseClass = RunningPlanEntry.class,
             inverse = "relationAttributeForRunningPlanToRunningPlanEntry",
-            cascadePolicy = CascadePolicy.SAVE,
+            cascadePolicy = CascadePolicy.ALL,
             fetchPolicy = FetchPolicy.LAZY)
     private List<RunningPlanEntry> entries; // training day with different units
     @Relationship(type = RelationshipType.ONE_TO_MANY,
@@ -70,7 +69,7 @@ public class RunningPlan extends PersistentObject {
         name = "";
         remarks = "";
         orderNumber = 0;
-        startDate = Date.from(Instant.now());
+        startDate = DateUtil.getDateFromNow();
         // start day is monday
         adjustStartDate();
         entries = new ArrayList<>();
@@ -92,7 +91,7 @@ public class RunningPlan extends PersistentObject {
         this.remarks = remarks;
         this.entries = entries;
         this.isTemplate = isTemplate;
-        startDate = Date.from(Instant.now());
+        startDate = DateUtil.getDateFromNow();
     }
 
     /**
@@ -155,8 +154,8 @@ public class RunningPlan extends PersistentObject {
      *
      * @return start date of the plan.
      */
-    public Date getStartDate() {
-        return startDate;
+    public LocalDate getStartDate() {
+        return DateUtil.getLocalDateFromDate(startDate);
     }
 
     /**
@@ -164,9 +163,9 @@ public class RunningPlan extends PersistentObject {
      *
      * @param startDate of the plan
      */
-    public void setStartDate(Date startDate) {
+    public void setStartDate(LocalDate startDate) {
         // change the date only if running plan not active
-        this.startDate = startDate;
+        this.startDate = DateUtil.getDateFromLocalDate(startDate);
         if (!isActive()) {
             // correct start day (is monday)
             adjustStartDate();
@@ -306,20 +305,18 @@ public class RunningPlan extends PersistentObject {
 
     // start day is monday
     private void adjustStartDate() {
-        LocalDate today = LocalDate.now(ZoneId.systemDefault());
-        LocalDate actualStartDate = Instant.ofEpochMilli(startDate.getTime())
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
+        LocalDate today = DateUtil.getLocalDateFromNow();
+        LocalDate actualStartDate = DateUtil.getLocalDateFromDate(startDate);
         if (actualStartDate.isBefore(today)) {
             // start day is in the past
-            startDate = java.sql.Date.valueOf(today);
+            startDate = DateUtil.getDateFromLocalDate(today);
         }
         DayOfWeek dayOfWeek = actualStartDate.getDayOfWeek();
         if (dayOfWeek != DayOfWeek.MONDAY) {
             // from Tuesday the start date is next Monday
             long daysToAdd = 8 - dayOfWeek.getValue();
             actualStartDate = actualStartDate.plusDays(daysToAdd);
-            startDate = java.sql.Date.valueOf(actualStartDate);
+            startDate = DateUtil.getDateFromLocalDate(actualStartDate);
         }
     }
 }

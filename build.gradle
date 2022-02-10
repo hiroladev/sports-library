@@ -1,9 +1,8 @@
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 
-
 group 'de.hirola'
-version '0.0.1-SNAPSHOT'
+version '0.0.3-SNAPSHOT'
 
 sourceCompatibility = 1.11 // java 11
 targetCompatibility = 1.11
@@ -26,16 +25,25 @@ java {
 }
 
 publishing {
-    publications {
-        maven(MavenPublication) {
-            from components.java
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/hiroladev/sports-library")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
         }
     }
-}
+    publications {
+        gpr(MavenPublication) {
+            groupId = 'de.hirola'
+            artifactId = 'sports-library'
+            version = '0.0.3-SNAPSHOT'
 
-wrapper {
-    gradleVersion = "7.3.3"
-    distributionType = Wrapper.DistributionType.ALL
+            from(components.java)
+        }
+    }
 }
 
 test {

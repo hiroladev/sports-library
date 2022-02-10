@@ -9,8 +9,11 @@ import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.Global;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.UUIDFactory;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.time.Instant;
 import java.util.Objects;
@@ -121,13 +124,15 @@ public class User extends PersistentObject {
     }
 
     /**
-     * Get the birthday of the user.
-     * The year ist need to calculate the max pulse.
+     * Get the birthday of the user. The year ist need to calculate the max pulse.
      *
      * @return The birthday of the user
      */
-    public Date getBirthday() {
-        return birthday;
+    public LocalDate getBirthday() {
+        return birthday
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
     }
 
     /**
@@ -135,8 +140,11 @@ public class User extends PersistentObject {
      *
      * @param birthday of the user
      */
-    public void setBirthday(Date birthday) {
-        this.birthday = birthday;
+    public void setBirthday(@NotNull LocalDate birthday) {
+        this.birthday = Date
+                .from(birthday.atStartOfDay()
+                .atZone(ZoneId.systemDefault())
+                .toInstant());
     }
 
     /**

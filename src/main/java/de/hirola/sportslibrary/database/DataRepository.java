@@ -2,9 +2,6 @@ package de.hirola.sportslibrary.database;
 
 import com.onyx.exception.OnyxException;
 import com.onyx.persistence.manager.PersistenceManager;
-import com.onyx.persistence.query.Query;
-import com.onyx.persistence.query.QueryCriteria;
-import com.onyx.persistence.query.QueryCriteriaOperator;
 import de.hirola.sportslibrary.SportsLibraryException;
 import de.hirola.sportslibrary.model.*;
 
@@ -12,12 +9,11 @@ import de.hirola.sportslibrary.util.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Copyright 2021 by Michael Schmidt, Hirola Consulting
@@ -33,6 +29,7 @@ public final class DataRepository {
     private final String TAG = DataRepository.class.getSimpleName();
 
     private final Logger logger = Logger.getInstance(null);
+    private final DatabaseManager databaseManager;
     private final PersistenceManager persistenceManager; // we use the Onxy Embedded Persistence Manager
 
     /**
@@ -41,7 +38,8 @@ public final class DataRepository {
      * @param appName of the app using this library
      */
     public DataRepository(@Nullable String appName) {
-        persistenceManager = DatabaseManager.getInstance(appName).getPersistenceManager(); // can be null
+        databaseManager = DatabaseManager.getInstance(appName);
+        persistenceManager = databaseManager.getPersistenceManager(); // can be null
     }
 
     /**
@@ -52,21 +50,11 @@ public final class DataRepository {
      * @return A flag to determine if the datastore is empty
      */
     public boolean isEmpty() {
-        // the datastore is "empty" if there are no movement and training types or running plans (yet)
-        int emptyValueCounter = 0;
-        QueryCriteria criteria1 = new QueryCriteria("uuid", QueryCriteriaOperator.EQUAL, "*");
-        Query query1 = new Query(MovementType.class, criteria1);
-
-        QueryCriteria criteria2 = new QueryCriteria("uuid", QueryCriteriaOperator.EQUAL, "*");
-        Query query2 = new Query(TrainingType.class, criteria1);
-
-        QueryCriteria criteria23= new QueryCriteria("uuid", QueryCriteriaOperator.EQUAL, "*");
-        Query query3 = new Query(RunningPlan.class, criteria1);
-
+        // the datastore is "empty" if there are no movement [and training types] and running plans (yet)
         try {
-            List<MovementType> result1 = persistenceManager.executeQuery(query3);
-            List<MovementType> result2 = persistenceManager.executeQuery(query3);
-            List<MovementType> result3 = persistenceManager.executeQuery(query3);
+            List<PersistentObject> result1 = persistenceManager.list(MovementType.class);
+            List<PersistentObject> result2 = persistenceManager.list(TrainingType.class);
+            List<PersistentObject> result3 = persistenceManager.list(RunningPlan.class);
             if (result1.isEmpty() && result2.isEmpty() && result3.isEmpty() ){
                 return true;
             }
@@ -121,6 +109,22 @@ public final class DataRepository {
         }
     }
 
+    public void saveRelationshipsForEntity(PersistentObject object, String relationship, Set<? extends PersistentObject> list) {
+        try {
+            persistenceManager.saveRelationshipsForEntity(object, relationship, list);
+        } catch (OnyxException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    /**
+     * Get an object from given type with given UUID.
+     *
+     * @param withType of object to find
+     * @param uuid of object to find
+     * @return The object from given type and the given UUID or null if the object was not found
+     *         or an error occurred while searching
+     */
     @Nullable
     public PersistentObject findByUUID(@NotNull Class<? extends PersistentObject> withType, @NotNull String uuid) {
         try {
@@ -149,14 +153,11 @@ public final class DataRepository {
                 if (persistentObject instanceof RunningPlan) {
                     RunningPlan runningPlan = (RunningPlan) persistentObject;
                     if (!runningPlan.isCompleted() || !runningPlan.isActive()) {
-                        Date startDate = runningPlan.getStartDate();
-                        LocalDate actualStartDate = Instant.ofEpochMilli(startDate.getTime())
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate();
+                        LocalDate startDate = runningPlan.getStartDate();
                         LocalDate today = LocalDate.now(ZoneId.systemDefault());
-                        if (actualStartDate.isBefore(today) || actualStartDate.isEqual(today)) {
+                        if (startDate.isBefore(today) || startDate.isEqual(today)) {
                             // the method adjust the start day automatically
-                            runningPlan.setStartDate(java.sql.Date.valueOf(today));
+                            runningPlan.setStartDate(today);
                             try {
                                 // save the corrected start date to local data store
                                 persistenceManager.saveEntity(runningPlan);
@@ -173,5 +174,13 @@ public final class DataRepository {
             logger.log(Logger.DEBUG, TAG, "Error occurred while searching all objects from type " + fromType.getSimpleName(), exception);
         }
         return results;
+    }
+
+    public void clearAll() {
+        databaseManager.clearAll();
+    }
+
+    public void close() {
+        databaseManager.close();
     }
 }

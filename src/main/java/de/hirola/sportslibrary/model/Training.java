@@ -7,11 +7,14 @@ import com.onyx.persistence.annotations.Relationship;
 import com.onyx.persistence.annotations.values.CascadePolicy;
 import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.database.PersistentObject;
+import de.hirola.sportslibrary.util.DateUtil;
 import de.hirola.sportslibrary.util.UUIDFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.Objects;
 
@@ -70,14 +73,17 @@ public class Training extends PersistentObject {
     }
 
     public Training(@NotNull String name, @Nullable String remarks, @Nullable TrainingType trainingType,
-                    @NotNull Track track, @Nullable Date trainingDate) {
+                    @NotNull Track track, @Nullable LocalDate trainingDate) {
         this.name = name;
         // if null set default
         this.remarks = Objects.requireNonNullElse(remarks, "");
         this.trainingType = Objects.requireNonNullElseGet(trainingType, TrainingType::new);
         this.track = track;
-        // if null set default
-        this.trainingDate = Objects.requireNonNullElseGet(trainingDate, () -> Date.from(Instant.now()));
+        if (trainingDate == null) {
+            this.trainingDate = DateUtil.getDateFromNow();
+        } else {
+            this.trainingDate = DateUtil.getDateFromLocalDate(trainingDate);
+        }
         // get the values from track
         distance = track.getDistance();
         altitudeDifference = track.getAverageSpeed();
@@ -85,7 +91,7 @@ public class Training extends PersistentObject {
     }
 
     public Training(@NotNull String name, @Nullable String remarks, @Nullable TrainingType trainingType,
-                    @Nullable Date trainingDate, @Nullable Track track,
+                    @Nullable LocalDate trainingDate, @Nullable Track track,
                     double distance, double averageSpeed, double altitudeDifference) {
         this.name = name;
         // if null set default
@@ -93,7 +99,11 @@ public class Training extends PersistentObject {
         // if null set default
         this.trainingType = Objects.requireNonNullElseGet(trainingType, TrainingType::new);
         this.track = track; // can be null
-        this.trainingDate = Objects.requireNonNullElseGet(trainingDate, () -> Date.from(Instant.now()));
+        if (trainingDate == null) {
+            this.trainingDate = DateUtil.getDateFromNow();
+        } else {
+            this.trainingDate = DateUtil.getDateFromLocalDate(trainingDate);
+        }
         this.distance = distance;
         this.averageSpeed= averageSpeed;
         this.altitudeDifference = altitudeDifference;
@@ -158,8 +168,8 @@ public class Training extends PersistentObject {
      *
      * @return The date of training
      */
-    public Date getTrainingDate() {
-        return trainingDate;
+    public LocalDate getTrainingDate() {
+        return DateUtil.getLocalDateFromDate(trainingDate);
     }
 
     /**
@@ -167,8 +177,8 @@ public class Training extends PersistentObject {
      *
      * @param trainingDate of the training
      */
-    public void setTrainingDate(Date trainingDate) {
-        this.trainingDate = trainingDate;
+    public void setTrainingDate(LocalDate trainingDate) {
+        this.trainingDate = DateUtil.getDateFromLocalDate(trainingDate);
     }
 
     /**

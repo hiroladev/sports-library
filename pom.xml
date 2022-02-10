@@ -6,23 +6,23 @@
 
     <groupId>de.hirola</groupId>
     <artifactId>sports-library</artifactId>
-    <version>0.0.5-SNAPSHOT</version>
+    <version>0.0.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Hirola sports-library</name>
     <description>A java library for sport apps. Use the kinto-java library.</description>
-    <url>https://github.com/hiroladev/sports-library</url>
+    <url>https://github.com/sports-library</url>
 
     <scm>
-        <connection>scm:git:git://github.com/hiroladev/sports-library.git</connection>
-        <developerConnection>scm:git:ssh://github.com/hiroladev/sports-library.git</developerConnection>
+        <connection>scm:git:git://github.com/sports-library.git</connection>
+        <developerConnection>scm:git:ssh://github.com/sports-library.git</developerConnection>
         <url>https://github.com/hiroladev/sports-library</url>
     </scm>
 
     <licenses>
         <license>
             <name>AGPL-3.0 License</name>
-            <url>https://github.com/hiroladev/kinto-java/blob/master/LICENSE</url>
+            <url>https://www.gnu.org/licenses/agpl-3.0.en.html</url>
         </license>
     </licenses>
 
@@ -36,6 +36,14 @@
     </developers>
 
     <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Hiroldev Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/hiroladev/sports-library</url>
+        </repository>
+    </distributionManagement>
+    <!--
+    <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
             <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
@@ -45,7 +53,7 @@
             <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
-
+    -->
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
@@ -99,6 +107,7 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
@@ -110,6 +119,7 @@
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
+            -->
         </plugins>
     </build>
 

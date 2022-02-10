@@ -1,6 +1,7 @@
 package de.hirola.sportslibrary.database;
 
 import com.onyx.exception.InitializationException;
+import com.onyx.exception.OnyxException;
 import com.onyx.persistence.factory.PersistenceManagerFactory;
 import com.onyx.persistence.factory.impl.EmbeddedPersistenceManagerFactory;
 import com.onyx.persistence.manager.PersistenceManager;
@@ -9,6 +10,8 @@ import de.hirola.sportslibrary.util.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -56,6 +59,32 @@ public class DatabaseManager {
         return persistenceManager;
     }
 
+    /**
+     * Delete all objects from the database.
+     */
+    public void clearAll() {
+        if (persistenceManager != null) {
+            for (Class<? extends PersistentObject> type : Global.persistentEntities) {
+                try {
+                    List<? extends PersistentObject> allObjectsFromType = persistenceManager.list(type);
+                    persistenceManager.deleteEntities(allObjectsFromType);
+                    String logMessage = allObjectsFromType.size()
+                            + " objects from type "
+                            + type.getSimpleName()
+                            + " deleted.";
+                    logger.log(Logger.DEBUG, TAG, logMessage, null);
+                } catch (OnyxException exception) {
+                    String errorMessage = "Error occurred while deleting all objects from type "
+                            + type;
+                    logger.log(Logger.ERROR, TAG, errorMessage, exception);
+                }
+            }
+        }
+    }
+
+    /**
+     * Close the database.
+     */
     public void close() {
         if (factory != null) {
             factory.close();

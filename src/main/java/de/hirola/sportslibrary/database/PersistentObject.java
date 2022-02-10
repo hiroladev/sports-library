@@ -1,5 +1,6 @@
 package de.hirola.sportslibrary.database;
 
+import com.onyx.persistence.IManagedEntity;
 import com.onyx.persistence.ManagedEntity;
 import com.onyx.persistence.annotations.Entity;
 
@@ -14,6 +15,6 @@ import com.onyx.persistence.annotations.Entity;
  * @since 0.0.1
  */
 @Entity
-public abstract class PersistentObject extends ManagedEntity {
+public abstract class PersistentObject extends ManagedEntity implements IManagedEntity {
     public abstract String getUUID();
 }

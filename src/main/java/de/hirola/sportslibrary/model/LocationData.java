@@ -8,10 +8,9 @@ import com.onyx.persistence.annotations.values.CascadePolicy;
 import com.onyx.persistence.annotations.values.FetchPolicy;
 import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.database.PersistentObject;
+import de.hirola.sportslibrary.util.DateUtil;
 import de.hirola.sportslibrary.util.UUIDFactory;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Objects;
 
 /**
@@ -52,7 +51,7 @@ public class LocationData extends PersistentObject {
      * Default constructor for reflection.
      */
     public LocationData() {
-        timeStamp = LocalDateTime.now().toInstant(ZoneOffset.UTC).toEpochMilli();
+        timeStamp = DateUtil.getTimeStampFromNow();
         provider = "https://www.countrycoordinate.com"; // Neustadt in Sachsen
         latitude = 51.023639;
         longitude = 14.213444;
@@ -67,7 +66,7 @@ public class LocationData extends PersistentObject {
      * @param longitude coordinate for the location
      */
     public LocationData(double latitude, double longitude) {
-        timeStamp = LocalDateTime.now().toInstant(ZoneOffset.UTC).toEpochMilli();
+        timeStamp = DateUtil.getTimeStampFromNow();
         provider = "Unknown";
         this.latitude = latitude;
         this.longitude = longitude;

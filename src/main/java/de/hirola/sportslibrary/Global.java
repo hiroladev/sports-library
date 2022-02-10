@@ -1,5 +1,8 @@
 package de.hirola.sportslibrary;
 
+import de.hirola.sportslibrary.database.PersistentObject;
+import de.hirola.sportslibrary.model.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,8 +18,27 @@ import java.util.Map;
  * @since 0.0.1
  */
 public final class Global {
-
+    /**
+     * Name of library, used as name for database and logging files.
+     */
     public static final String LIBRARY_NAME = "sports-library";
+
+    /**
+     * A list of all types handled by the database.
+     */
+    public static final List<Class<? extends PersistentObject>> persistentEntities;
+    static {
+        persistentEntities = new ArrayList<>();
+        persistentEntities.add(LocationData.class);
+        persistentEntities.add(MovementType.class);
+        persistentEntities.add(RunningPlan.class);
+        persistentEntities.add(RunningPlanEntry.class);
+        persistentEntities.add(RunningUnit.class);
+        persistentEntities.add(Track.class);
+        persistentEntities.add(Training.class);
+        persistentEntities.add(TrainingType.class);
+        persistentEntities.add(User.class);
+    };
 
     /**
      * enable / disable debug mode
@@ -28,7 +50,6 @@ public final class Global {
      */
     public static final class TrainingParameter {
         public static final Map<Integer, String> genderValues;
-
         static {
             genderValues = new HashMap<>();
             genderValues.put(0, "gender_undefined");
@@ -38,7 +59,6 @@ public final class Global {
         }
 
         public static final Map<Integer, String> trainingLevel;
-
         static {
             trainingLevel = new HashMap<>();
             trainingLevel.put(0, "training_beginner");
@@ -47,7 +67,6 @@ public final class Global {
         }
 
         public static final Map<String, String> movementTypes;
-
         static {
             movementTypes = new HashMap<>();
             movementTypes.put("P", "movement_type_pause");

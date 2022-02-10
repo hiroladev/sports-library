@@ -300,14 +300,16 @@ public class TemplateLoader {
         if (listOfObjects.size() == 0) {
             throw new SportsLibraryException("There are no movement types in local datastore. Try to import movement types first.");
         }
-        // check if the list contains movement type objects
-        Class<?> objectClass = listOfObjects.get(0).getClass();
-        if (!objectClass.isInstance(MovementType.class)) {
-            throw new SportsLibraryException("The list contains no movement types.");
+        List<MovementType> movementTypes = new ArrayList<>();
+        for (PersistentObject object : listOfObjects) {
+            try {
+                movementTypes.add((MovementType) object);
+            } catch (ClassCastException exception) {
+                String errorMessage = " The list of movement types contains an object from type "
+                        + object.getClass().getSimpleName();
+                logger.log(Logger.DEBUG, TAG, errorMessage, exception);
+            }
         }
-        // cast the list
-        @SuppressWarnings("unchecked")
-        List<MovementType> movementTypes = (List<MovementType>) listOfObjects;
         // Laden der Laufpläne aus JSON
         loadRunningPlanTemplates();
         //  Templates in Laufpläne umwandeln

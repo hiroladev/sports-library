@@ -8,11 +8,13 @@ import com.onyx.persistence.annotations.values.CascadePolicy;
 import com.onyx.persistence.annotations.values.FetchPolicy;
 import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.database.PersistentObject;
+import de.hirola.sportslibrary.util.DateUtil;
 import de.hirola.sportslibrary.util.UUIDFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -108,11 +110,15 @@ public class Track extends PersistentObject {
      * @param importDate of track
      * @param locations of track
      */
-    public Track(@NotNull String name, @Nullable String description, @Nullable Date importDate,
+    public Track(@NotNull String name, @Nullable String description, @Nullable LocalDate importDate,
                  @NotNull List<LocationData> locations) {
         this.name = name;
         this.description = Objects.requireNonNullElse(description, "");
-        this.importDate = Objects.requireNonNullElseGet(importDate, () -> Date.from(Instant.now()));
+        if (importDate == null) {
+            this.importDate = DateUtil.getDateFromNow();
+        } else {
+            this.importDate = DateUtil.getDateFromLocalDate(importDate);
+        }
         this.locations = locations;
         //TODO: start and stop time, avg, speed
     }
@@ -130,11 +136,15 @@ public class Track extends PersistentObject {
      * @param distance of track
      * @param locations of track
      */
-    public Track(@NotNull String name, @Nullable String description, @Nullable Date importDate,
+    public Track(@NotNull String name, @Nullable String description, @Nullable LocalDate importDate,
                  long startTime, long stopTime, double avg, double distance, @NotNull List<LocationData> locations) {
         this.name = name;
         this.description = Objects.requireNonNullElse(description, "");
-        this.importDate = Objects.requireNonNullElseGet(importDate, () -> Date.from(Instant.now()));
+        if (importDate == null) {
+            this.importDate = DateUtil.getDateFromNow();
+        } else {
+            this.importDate = DateUtil.getDateFromLocalDate(importDate);
+        }
         this.startTime = startTime;
         this.stopTime = stopTime;
         this.averageSpeed = avg;
@@ -285,8 +295,8 @@ public class Track extends PersistentObject {
      *
      * @return The import date of the track
      */
-    public Date getImportDate() {
-        return importDate;
+    public LocalDate getImportDate() {
+        return DateUtil.getLocalDateFromDate(importDate);
     }
 
     /**
