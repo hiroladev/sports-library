@@ -7,19 +7,10 @@ import de.hirola.sportslibrary.model.*;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.time.DayOfWeek;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 class SportsLibraryTest {
-
-    SportsLibrary sportsLibrary;
-    DataRepository dataRepository;
-    List<? extends PersistentObject>  runningPlans;
 
     @Test
     void checkRelations() {
@@ -80,101 +71,6 @@ class SportsLibraryTest {
             } else {
                 fail("Wrong type of object.");
             }
-
-        } catch (SportsLibraryException exception) {
-            fail(exception.getMessage());
-        }
-    }
-
-    //@Test
-    void initializeSportsLibrary() {
-        try {
-            sportsLibrary = new SportsLibrary("SportsLibraryTest", null);
-            assertNotNull(sportsLibrary, "Library not initialize.");
-            dataRepository = sportsLibrary.getDataRepository();
-            assertNotNull(dataRepository, "DataRepository not initialize.");
-
-            // test the import from the templates
-            // exists 3 running plans in local datastore?
-            runningPlans = dataRepository.findAll(RunningPlan.class);
-            assertEquals(3,runningPlans.size());
-
-            // only 1 app users must exist
-            List<? extends PersistentObject> users = dataRepository.findAll(User.class);
-            assertEquals(1, users.size());
-            // running plan start date, trainings starts on mondays
-            PersistentObject object = runningPlans.get(0);
-            if (object instanceof RunningPlan) {
-                RunningPlan runningPlan = (RunningPlan) object;
-                for (int i = 0; i < 7; i++) {
-                    LocalDate startDate = LocalDate.now(ZoneId.systemDefault());
-                    startDate = startDate.plusDays(i);
-                    runningPlan.setStartDate(java.sql.Date.valueOf(startDate));
-                    LocalDate actualStartDate = Instant.ofEpochMilli(runningPlan.getStartDate().getTime())
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDate();
-                    assertEquals(DayOfWeek.MONDAY, actualStartDate.getDayOfWeek());
-                }
-                // set start date on active running plan
-                List<RunningPlanEntry> entries = runningPlan.getEntries();
-                if (!entries.isEmpty()) {
-                    RunningPlanEntry entry = entries.get(0);
-                    List<RunningUnit> units = entry.getRunningUnits();
-                    if (!units.isEmpty()) {
-                        RunningUnit unit = units.get(0);
-                        unit.setCompleted(true);
-                        assertTrue(runningPlan.isActive());
-                        Date startDate = runningPlan.getStartDate();
-                        LocalDate newStartDate = LocalDate.now().plusWeeks(2);
-                        runningPlan.setStartDate(java.sql.Date.valueOf(newStartDate));
-                        // no changes for the start date on active running plan
-                        assertEquals(startDate, runningPlan.getStartDate());
-                        // get the duration of running plan units
-                        int sumOfUnitDurations = 0;
-                        for (RunningUnit runningUnit : units) {
-                            sumOfUnitDurations += runningUnit.getDuration();
-                        }
-                        assertEquals(entry.getDuration(), sumOfUnitDurations);
-                    }
-                } else {
-                    fail("RunningPlan has no entries.");
-                }
-
-            } else {
-                fail("Object not from type RunningPlan.");
-            }
-
-
-        } catch (SportsLibraryException exception) {
-            fail(exception.getMessage());
-        }
-    }
-
-    //@Test
-    void testSportsLibrary() {
-        try {
-            sportsLibrary = new SportsLibrary("SportsLibraryTest", null);
-            assertNotNull(sportsLibrary, "Library not initialize.");
-            dataRepository = sportsLibrary.getDataRepository();
-            assertNotNull(dataRepository, "DataRepository not initialize.");
-
-            // test the import from the templates
-            // exists 3 running plans in local datastore?
-            RunningPlan runningPlan = (RunningPlan) dataRepository.findAll(RunningPlan.class).get(0);
-            List<RunningPlanEntry> runningPlanEntries = runningPlan.getEntries();
-            RunningUnit runningUnit = runningPlanEntries.get(0).getRunningUnits().get(0);
-            assertTrue(runningUnit.getUUID().isEmpty(),"RunningUnit is empty.");
-
-            // test the duration values
-            // 1. running plan entry = sum of duration from the units
-            int calculatedDuration = 0;
-            for (RunningPlanEntry runningPlanEntry : runningPlanEntries) {
-                List<RunningUnit> runningUnits = runningPlanEntry.getRunningUnits();
-                for (RunningUnit runningUnit1 : runningUnits) {
-                    calculatedDuration += runningUnit1.getDuration();
-                }
-            }
-            assertEquals(runningPlan.getDuration(), calculatedDuration, "RunningPlan duration is wrong.");
 
         } catch (SportsLibraryException exception) {
             fail(exception.getMessage());
