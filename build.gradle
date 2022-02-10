@@ -1,9 +1,12 @@
-plugins {
-    id 'java'
-}
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+
 
 group 'de.hirola'
 version '0.0.1-SNAPSHOT'
+
+sourceCompatibility = 1.11 // java 11
+targetCompatibility = 1.11
 
 repositories {
     mavenCentral()
@@ -15,6 +18,24 @@ dependencies {
     implementation 'org.jetbrains:annotations:22.0.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+wrapper {
+    gradleVersion = "7.3.3"
+    distributionType = Wrapper.DistributionType.ALL
 }
 
 test {
