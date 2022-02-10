@@ -254,7 +254,7 @@ public class RunningPlan extends PersistentObject {
 
     /**
      * Indicates whether the run plan has already been completed, i.e. has been carried out.
-     * Automatically <code>true<code> if all sessions have been completed.
+     * Automatically true if all sessions have been completed.
      *
      * @return A flag to determine if the plan is completed
      */
