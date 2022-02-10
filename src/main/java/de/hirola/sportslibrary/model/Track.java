@@ -325,4 +325,35 @@ public class Track extends PersistentObject {
         return Objects.hash(super.hashCode(), uuid, name, description, startTime, stopTime);
     }
 
+    /**
+     * A wrapper class for the id of a track.
+     * Can be used while handling track recording on Android.
+     * The id will be created with the primary key in a local sqlite database.
+     */
+    public static final class Id {
+        private final long id;
+        /**
+         * Create an instance of the id, which represents the (temporary) id
+         * of a track.
+         *
+         * @param id of track while recording
+         */
+        public Id(long id) {
+            this.id = id;
+        }
+
+        /**
+         * Get the (temporary) id of a track.
+         *
+         * @return The (temporary) id of a track.
+         */
+        public long getId() {
+            return id;
+        }
+
+        @Override
+        public String toString() {
+            return "Track.ID: " + id;
+        }
+    }
 }
