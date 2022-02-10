@@ -1,0 +1,447 @@
+package de.hirola.sportslibrary.util;
+
+import de.hirola.sportslibrary.database.DataRepository;
+import de.hirola.sportslibrary.database.PersistentObject;
+import de.hirola.sportslibrary.SportsLibraryApplication;
+import de.hirola.sportslibrary.SportsLibraryException;
+import de.hirola.sportslibrary.model.*;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
+/**
+ * Copyright 2021 by Michael Schmidt, Hirola Consulting
+ * This software us licensed under the AGPL-3.0 or later.
+ *
+ * Create objects from template files (JSON).
+ *
+ * @author Michael Schmidt (Hirola)
+ * @since 0.0.1
+ */
+public class TemplateLoader {
+
+    private final String TAG = Logger.class.getSimpleName();
+
+    private final Logger logger = Logger.getInstance(null);
+    private final DataRepository dataRepository;
+    private final SportsLibraryApplication application; // on Android load json from R.raw
+    private final List<RunningPlanTemplate> runningPlanTemplatesImportList;
+    private final List<RunningPlan> importedRunningPlans;
+    private boolean isRunningOnAndroid;
+
+
+    public TemplateLoader(@NotNull DataRepository dataRepository) throws SportsLibraryException {
+        if (!dataRepository.isOpen()) {
+            throw new SportsLibraryException("The local datastore isn't open. Can't import templates.");
+        }
+        this.dataRepository = dataRepository;
+        runningPlanTemplatesImportList = new ArrayList<>();
+        importedRunningPlans = new ArrayList<>();
+        application = null;
+        try {
+            isRunningOnAndroid = System.getProperty("java.vm.vendor").equals("The Android Project");
+        } catch (SecurityException exception){
+            isRunningOnAndroid = false;
+        }
+    }
+
+    public TemplateLoader(@NotNull DataRepository dataRepository, @Nullable SportsLibraryApplication application) throws SportsLibraryException {
+        if (!dataRepository.isOpen()) {
+            throw new SportsLibraryException("The local datastore isn't open. Can't import templates.");
+        }
+        this.dataRepository = dataRepository;
+        this.application = application;
+        runningPlanTemplatesImportList = new ArrayList<>();
+        importedRunningPlans = new ArrayList<>();
+        // determine if android or jvm
+        // see https://developer.android.com/reference/java/lang/System#getProperties()
+        try {
+            isRunningOnAndroid = System.getProperty("java.vm.vendor").equals("The Android Project");
+        } catch (SecurityException exception){
+            isRunningOnAndroid = false;
+        }
+        if (isRunningOnAndroid && application == null) {
+            throw new SportsLibraryException("The application must be not null.");
+        }
+    }
+
+    /**
+     * Loads objects of specific types from available templates (JSON) and adds them to the local data store.
+     *
+     * @throws SportsLibraryException if no templates were found or could not be loaded successfully
+     */
+    public void loadAllFromJSON() throws SportsLibraryException {
+        addMovementTypesFromTemplate();
+        addTrainingTypesFromTemplate();
+        addRunningPlansFromTemplate();
+    }
+
+    /**
+     * Loads objects of a specific type from templates (JSON) and adds them to the local data store.
+     *
+     * @param typeOf objects of this type should be loaded from templates
+     * @throws SportsLibraryException if no templates were found or could not be loaded successfully
+     */
+    public void loadFromJSON(@NotNull Class<? extends PersistentObject> typeOf) throws SportsLibraryException {
+        if (isRunningOnAndroid && application == null) {
+            throw new SportsLibraryException("For using this method under Android, the application must not be null. " +
+                    "Please initialize the template loader with the constructor (DataRepository, SportsLibraryApplication)");
+        }
+        if (typeOf.equals(MovementType.class)) {
+            addMovementTypesFromTemplate();
+            return;
+        }
+        if (typeOf.equals(TrainingType.class)) {
+            addTrainingTypesFromTemplate();
+            return;
+        }
+        if (typeOf.equals(RunningPlan.class)) {
+            addRunningPlansFromTemplate();
+            return;
+        }
+        throw new SportsLibraryException("Object type in parameter isn' valid.");
+    }
+
+    /**
+     * Load a plan template to create (complex) plan objects from a json file.
+     *
+     * @param jsonInputStream to the template file
+     * @return A template object to create a running plan
+     * @throws SportsLibraryException if the template was not found or could not be loaded successfully
+     * @see RunningPlanTemplate
+     */
+    public RunningPlanTemplate loadRunningPlanTemplateFromJSON(@NotNull InputStream jsonInputStream) throws SportsLibraryException {
+        // aus JSON Objekte erstellen
+        try {
+            // create ObjectMapper instance
+            ObjectMapper objectMapper = new ObjectMapper();
+            // convert a JSON to a running plan templates
+            // add to the local list of running plans
+            return objectMapper.readValue(jsonInputStream, RunningPlanTemplate.class);
+        } catch (IOException exception) {
+            // TODO: Logging
+            String errorMessage = "Error occurred while parsing json of running plan template: "
+                    + exception;
+            throw new SportsLibraryException(errorMessage);
+        }
+    }
+
+    /**
+     * Create a running plan from a plan template object.
+     * @param template for the running plan
+     * @return A running plan, create from a template object
+     * @throws SportsLibraryException if the running plan could not create from template object
+     * @see RunningPlan
+     */
+    public RunningPlan importRunningPlanFromTemplate(@NotNull RunningPlanTemplate template) throws SportsLibraryException {
+        // add template to the import list
+        runningPlanTemplatesImportList.add(template);
+        // add template to local datastore
+        addRunningPlansFromTemplate();
+        if (importedRunningPlans.size() == 1) {
+            return importedRunningPlans.get(0);
+        }
+        throw new SportsLibraryException("More than one template was imported.");
+    }
+
+    /**
+     * Exports (saves?) a running plan as a template to a JSON file.
+     *
+     * @param runningPlan to export or save
+     * @param exportDirPath to the JSON file to export the run plan to
+     * @throws SportsLibraryException if the file could not be saved or an error occurred during export
+     */
+    public void exportRunningPlanToJSON(RunningPlan runningPlan, Path exportDirPath) throws SportsLibraryException {
+        try {
+            if (runningPlan == null) {
+                throw new SportsLibraryException("Can't save a null object.");
+            }
+
+            if (exportDirPath == null) {
+                throw new SportsLibraryException("The path must not null.");
+            }
+            // prüfen, ob der Pfad vorhanden und die Datei dort gespeichert werden kann
+            File exportDir = exportDirPath.toFile();
+            if (!exportDir.exists() && !exportDir.isDirectory() && !exportDir.canWrite()) {
+                throw new SportsLibraryException("The directory "
+                        + exportDirPath
+                        + " doesn't exists or isn't a directory or isn't writable.");
+            }
+            LocalDate localDate = LocalDate.now();
+            String exportFileName = runningPlan.getName().toLowerCase(Locale.ROOT) +
+                    "+ export-"
+                    + localDate.format(DateTimeFormatter.ISO_DATE)
+                    + ".json";
+
+            Path exportFilePath = Paths.get(exportDirPath.toString(), exportFileName);
+            // create object mapper instance
+            ObjectMapper ObjectMapper = new ObjectMapper();
+            // convert the running plan to JSON file
+            ObjectMapper.writeValue(exportFilePath.toFile(),runningPlan);
+        } catch (SecurityException | IOException exception) {
+            // TODO: Logging
+            String errorMessage = "Error occurred while exporting running plans: ".concat(exception.getMessage());
+            throw new SportsLibraryException(errorMessage);
+        }
+    }
+
+    // Laden von Trainingsarten aus Vorlagen (JSON) und Ablegen im Datenspeicher
+    private void addTrainingTypesFromTemplate() throws SportsLibraryException {
+        // aus JSON Objekte erstellen
+        try {
+            // create ObjectMapper instance
+            ObjectMapper objectMapper = new ObjectMapper();
+            TrainingType[] trainingTypes;
+            if (isRunningOnAndroid) {
+                // on Android get the JSON from R.json ...
+                InputStream inputStream = application.getTrainingTypeTemplates();
+                // convert JSON array to list of movement types
+                trainingTypes = objectMapper.readValue(inputStream, TrainingType[].class);
+            } else {
+                // on JVM read JSON from jar resources
+                // Pfad zu den Vorlagen der Bewegungsarten
+                // sucht im Ordner resources, dazu muss / am Anfang stehen
+                // Pfad zu den Trainingstypen-Vorlagen
+                // sucht im Ordner resources, dazu muss / am Anfang stehen
+                String jsonResourceFileName = "/json/training-types.json";
+                URL url = this.getClass().getResource(jsonResourceFileName);
+                if (url == null) {
+                    throw new SportsLibraryException("Can't finde the resource file "
+                            + jsonResourceFileName);
+                }
+                Path path = Paths.get(url.toURI());
+                // convert JSON array to list of available template files
+                trainingTypes = objectMapper.readValue(path.toFile(), TrainingType[].class);
+            }
+            if (trainingTypes.length == 0) {
+                // TODO: Logging
+                throw new SportsLibraryException("Could not load training types.");
+            }
+            // Trainingsarten speichern
+            try {
+                for (TrainingType trainingType : trainingTypes) {
+                    dataRepository.save(trainingType);
+                }
+            } catch (SportsLibraryException exception) {
+                // TODO: Logging
+                String errorMessage = "Error occurred while saving an TrainingType object: ".concat(exception.getMessage());
+                throw new SportsLibraryException(errorMessage);
+            }
+        } catch (IOException | URISyntaxException exception) {
+            // TODO: Logging
+            String errorMessage = "Error occurred while parsing json of running plan templates: "
+                    + exception;
+            throw new SportsLibraryException(errorMessage);
+        }
+    }
+
+    // Laden von Bewegungsarten aus Vorlagen (JSON) und Ablegen im Datenspeicher
+    private void addMovementTypesFromTemplate() throws SportsLibraryException {
+        // aus JSON Objekte erstellen
+        try {
+            MovementType[] movementTypes;
+            // create ObjectMapper instance
+            ObjectMapper objectMapper = new ObjectMapper();
+            if (isRunningOnAndroid) {
+                // on Android get the JSON from R.json ...
+                InputStream inputStream = application.getMovementTypeTemplates();
+                // convert JSON array to list of movement types
+                movementTypes = objectMapper.readValue(inputStream, MovementType[].class);
+            } else {
+                // on JVM read JSON from jar resources
+                // Pfad zu den Vorlagen der Bewegungsarten
+                // sucht im Ordner resources, dazu muss / am Anfang stehen
+                String jsonResourceFileName = "/json/movement-types.json";
+                URL url = this.getClass().getResource(jsonResourceFileName);
+                if (url == null) {
+                    throw new SportsLibraryException("Can't finde the resource file "
+                            + jsonResourceFileName);
+                }
+                Path path = Paths.get(url.toURI());
+                // convert JSON array to list of movement types
+                movementTypes = objectMapper.readValue(path.toFile(), MovementType[].class);
+            }
+            // Bewegungsarten speichern
+            try {
+                for (MovementType movementType : movementTypes) {
+                    dataRepository.save(movementType);
+                }
+            } catch (SportsLibraryException exception) {
+                // TODO: Logging
+                String errorMessage = "Error occurred while saving an MovementType: "
+                        + exception.getMessage();
+                throw new SportsLibraryException(errorMessage);
+            }
+        } catch (IOException | URISyntaxException exception) {
+            // TODO: Logging
+            String errorMessage = "Error occurred while parsing json of movement types: "
+                    + exception;
+            throw new SportsLibraryException(errorMessage);
+        }
+    }
+
+    //  Laden von Laufplänen aus Vorlagen (JSON) und Ablegen im Datenspeicher
+    // TODO: rollback on error
+    private void addRunningPlansFromTemplate() throws SportsLibraryException {
+        //  Liste der Bewegungsgarten - notwendig für das Anlegen von Laufplänen
+
+        List<? extends PersistentObject> listOfObjects = dataRepository.findAll(MovementType.class);
+        //  Bewegungsarten müssen bereits vorhanden sein, ansonsten können keine Laufpläne angelegt werden
+        if (listOfObjects.size() == 0) {
+            throw new SportsLibraryException("There are no movement types in local datastore. Try to import movement types first.");
+        }
+        // check if the list contains movement type objects
+        Class<?> objectClass = listOfObjects.get(0).getClass();
+        if (!objectClass.isInstance(MovementType.class)) {
+            throw new SportsLibraryException("The list contains no movement types.");
+        }
+        // cast the list
+        @SuppressWarnings("unchecked")
+        List<MovementType> movementTypes = (List<MovementType>) listOfObjects;
+        // Laden der Laufpläne aus JSON
+        loadRunningPlanTemplates();
+        //  Templates in Laufpläne umwandeln
+        if (runningPlanTemplatesImportList.size() > 0) {
+            for (RunningPlanTemplate runningPlanTemplate : runningPlanTemplatesImportList) {
+                //  aus einer Vorlage einen Laufplan anlegen
+                //  jeder Laufplan enthält für die Wochen und Tage jeweils einen
+                //  Trainingsabschnitt "2:L;3:LG;2:L;3:LG;2:L;3:LG;2:L;3:LG;2:L;3:LG" (unit)
+                ArrayList<RunningPlanEntry> runningPlanEntries = new ArrayList<>();
+                for (RunningPlanTemplateUnit unit : runningPlanTemplate.getTrainingUnits()) {
+                    //  aus String-Array ["20", "ZG"] die einzelnen Elemente extrahieren
+                    //  gerade = Zeit, ungerade = Art der Bewegung, 0,1,2,3
+                    ArrayList<RunningUnit> runningUnits = new ArrayList<>();
+                    //  Bewegungsart über Schlüssel suchen
+                    MovementType movementType = null;
+                    int duration = 0;
+                    int index = 0;
+                    Iterator<String> runningUnitStringsIterator = Arrays.stream(unit.getUnits()).iterator();
+                    while (runningUnitStringsIterator.hasNext()) {
+                        String runningUnitString = runningUnitStringsIterator.next();
+                        if ((index % 2) == 0) {
+                            //  gerade Zahl -> Dauer
+                            try {
+                                duration = Integer.parseInt(runningUnitString);
+                            } catch (NumberFormatException exception) {
+                                duration = 0;
+                                logger.log(Logger.DEBUG, TAG, "Duration on running unit was not a number.", null);
+                            }
+                        } else {
+                            //  über das Kürzel nach der Bewegungsart suchen
+                            for (MovementType type : movementTypes) {
+                                if (type.getKey().equalsIgnoreCase(runningUnitString)) {
+                                    movementType = type;
+                                }
+                            }
+                            //  Bewegungsart nicht gefunden?
+                            if (movementType == null) {
+                                // TODO: Logging, ausführlicher Fehler
+                                // Eine notwendige Bewegungsart (Schlüssel) wurde im Datenspeicher nicht gefunden.
+                                throw new SportsLibraryException("A required movement type (key) wasn't found in import.");
+                            }
+                            //  einen Trainingsabschnitt erstellen
+                            RunningUnit runningUnit = new RunningUnit(duration, movementType);
+                            //  den einzelnen Abschnitt (1:L) zur Trainingseinheit hinzufügen
+                            runningUnits.add(runningUnit);
+                        }
+                        //  Schleifen-Index erhöhen
+                        index += 1;
+                    }
+                    // ein Eintrag im Trainingsplan, also das Training eines Tages
+                    RunningPlanEntry runningPlanEntry = new RunningPlanEntry(unit.getDay(), unit.getWeek(), runningUnits);
+                    //  den Trainingsplan-Eintrag zur Liste hinzufügen
+                    runningPlanEntries.add(runningPlanEntry);
+                }
+                //  Laufplan anlegen
+                RunningPlan runningPlan = new RunningPlan(
+                        runningPlanTemplate.getName(),
+                        runningPlanTemplate.getRemarks(),
+                        runningPlanTemplate.getOrderNumber(),
+                        runningPlanEntries,
+                        runningPlanTemplate.isTemplate);
+                try {
+                    // save the running plan and all related objects
+                    dataRepository.save(runningPlan);
+                    // add to the imported list
+                    importedRunningPlans.add(runningPlan);
+                } catch (SportsLibraryException exception) {
+                    String errorMessage = "Error occurred while saving a running plan.";
+                    logger.log(Logger.DEBUG, TAG, errorMessage, exception);
+                    throw new SportsLibraryException(errorMessage + ": " + exception.getMessage());
+                }
+            }
+            // clear the list
+            runningPlanTemplatesImportList.clear();
+        } else {
+            throw new SportsLibraryException("The list of running plan templates was empty. The import failed.");
+        }
+    }
+
+    //  Laden von Laufplan-Vorlagen zur Erstellung von (komplexen) Laufplan-Objekten
+    private void loadRunningPlanTemplates() throws SportsLibraryException {
+        // aus JSON Objekte erstellen
+        try {
+            // create ObjectMapper instance
+            ObjectMapper objectMapper = new ObjectMapper();
+            if (isRunningOnAndroid) {
+                // on Android get the JSON from R.json ...
+                InputStream[] inputStreams = application.getRunningPlanTemplates();
+                // convert JSON array to list of running plans templates
+                Iterator<InputStream> inputStreamIterator = Arrays.stream(inputStreams).iterator();
+                while (inputStreamIterator.hasNext()) {
+                    // add a template to the local list of running plans
+                    runningPlanTemplatesImportList.add(objectMapper.readValue(inputStreamIterator.next(),
+                            RunningPlanTemplate.class));
+                }
+            } else {
+                // on JVM read JSON from jar resources
+                // Pfad zum Index: Verzeichnis der vorhandenen Laufplan-Vorlagen
+                // sucht im Ordner resources, dazu muss / am Anfang stehen
+                String jsonResourceFileName = "/json/index-of-templates.json";
+                URL url = this.getClass().getResource(jsonResourceFileName);
+                if (url == null) {
+                    throw new SportsLibraryException("Can't finde the resource file "
+                            + jsonResourceFileName);
+                }
+                Path path = Paths.get(url.toURI());
+                // convert JSON array to list of available template files
+                List<RunningPlanTemplateFile> runningPlanTemplateFiles = Arrays.asList(objectMapper.readValue(path.toFile(), RunningPlanTemplateFile[].class));
+                if (runningPlanTemplateFiles.isEmpty()) {
+                    // TODO: Logging
+                    throw new SportsLibraryException("There are no running plan templates in index file.");
+                }
+                //  die über den Index ermittelten Vorlagen einlesen
+                for (RunningPlanTemplateFile runningPlanTemplateFile : runningPlanTemplateFiles) {
+                    //  jeweilige JSON-Datei der Vorlage laden
+                    jsonResourceFileName = "/json/" + runningPlanTemplateFile.getFileName() + ".json";
+                    url = this.getClass().getResource(jsonResourceFileName);
+                    if (url == null) {
+                        throw new SportsLibraryException("Can't finde the resource file "
+                                + jsonResourceFileName);
+                    }
+                    path = Paths.get(url.toURI());
+                    // Laufplan-Vorlage einlesen
+                    // convert JSON file to an template object
+                    RunningPlanTemplate runningPlanTemplate = objectMapper.readValue(path.toFile(), RunningPlanTemplate.class);
+                    // add to list
+                    runningPlanTemplatesImportList.add(runningPlanTemplate);
+                }
+            }
+        } catch (IOException | URISyntaxException exception) {
+            // TODO: Logging
+            String errorMessage = "Error occurred while parsing json of running plan templates: "
+                    + exception;
+            throw new SportsLibraryException(errorMessage);
+        }
+    }
+}
