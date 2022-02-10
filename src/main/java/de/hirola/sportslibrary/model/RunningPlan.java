@@ -242,7 +242,7 @@ public class RunningPlan extends PersistentObject {
 
     /**
      * Indicates whether the schedule is selected and used.
-     * The value is <b>true</b> if at least one session has been completed.
+     * The value is true if at least one session has been completed.
      * An active plan is assigned to the user.
      *
      * @return A flag to determine if plan is active in training.

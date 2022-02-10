@@ -112,7 +112,7 @@ public class RunningPlanEntry extends PersistentObject {
 
     /**
      * Indicates whether the run plan entry (training day) has been completed.
-     * Is automatically <b>true</b> if all training sections are completed.
+     * Is automatically true if all training sections are completed.
      *
      * @return A flag to determine if all units of entry completed
      */
