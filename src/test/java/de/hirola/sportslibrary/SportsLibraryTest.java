@@ -87,7 +87,6 @@ class SportsLibraryTest {
 
         // delete all objects
         dataRepository.clearAll();
-        dataRepository.close();
     }
 
     @Test
@@ -175,7 +174,6 @@ class SportsLibraryTest {
 
         // delete all objects
         dataRepository.clearAll();
-        dataRepository.close();
     }
 
     @Test
@@ -229,7 +227,6 @@ class SportsLibraryTest {
 
         // delete all objects
         dataRepository.clearAll();
-        dataRepository.close();
     }
 
     @Test
@@ -288,7 +285,6 @@ class SportsLibraryTest {
 
         // delete all objects
         dataRepository.clearAll();
-        dataRepository.close();
     }
 
     @Test
@@ -370,7 +366,6 @@ class SportsLibraryTest {
 
         // delete all objects
         dataRepository.clearAll();
-        dataRepository.close();
     }
 
 }
