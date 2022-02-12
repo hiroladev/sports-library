@@ -52,17 +52,18 @@ public class Training extends PersistentObject {
     private Date trainingDate;
     @Relationship(type = RelationshipType.MANY_TO_ONE,
             inverseClass = TrainingType.class,
-            inverse = "relationAttributeForTrainingToTrainingType",
+            inverse = "associatedTrainings",
             cascadePolicy = CascadePolicy.NONE)
     private TrainingType trainingType; // biking, running, ...
     @Relationship(type = RelationshipType.MANY_TO_ONE,
             inverseClass = Track.class,
-            inverse = "relationAttributeForTrainingToTrack",
+            inverse = "associatedTrainings",
             cascadePolicy = CascadePolicy.SAVE)
     private Track track; // track of the training
 
     /**
-     * Default constructor for import from json.
+     * Default constructor for reflection, JSON import
+     * and database management.
      */
     public Training() {
         name = "Training";

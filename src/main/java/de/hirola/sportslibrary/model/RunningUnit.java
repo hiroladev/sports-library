@@ -9,6 +9,7 @@ import com.onyx.persistence.annotations.values.FetchPolicy;
 import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.UUIDFactory;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
@@ -37,18 +38,18 @@ public class RunningUnit extends PersistentObject {
     private final long duration; // duration in minutes
     @Relationship(type = RelationshipType.MANY_TO_ONE,
             inverseClass = MovementType.class,
-            inverse = "relationAttributeForMovementTypeToRunningPlanUnit", // mapping attribute in MovementType
-            cascadePolicy = CascadePolicy.NONE)
+            inverse = "associatedRunningUnits",
+            cascadePolicy = CascadePolicy.SAVE)
     private MovementType movementType;
     @Relationship(type = RelationshipType.MANY_TO_ONE,
             inverseClass = RunningPlanEntry.class,
             inverse = "runningUnits",
             cascadePolicy = CascadePolicy.ALL,
             fetchPolicy = FetchPolicy.LAZY)
-    private RunningPlanEntry relationAttributeForRunningPlanEntryToRunningPlanUnit; // defined only for modelling the relationship 1:m
+    private RunningPlanEntry associatedRunningPlanEntry; // used only for modelling relations
 
     /**
-     * Default constructor for reflection.
+     * Default constructor for reflection and database management.
      */
     public RunningUnit() {
         super();
@@ -63,7 +64,7 @@ public class RunningUnit extends PersistentObject {
      * @param duration of the unit
      * @param movementType of the unit
      */
-    public RunningUnit(int duration, MovementType movementType) {
+    public RunningUnit(int duration, @NotNull MovementType movementType) {
         this.duration = duration;
         this.movementType = movementType;
         this.isCompleted = false;

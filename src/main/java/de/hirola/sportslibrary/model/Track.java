@@ -53,7 +53,7 @@ public class Track extends PersistentObject {
     private double altitudeDifference = -1;
     @Relationship(type = RelationshipType.ONE_TO_MANY,
             inverseClass = LocationData.class,
-            inverse = "relationAttributeForTrackToLocationData",
+            inverse = "associatedTrack",
             cascadePolicy = CascadePolicy.ALL,
             fetchPolicy = FetchPolicy.LAZY)
     private List<LocationData> locations; // list of tracking data
@@ -61,9 +61,10 @@ public class Track extends PersistentObject {
             inverseClass = Training.class,
             inverse = "track",
             cascadePolicy = CascadePolicy.SAVE)
-    private List<Training> relationAttributeForTrainingToTrack; // used only for modelling relations
+    private List<Training> associatedTrainings; // used only for modelling relations
+
     /**
-     * Default constructor for reflection.
+     * Default constructor for reflection and database management.
      */
     public Track() {
         locations = new ArrayList<>();
@@ -74,13 +75,12 @@ public class Track extends PersistentObject {
      *
      * @param name of track
      * @param description of track
-     * @param startTime of track
+     * @param locations of track
      */
-    public Track(String name, String description, long startTime) {
+    public Track(@NotNull String name, @Nullable String description, @Nullable List<LocationData> locations) {
         this.name = name;
         this.description = description;
-        this.startTime = startTime;
-        locations = new ArrayList<>();
+        this.locations = Objects.requireNonNullElseGet(locations, ArrayList::new);
     }
 
     /**
@@ -94,7 +94,7 @@ public class Track extends PersistentObject {
      */
     public Track(String name, String description, long startTime, long stopTime, @Nullable List<LocationData> locations) {
         this.name = name;
-        this.description = description;
+        this.description = Objects.requireNonNullElse(description, "No description available.");
         this.startTime = startTime;
         this.stopTime = stopTime;
         this.locations = Objects.requireNonNullElseGet(locations, ArrayList::new);
@@ -113,7 +113,7 @@ public class Track extends PersistentObject {
     public Track(@NotNull String name, @Nullable String description, @Nullable LocalDate importDate,
                  @NotNull List<LocationData> locations) {
         this.name = name;
-        this.description = Objects.requireNonNullElse(description, "");
+        this.description = Objects.requireNonNullElse(description, "No description available.");
         if (importDate == null) {
             this.importDate = DateUtil.getDateFromNow();
         } else {
@@ -139,7 +139,7 @@ public class Track extends PersistentObject {
     public Track(@NotNull String name, @Nullable String description, @Nullable LocalDate importDate,
                  long startTime, long stopTime, double avg, double distance, @NotNull List<LocationData> locations) {
         this.name = name;
-        this.description = Objects.requireNonNullElse(description, "");
+        this.description = Objects.requireNonNullElse(description, "No description available.");
         if (importDate == null) {
             this.importDate = DateUtil.getDateFromNow();
         } else {

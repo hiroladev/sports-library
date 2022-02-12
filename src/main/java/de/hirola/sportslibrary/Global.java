@@ -24,29 +24,40 @@ public final class Global {
     public static final String LIBRARY_NAME = "sports-library";
 
     /**
-     * A list of all types handled by the database.
-     */
-    public static final List<Class<? extends PersistentObject>> persistentEntities;
-    static {
-        persistentEntities = new ArrayList<>();
-        persistentEntities.add(LocationData.class);
-        persistentEntities.add(MovementType.class);
-        persistentEntities.add(RunningPlan.class);
-        persistentEntities.add(RunningPlanEntry.class);
-        persistentEntities.add(RunningUnit.class);
-        persistentEntities.add(Track.class);
-        persistentEntities.add(Training.class);
-        persistentEntities.add(TrainingType.class);
-        persistentEntities.add(User.class);
-    };
-
-    /**
      * enable / disable debug mode
      */
     public static final boolean APP_DEBUG_MODE = true;
 
     /**
-     * training parameter
+     * A list of all types handled by the database.
+     */
+    public static final List<Class<? extends PersistentObject>> PERSISTENT_CLASSES_LIST;
+    static {
+        PERSISTENT_CLASSES_LIST = new ArrayList<>();
+        PERSISTENT_CLASSES_LIST.add(LocationData.class);
+        PERSISTENT_CLASSES_LIST.add(MovementType.class);
+        PERSISTENT_CLASSES_LIST.add(RunningPlan.class);
+        PERSISTENT_CLASSES_LIST.add(RunningPlanEntry.class);
+        PERSISTENT_CLASSES_LIST.add(RunningUnit.class);
+        PERSISTENT_CLASSES_LIST.add(Track.class);
+        PERSISTENT_CLASSES_LIST.add(Training.class);
+        PERSISTENT_CLASSES_LIST.add(TrainingType.class);
+        PERSISTENT_CLASSES_LIST.add(User.class);
+    }
+
+    /**
+    * A list of all types to be deleted as embedded objects.
+     */
+    public static final List<Class<? extends PersistentObject>> CASCADING_DELETED_CLASSES;
+    static {
+        CASCADING_DELETED_CLASSES = new ArrayList<>();
+        CASCADING_DELETED_CLASSES.add(LocationData.class);
+        CASCADING_DELETED_CLASSES.add(RunningPlanEntry.class);
+        CASCADING_DELETED_CLASSES.add(RunningUnit.class);
+    }
+
+    /**
+     * Training parameter
      */
     public static final class TrainingParameter {
         public static final Map<Integer, String> genderValues;
@@ -78,22 +89,16 @@ public final class Global {
     }
 
     /**
-     * app parameter
+     * App parameter
      */
     public static final class AppSettings {
 
-        // App-ID -> Bucket (Kinto) -> Datenbank (SQL)
-        public static final String appID = "SportsLibrary";
-        // MapBox Public Access Token
-        public static final String mapboxAccessToken = "";
         // Nutzung der Cloud-Synchronisation, ermöglicht den Zugriff auf die Daten von verschiedenen Endgeräten aus.
-        public static final boolean useSync = true;
-        // GPS für Aufzeichnung der Strecke und Ermittlung der Geschwindigkeit nutzen.
-        public static final boolean useGPS = true;
+        public static final boolean useSync = false;
     }
 
     /**
-     * validation parameter for locations
+     * Validation parameter for locations
      */
     public static final class ValidLocationValues {
         // Minimaler Wert der Latitude.
@@ -108,6 +113,10 @@ public final class Global {
 
     // Programm-Vorgaben (Wertebereiche)
     public static final class Defaults {
+        /**
+         * Default color for movement types
+         */
+        public static final String DEFAULT_MOVEMENT_TYPE_COLOR = "green";
         // Beginn der GPS-Aufzeichnung ab Anzahl von Location-Updates. Erhöhung der Genauigkeit.
         public static final int locationUpdatesRecordsBeginsAt = 5;
         // nach wie viel Sekunden soll ein Track gespeichert werden
@@ -122,7 +131,6 @@ public final class Global {
         // Der Maximal-Puls wird nach der Formel 220 (Männer) bzw. 226 (Frauen) - Alter berechnet.
         // 2 = Frau, 3 = Mann
         public static final Map<Integer, Integer> valuesForCalculateMaxPulse;
-
         static {
             valuesForCalculateMaxPulse = new HashMap<>();
             valuesForCalculateMaxPulse.put(2, 226);
@@ -134,24 +142,11 @@ public final class Global {
         // Anzahl an anzuzeigenden Trainingswochen bei Laufplänen, wenn noch kein Startdatum gewählt wurde.
         // Aktuell 3 Monate.
         public static final int numberOfSelectableTrainingStartWeeks = 12;
-        // Wochentage, beginnend mit dem Index 1
-        public static final List<String> daysOfWeeks;
 
-        static {
-            daysOfWeeks = new ArrayList<>();
-            daysOfWeeks.add("Die Woche fängt mit der 1 an ...");
-            daysOfWeeks.add("Montag");
-            daysOfWeeks.add("Dienstag");
-            daysOfWeeks.add("Mittwoch");
-            daysOfWeeks.add("Donnerstag");
-            daysOfWeeks.add("Freitag");
-            daysOfWeeks.add("Samstag");
-            daysOfWeeks.add("Sonntag");
-        }
     }
 
     /**
-     * user settings keys
+     * User settings keys
      */
     public static final class PreferencesKeys {
         // sollen Trainings (Tracks) gespeichert werden?
@@ -177,7 +172,6 @@ public final class Global {
         public static final String movementTypeDefaultColorString ="green";
         //Tabellen-Header
         public static final List<String> routeCollectionTableHeader;
-
         static {
             routeCollectionTableHeader = new ArrayList<>();
             routeCollectionTableHeader.add("Name der Route");
@@ -188,7 +182,6 @@ public final class Global {
         }
 
         public static final List<String> monthlyBikeTrainingTableHeader;
-
         static {
             monthlyBikeTrainingTableHeader = new ArrayList<>();
             monthlyBikeTrainingTableHeader.add("Tag");
@@ -198,7 +191,6 @@ public final class Global {
         }
 
         public static final List<String> yearlyBikeTrainingTableHeader;
-
         static {
             yearlyBikeTrainingTableHeader = new ArrayList<>();
             yearlyBikeTrainingTableHeader.add("Jahr");
@@ -208,7 +200,6 @@ public final class Global {
         }
 
         public static final List<String> runningPlanTableHeader;
-
         static {
             runningPlanTableHeader = new ArrayList<>();
             runningPlanTableHeader.add("");

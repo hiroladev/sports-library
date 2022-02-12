@@ -42,10 +42,10 @@ public class TrainingType extends PersistentObject {
             inverseClass = Training.class,
             inverse = "trainingType",
             cascadePolicy = CascadePolicy.SAVE)
-    private List<Training> relationAttributeForTrainingToTrainingType; // only for modelling 1:m relations
+    private List<Training> associatedTrainings; // only for modelling 1:m relations
 
     /**
-     * Default constructor for reflection.
+     * Default constructor for reflection and database management.
      */
     public TrainingType() {
         super();

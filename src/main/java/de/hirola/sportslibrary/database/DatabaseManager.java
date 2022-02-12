@@ -10,7 +10,6 @@ import de.hirola.sportslibrary.util.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -64,7 +63,7 @@ public class DatabaseManager {
      */
     public void clearAll() {
         if (persistenceManager != null) {
-            for (Class<? extends PersistentObject> type : Global.persistentEntities) {
+            for (Class<? extends PersistentObject> type : Global.PERSISTENT_CLASSES_LIST) {
                 try {
                     List<? extends PersistentObject> allObjectsFromType = persistenceManager.list(type);
                     persistenceManager.deleteEntities(allObjectsFromType);

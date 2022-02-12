@@ -7,8 +7,11 @@ import com.onyx.persistence.annotations.Relationship;
 import com.onyx.persistence.annotations.values.CascadePolicy;
 import com.onyx.persistence.annotations.values.FetchPolicy;
 import com.onyx.persistence.annotations.values.RelationshipType;
+import de.hirola.sportslibrary.Global;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.UUIDFactory;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
@@ -20,6 +23,8 @@ import java.util.Objects;
  * Object for managing movement types. The user can make his own settings.
  * When you start the app for the first time, some movement types are imported
  * into the data store using JSON.
+ * The unique identifier of an object from type is the key. The key corresponds with
+ * a key in the JSON.
  *
  * @author Michael Schmidt (Hirola)
  * @since 0.0.1
@@ -30,9 +35,7 @@ public class MovementType extends PersistentObject {
 
     @Attribute
     @Identifier
-    private final String uuid = UUIDFactory.generateUUID();
-    @Attribute
-    private final String key;  // token for the type of moving, e.g. L is running
+    private final String key;  // token for the type of moving, e.g. L is running, must be unique
     @Attribute
     private final String stringForKey; // the text for the token
     private String colorKeyString; // the color for the token, dynamically on different platforms
@@ -45,16 +48,16 @@ public class MovementType extends PersistentObject {
             inverse = "movementType",
             cascadePolicy = CascadePolicy.NONE,
             fetchPolicy = FetchPolicy.LAZY)
-    private List<RunningUnit> relationAttributeForMovementTypeToRunningPlanUnit; // defined only for modelling the relationship 1:m
+    private List<RunningUnit> associatedRunningUnits; // used only for modelling relations
 
     /**
-     * Default constructor for reflection.
+     * Default constructor for reflection and database management.
      */
     public MovementType() {
         super();
-        key = "";
-        stringForKey = "";
-        colorKeyString = "green";
+        key = UUIDFactory.generateUUID();
+        stringForKey = UUIDFactory.generateUUID();
+        this.colorKeyString = Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR;
         speed = 0.0;
         pace = 0.0;
     }
@@ -68,11 +71,12 @@ public class MovementType extends PersistentObject {
      * @param speed for the type
      * @param pace for the type
      */
-    public MovementType(String key, String stringForKey, String colorKeyString, double speed, double pace) {
+    public MovementType(@NotNull String key, @NotNull String stringForKey, @Nullable String colorKeyString,
+                        double speed, double pace) {
         super();
         this.key = key;
         this.stringForKey = stringForKey;
-        this.colorKeyString = colorKeyString;
+        this.colorKeyString = Objects.requireNonNullElse(colorKeyString, Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR);
         this.speed = speed;
         this.pace = pace;
     }
@@ -155,18 +159,17 @@ public class MovementType extends PersistentObject {
         // gleicher Schlüssel = gleiches Objekt
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
         MovementType that = (MovementType) o;
-        return key.equals(that.key);
+        return key.equals(that.key); // key must be unique
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), uuid, key, stringForKey, colorKeyString);
+        return Objects.hash(super.hashCode(), key, stringForKey, colorKeyString);
     }
 
     @Override
     public String getUUID() {
-        return uuid;
+        return key;
     }
 }

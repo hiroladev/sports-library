@@ -38,7 +38,7 @@ public class RunningPlanEntry extends PersistentObject {
     private final int day; // day of week, begins with 1 (monday)
     @Relationship(type = RelationshipType.ONE_TO_MANY,
             inverseClass = RunningUnit.class,
-            inverse = "relationAttributeForRunningPlanEntryToRunningPlanUnit",
+            inverse = "associatedRunningPlanEntry",
             cascadePolicy = CascadePolicy.ALL,
             fetchPolicy = FetchPolicy.LAZY)
     private final List<RunningUnit> runningUnits; // units if training day
@@ -47,10 +47,10 @@ public class RunningPlanEntry extends PersistentObject {
             inverse = "entries",
             cascadePolicy = CascadePolicy.ALL,
             fetchPolicy = FetchPolicy.LAZY)
-    private RunningPlan relationAttributeForRunningPlanToRunningPlanEntry; // defined only for modelling the relationship 1:m
+    private RunningPlan associatedRunningPlan; // used only for modelling relations
 
     /**
-     * Default constructor for reflection.
+     * Default constructor for reflection and database management.
      */
     public RunningPlanEntry() {
         super();
@@ -67,7 +67,7 @@ public class RunningPlanEntry extends PersistentObject {
      * @param runningUnits of entry
      * @see RunningUnit
      */
-    public RunningPlanEntry (int day, int week, @NotNull ArrayList<RunningUnit> runningUnits) {
+    public RunningPlanEntry (int day, int week, @NotNull List<RunningUnit> runningUnits) {
         this.day = day;
         this.week = week;
         this.runningUnits = runningUnits;

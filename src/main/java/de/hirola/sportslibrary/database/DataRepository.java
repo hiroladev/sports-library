@@ -2,6 +2,7 @@ package de.hirola.sportslibrary.database;
 
 import com.onyx.exception.OnyxException;
 import com.onyx.persistence.manager.PersistenceManager;
+import de.hirola.sportslibrary.Global;
 import de.hirola.sportslibrary.SportsLibraryException;
 import de.hirola.sportslibrary.model.*;
 
@@ -9,9 +10,12 @@ import de.hirola.sportslibrary.util.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -102,18 +106,27 @@ public final class DataRepository {
      */
     public void delete(PersistentObject object) throws SportsLibraryException {
         try {
+            // Embedded objects are created or updated when saving.
+            // Unfortunately, cascading delete doesn't work. To be on the safe side,
+            // the embedded objects are therefore deleted independently.
+            // I tried everything based on this page (https://www.onyx.dev/learn/tutorials/1/relationships/cascade-policy).
+            // Without success. It sucks. Hence, this workaround:
+            // first we delete the "parent" object in the database
             persistenceManager.deleteEntity(object);
+            // now we need to delete all embedded objects (with exceptions)
+            cascadingDeleteForObject(object);
         } catch (OnyxException exception) {
-            logger.log(Logger.DEBUG, TAG, "Deleting the object with id " + object.getUUID() + " failed.", exception);
-            throw new SportsLibraryException(exception);
-        }
-    }
-
-    public void saveRelationshipsForEntity(PersistentObject object, String relationship, Set<? extends PersistentObject> list) {
-        try {
-            persistenceManager.saveRelationshipsForEntity(object, relationship, list);
-        } catch (OnyxException exception) {
-            exception.printStackTrace();
+            String errorMessage = "Deleting the object with id " + object.getUUID() + " failed.";
+            logger.log(Logger.ERROR, TAG, errorMessage, exception);
+            // rollback
+            try {
+                persistenceManager.saveEntity(object);
+            } catch (OnyxException exception1) {
+                // now everything has gone wrong
+                logger.log(Logger.ERROR, TAG, errorMessage, exception);
+                throw new SportsLibraryException(errorMessage + " Cascading delete failed: " + exception.getMessage());
+            }
+            throw new SportsLibraryException(errorMessage + ": " + exception.getMessage());
         }
     }
 
@@ -182,5 +195,63 @@ public final class DataRepository {
 
     public void close() {
         databaseManager.close();
+    }
+
+    // workaround for delete embedded objects
+    private void cascadingDeleteForObject(PersistentObject object) throws SportsLibraryException {
+        // not all types should be deleted as embedded objects
+        try {
+            Field[] attributes = object.getClass().getDeclaredFields();
+            for (Field attribute : attributes) {
+                Class<?> clazz = attribute.getType();
+                // embedded list object
+                if (clazz.getSimpleName().equalsIgnoreCase("List")) {
+                    // get a list element
+                    Class<?> listElementClazz = ((Class<?>) ((ParameterizedType) attribute.getGenericType()).getActualTypeArguments()[0]);
+                    // contains the list objects from type PersistentObject?
+                    if (PersistentObject.class.isAssignableFrom(listElementClazz)) {
+                        // should this type delete?
+                        if (Global.CASCADING_DELETED_CLASSES.contains(listElementClazz)) {
+                            // try to delete all objects from this list
+                            attribute.setAccessible(true);
+                            Object listAttributeObject = attribute.get(object);
+                            if (listAttributeObject instanceof List) {
+                                @SuppressWarnings("unchecked")
+                                List<PersistentObject> persistentObjectList = (List<PersistentObject>) listAttributeObject;
+                                // the object can contain other embedded objects
+                                for (PersistentObject persistentObject : persistentObjectList) {
+                                    // check if the object (still) exists
+                                    String uuid = persistentObject.getUUID();
+                                    PersistentObject savedPersistentObject = findByUUID(persistentObject.getClass(), uuid);
+                                    if (savedPersistentObject != null) {
+                                        // recalls this func
+                                        delete(persistentObject);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                // persistent object
+                else {
+                    // contains the list objects from type PersistentObject?
+                    if (PersistentObject.class.isAssignableFrom(clazz)) {
+                        // should this type delete?
+                        if (Global.CASCADING_DELETED_CLASSES.contains(clazz)) {
+                            attribute.setAccessible(true);
+                            PersistentObject persistentObject = (PersistentObject) attribute.get(object);
+                            String uuid = persistentObject.getUUID();
+                            PersistentObject savedPersistentObject = findByUUID(persistentObject.getClass(), uuid);
+                            if (savedPersistentObject != null) {
+                                // recalls this func
+                                delete(persistentObject);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (IllegalAccessException exception) {
+            throw new SportsLibraryException(exception);
+        }
     }
 }

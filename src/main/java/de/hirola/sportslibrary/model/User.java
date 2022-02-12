@@ -54,7 +54,7 @@ public class User extends PersistentObject {
     private RunningPlan activeRunningPlan; // current training
 
     /**
-     * Default constructor for reflection.
+     * Default constructor for reflection and database management.
      */
     public User() {
         super();

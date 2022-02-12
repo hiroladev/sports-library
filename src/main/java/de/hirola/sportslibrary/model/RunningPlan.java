@@ -10,6 +10,8 @@ import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.DateUtil;
 import de.hirola.sportslibrary.util.UUIDFactory;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -50,7 +52,7 @@ public class RunningPlan extends PersistentObject {
     private final boolean isTemplate; // templates must be not changed
     @Relationship(type = RelationshipType.ONE_TO_MANY,
             inverseClass = RunningPlanEntry.class,
-            inverse = "relationAttributeForRunningPlanToRunningPlanEntry",
+            inverse = "associatedRunningPlan",
             cascadePolicy = CascadePolicy.ALL,
             fetchPolicy = FetchPolicy.LAZY)
     private List<RunningPlanEntry> entries; // training day with different units
@@ -62,7 +64,7 @@ public class RunningPlan extends PersistentObject {
     private List<User> relationAttributeForUserToRunningPlan; // only for modelling relations
 
     /**
-     * Default constructor for reflection.
+     * Default constructor for reflection and database management.
      */
     public RunningPlan() {
         super();
@@ -85,10 +87,10 @@ public class RunningPlan extends PersistentObject {
      * @param entries of plan
      * @param isTemplate can the plan be changed or deleted
      */
-    public RunningPlan(String name, String remarks, int orderNumber, ArrayList<RunningPlanEntry> entries, boolean isTemplate) {
+    public RunningPlan(@NotNull String name, @Nullable String remarks, int orderNumber, @NotNull List<RunningPlanEntry> entries, boolean isTemplate) {
         this.name = name;
+        this.remarks = Objects.requireNonNullElse(remarks, "No description available.");
         this.orderNumber = orderNumber;
-        this.remarks = remarks;
         this.entries = entries;
         this.isTemplate = isTemplate;
         startDate = DateUtil.getDateFromNow();

@@ -10,6 +10,7 @@ import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.DateUtil;
 import de.hirola.sportslibrary.util.UUIDFactory;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
@@ -45,10 +46,10 @@ public class LocationData extends PersistentObject {
                 inverse = "locations",
                 cascadePolicy = CascadePolicy.ALL,
                 fetchPolicy = FetchPolicy.LAZY)
-    private Track relationAttributeForTrackToLocationData; // only for modelling relations 1:m
+    private Track associatedTrack; // used only for modelling relations
 
     /**
-     * Default constructor for reflection.
+     * Default constructor for reflection and database management.
      */
     public LocationData() {
         timeStamp = DateUtil.getTimeStampFromNow();
@@ -60,7 +61,7 @@ public class LocationData extends PersistentObject {
     }
 
     /**
-     * Creates a location object.
+     * Creates a location object with coordinates.
      *
      * @param latitude coordinate for the location
      * @param longitude coordinate for the location
@@ -84,7 +85,8 @@ public class LocationData extends PersistentObject {
      * @param altitude of the location
      * @param speed of the location
      */
-    public LocationData(long timeStamp, String provider, double latitude, double longitude, double altitude, double speed) {
+    public LocationData(long timeStamp, String provider,
+                        double latitude, double longitude, double altitude, double speed) {
         this.timeStamp = timeStamp;
         this.provider = provider;
         this.latitude = latitude;
