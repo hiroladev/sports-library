@@ -20,8 +20,26 @@ class SportsLibraryTest {
     DataRepository dataRepository;
 
     @Test
+    void testLibrary() {
+        try {
+            // empty app name
+            sportsLibrary = new SportsLibrary("", null);
+            assertNotNull(sportsLibrary, "Library not initialize.");
+            dataRepository = sportsLibrary.getDataRepository();
+            assertNotNull(dataRepository, "DataRepository not initialize.");
+
+        } catch (SportsLibraryException exception) {
+            fail(exception.getMessage());
+        }
+    }
+
+    @Test
     void testRelations() {
         try {
+
+            sportsLibrary = new SportsLibrary(null, null);
+            dataRepository = sportsLibrary.getDataRepository();
+
             // user has an active running plan
             RunningPlan runningPlan = new RunningPlan();
             User user = new User();
@@ -43,7 +61,6 @@ class SportsLibraryTest {
             Training training = new Training("Training", null, null, track, null);
 
             // save all objects
-            dataRepository= new DataRepository(null);
             dataRepository.save(runningPlan);
             dataRepository.save(user);
             dataRepository.save(track);
@@ -92,10 +109,8 @@ class SportsLibraryTest {
     @Test
     void testObjects() {
         try {
-            sportsLibrary = new SportsLibrary("SportsLibraryTest", null);
-            assertNotNull(sportsLibrary, "Library not initialize.");
+            sportsLibrary = new SportsLibrary(null, null);
             dataRepository = sportsLibrary.getDataRepository();
-            assertNotNull(dataRepository, "DataRepository not initialize.");
 
             // test the import from the templates
             // exists 3 running plans in local datastore?
@@ -179,10 +194,8 @@ class SportsLibraryTest {
     @Test
     void testTrackAndLocationsCRUD() {
         try {
-            sportsLibrary = new SportsLibrary("SportsLibraryTest", null);
-            assertNotNull(sportsLibrary, "Library not initialize.");
+            sportsLibrary = new SportsLibrary(null, null);
             dataRepository = sportsLibrary.getDataRepository();
-            assertNotNull(dataRepository, "DataRepository not initialize.");
 
             // create a track with locations
             LocationData locationData1 = new LocationData();
@@ -232,10 +245,8 @@ class SportsLibraryTest {
     @Test
     void testTrackAndTrainingTypeAndTrainingCRUD() {
         try {
-            sportsLibrary = new SportsLibrary("SportsLibraryTest", null);
-            assertNotNull(sportsLibrary, "Library not initialize.");
+            sportsLibrary = new SportsLibrary(null, null);
             dataRepository = sportsLibrary.getDataRepository();
-            assertNotNull(dataRepository, "DataRepository not initialize.");
 
             // create a track with locations
             LocationData locationData1 = new LocationData();
@@ -290,10 +301,8 @@ class SportsLibraryTest {
     @Test
     void testRunningPlanCRUD() {
         try {
-            sportsLibrary = new SportsLibrary("SportsLibraryTest", null);
-            assertNotNull(sportsLibrary, "Library not initialize.");
+            sportsLibrary = new SportsLibrary(null, null);
             dataRepository = sportsLibrary.getDataRepository();
-            assertNotNull(dataRepository, "DataRepository not initialize.");
 
             // create a running plan
             // this movement type (with the key 'L') already exists!
