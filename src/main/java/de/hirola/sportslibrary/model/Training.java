@@ -12,9 +12,7 @@ import de.hirola.sportslibrary.util.UUIDFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.Objects;
 

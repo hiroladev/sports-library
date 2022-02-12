@@ -10,7 +10,6 @@ import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.DateUtil;
 import de.hirola.sportslibrary.util.UUIDFactory;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
