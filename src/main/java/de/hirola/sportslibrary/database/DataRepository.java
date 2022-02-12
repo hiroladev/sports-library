@@ -15,9 +15,8 @@ import java.lang.reflect.ParameterizedType;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+
 
 /**
  * Copyright 2021 by Michael Schmidt, Hirola Consulting
@@ -39,10 +38,10 @@ public final class DataRepository {
     /**
      * Create the local datastore access layer.
      *
-     * @param appName of the app using this library
+     * @param databaseManager of this library
      */
-    public DataRepository(@Nullable String appName) {
-        databaseManager = DatabaseManager.getInstance(appName);
+    public DataRepository(@NotNull DatabaseManager databaseManager) {
+        this.databaseManager = databaseManager;
         persistenceManager = databaseManager.getPersistenceManager(); // can be null
     }
 
@@ -55,17 +54,19 @@ public final class DataRepository {
      */
     public boolean isEmpty() {
         // the datastore is "empty" if there are no movement [and training types] and running plans (yet)
-        try {
-            List<PersistentObject> result1 = persistenceManager.list(MovementType.class);
-            List<PersistentObject> result2 = persistenceManager.list(TrainingType.class);
-            List<PersistentObject> result3 = persistenceManager.list(RunningPlan.class);
-            if (result1.isEmpty() && result2.isEmpty() && result3.isEmpty() ){
+        if (isOpen()) {
+            try {
+                List<PersistentObject> result1 = persistenceManager.list(MovementType.class);
+                List<PersistentObject> result2 = persistenceManager.list(TrainingType.class);
+                List<PersistentObject> result3 = persistenceManager.list(RunningPlan.class);
+                if (result1.isEmpty() && result2.isEmpty() && result3.isEmpty()) {
+                    return true;
+                }
+
+            } catch (OnyxException exception) {
+                logger.log(Logger.DEBUG, TAG, "Error occurred while searching.", exception);
                 return true;
             }
-
-        } catch (OnyxException exception) {
-            logger.log(Logger.DEBUG, TAG, "Error occurred while searching.", exception);
-            return true;
         }
         return false;
     }
@@ -90,11 +91,15 @@ public final class DataRepository {
         // Onyx does not differentiate between updating or inserting entities.
         // If an entity with a matching primary key already exists,
         // Onyx Database will assume you are updating the entity specified and overwrite the existing record.
-        try {
-            persistenceManager.saveEntity(object);
-        } catch (OnyxException exception) {
-            logger.log(Logger.DEBUG, TAG, "Saving the object with id " + object.getUUID() + " failed.", exception);
-            throw new SportsLibraryException(exception);
+        if (isOpen()) {
+            try {
+                persistenceManager.saveEntity(object);
+            } catch (OnyxException exception) {
+                logger.log(Logger.DEBUG, TAG, "Saving the object with id " + object.getUUID() + " failed.", exception);
+                throw new SportsLibraryException(exception);
+            }
+        } else {
+            throw new SportsLibraryException("Database not available.");
         }
     }
 
@@ -105,28 +110,32 @@ public final class DataRepository {
      * @throws SportsLibraryException if an error occurred while removing
      */
     public void delete(PersistentObject object) throws SportsLibraryException {
-        try {
-            // Embedded objects are created or updated when saving.
-            // Unfortunately, cascading delete doesn't work. To be on the safe side,
-            // the embedded objects are therefore deleted independently.
-            // I tried everything based on this page (https://www.onyx.dev/learn/tutorials/1/relationships/cascade-policy).
-            // Without success. It sucks. Hence, this workaround:
-            // first we delete the "parent" object in the database
-            persistenceManager.deleteEntity(object);
-            // now we need to delete all embedded objects (with exceptions)
-            cascadingDeleteForObject(object);
-        } catch (OnyxException exception) {
-            String errorMessage = "Deleting the object with id " + object.getUUID() + " failed.";
-            logger.log(Logger.ERROR, TAG, errorMessage, exception);
-            // rollback
+        // Embedded objects are created or updated when saving.
+        // Unfortunately, cascading delete doesn't work. To be on the safe side,
+        // the embedded objects are therefore deleted independently.
+        // I tried everything based on this page (https://www.onyx.dev/learn/tutorials/1/relationships/cascade-policy).
+        // Without success. It sucks. Hence, this workaround:
+        // first we delete the "parent" object in the database
+        if (isOpen()) {
             try {
-                persistenceManager.saveEntity(object);
-            } catch (OnyxException exception1) {
-                // now everything has gone wrong
+                persistenceManager.deleteEntity(object);
+                // now we need to delete all embedded objects (with exceptions)
+                cascadingDeleteForObject(object);
+            } catch (OnyxException exception) {
+                String errorMessage = "Deleting the object with id " + object.getUUID() + " failed.";
                 logger.log(Logger.ERROR, TAG, errorMessage, exception);
-                throw new SportsLibraryException(errorMessage + " Cascading delete failed: " + exception.getMessage());
+                // rollback
+                try {
+                    persistenceManager.saveEntity(object);
+                } catch (OnyxException exception1) {
+                    // now everything has gone wrong
+                    logger.log(Logger.ERROR, TAG, errorMessage, exception);
+                    throw new SportsLibraryException(errorMessage + " Cascading delete failed: " + exception.getMessage());
+                }
+                throw new SportsLibraryException(errorMessage + ": " + exception.getMessage());
             }
-            throw new SportsLibraryException(errorMessage + ": " + exception.getMessage());
+        } else {
+            throw new SportsLibraryException("Database not available.");
         }
     }
 
@@ -140,13 +149,16 @@ public final class DataRepository {
      */
     @Nullable
     public PersistentObject findByUUID(@NotNull Class<? extends PersistentObject> withType, @NotNull String uuid) {
-        try {
-            return persistenceManager.findById(withType, uuid);
-        } catch (OnyxException exception) {
-            logger.log(Logger.DEBUG, TAG, "Error while searching an object from type "
-                    + withType + " and id " + uuid,  exception);
+        if (isOpen()) {
+            try {
+                return persistenceManager.findById(withType, uuid);
+            } catch (OnyxException exception) {
+                logger.log(Logger.DEBUG, TAG, "Error while searching an object from type "
+                        + withType + " and id " + uuid, exception);
+            }
         }
         return null;
+
     }
 
     /**
@@ -159,32 +171,34 @@ public final class DataRepository {
      */
     public List<? extends PersistentObject> findAll(Class<? extends PersistentObject> fromType)  {
         List<? extends PersistentObject> results = new ArrayList<>();
-        try {
-            results = persistenceManager.list(fromType);
-            // check and correct the start date if running plan not active
-            for (PersistentObject persistentObject : results) {
-                if (persistentObject instanceof RunningPlan) {
-                    RunningPlan runningPlan = (RunningPlan) persistentObject;
-                    if (!runningPlan.isCompleted() || !runningPlan.isActive()) {
-                        LocalDate startDate = runningPlan.getStartDate();
-                        LocalDate today = LocalDate.now(ZoneId.systemDefault());
-                        if (startDate.isBefore(today) || startDate.isEqual(today)) {
-                            // the method adjust the start day automatically
-                            runningPlan.setStartDate(today);
-                            try {
-                                // save the corrected start date to local data store
-                                persistenceManager.saveEntity(runningPlan);
-                            } catch (OnyxException exception) {
-                                logger.log(Logger.DEBUG, TAG, "Saving the new start day of running plan with id "
-                                        + runningPlan.getUUID() + " failed.", exception);
+        if (isOpen()) {
+            try {
+                results = persistenceManager.list(fromType);
+                // check and correct the start date if running plan not active
+                for (PersistentObject persistentObject : results) {
+                    if (persistentObject instanceof RunningPlan) {
+                        RunningPlan runningPlan = (RunningPlan) persistentObject;
+                        if (!runningPlan.isCompleted() || !runningPlan.isActive()) {
+                            LocalDate startDate = runningPlan.getStartDate();
+                            LocalDate today = LocalDate.now(ZoneId.systemDefault());
+                            if (startDate.isBefore(today) || startDate.isEqual(today)) {
+                                // the method adjust the start day automatically
+                                runningPlan.setStartDate(today);
+                                try {
+                                    // save the corrected start date to local data store
+                                    persistenceManager.saveEntity(runningPlan);
+                                } catch (OnyxException exception) {
+                                    logger.log(Logger.DEBUG, TAG, "Saving the new start day of running plan with id "
+                                            + runningPlan.getUUID() + " failed.", exception);
+                                }
                             }
                         }
                     }
                 }
-            }
 
-        } catch (OnyxException exception) {
-            logger.log(Logger.DEBUG, TAG, "Error occurred while searching all objects from type " + fromType.getSimpleName(), exception);
+            } catch (OnyxException exception) {
+                logger.log(Logger.DEBUG, TAG, "Error occurred while searching all objects from type " + fromType.getSimpleName(), exception);
+            }
         }
         return results;
     }

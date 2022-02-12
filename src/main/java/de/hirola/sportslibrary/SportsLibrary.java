@@ -1,6 +1,7 @@
 package de.hirola.sportslibrary;
 
 import de.hirola.sportslibrary.database.DataRepository;
+import de.hirola.sportslibrary.database.DatabaseManager;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.model.User;
 import de.hirola.sportslibrary.util.Logger;
@@ -42,7 +43,8 @@ public final class SportsLibrary implements DatastoreDelegate {
     public SportsLibrary(@Nullable String appName,
                          @Nullable SportsLibraryApplication application) throws SportsLibraryException {
         // lokalen Datenspeicher mit dem Namen der App anlegen / öffnen
-        dataRepository = new DataRepository(appName);
+        DatabaseManager databaseManager = DatabaseManager.getInstance(appName);
+        dataRepository = new DataRepository(databaseManager);
         // bei neu angelegtem Datenspeicher diesen mit initialen Werten befüllen
         if (dataRepository.isEmpty()) {
             TemplateLoader templateLoader = new TemplateLoader(dataRepository, application);

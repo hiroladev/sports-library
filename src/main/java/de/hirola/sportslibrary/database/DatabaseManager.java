@@ -93,8 +93,17 @@ public class DatabaseManager {
     private DatabaseManager(@Nullable String appName) {
         //TODO: alternative user defined path
         String databasePath;
+        String databaseName;
         //TODO: check valid appName
-        String databaseName = Objects.requireNonNullElse(appName, Global.LIBRARY_NAME);
+        if (appName == null) {
+            databaseName = Global.LIBRARY_NAME;
+        } else {
+            if (appName.length() > 0) {
+                databaseName = appName;
+            } else {
+                databaseName = Global.LIBRARY_NAME;
+            }
+        }
 
         // build the path, determine if android or jvm
         // see https://developer.android.com/reference/java/lang/System#getProperties()
