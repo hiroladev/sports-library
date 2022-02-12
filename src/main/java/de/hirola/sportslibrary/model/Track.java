@@ -42,9 +42,9 @@ public class Track extends PersistentObject {
     @Attribute
     private Date importDate = Date.from(Instant.now());
     @Attribute
-    private long startTime = -1;
+    private long startTimeInMilli = -1;
     @Attribute
-    private long stopTime = -1;
+    private long stopTimeInMilli = -1;
     @Attribute
     private double distance = -1.0;
     @Attribute
@@ -75,11 +75,25 @@ public class Track extends PersistentObject {
      *
      * @param name of track
      * @param description of track
+     * @param startTimeInMilli of track
+     */
+    public Track(@NotNull String name, @Nullable String description, long startTimeInMilli) {
+        this.name = name;
+        this.description = Objects.requireNonNullElse(description, "No description available.");
+        this.startTimeInMilli = startTimeInMilli;
+        this.locations = new ArrayList<>();
+    }
+
+    /**
+     * Create a track to start recording.
+     *
+     * @param name of track
+     * @param description of track
      * @param locations of track
      */
     public Track(@NotNull String name, @Nullable String description, @Nullable List<LocationData> locations) {
         this.name = name;
-        this.description = description;
+        this.description = Objects.requireNonNullElse(description, "No description available.");
         this.locations = Objects.requireNonNullElseGet(locations, ArrayList::new);
     }
 
@@ -88,15 +102,15 @@ public class Track extends PersistentObject {
      *
      * @param name of track
      * @param description of track
-     * @param startTime of track
-     * @param stopTime of track
+     * @param startTimeInMilli of track
+     * @param stopTimeInMilli of track
      * @param locations of track, can be null
      */
-    public Track(String name, String description, long startTime, long stopTime, @Nullable List<LocationData> locations) {
+    public Track(String name, String description, long startTimeInMilli, long stopTimeInMilli, @Nullable List<LocationData> locations) {
         this.name = name;
         this.description = Objects.requireNonNullElse(description, "No description available.");
-        this.startTime = startTime;
-        this.stopTime = stopTime;
+        this.startTimeInMilli = startTimeInMilli;
+        this.stopTimeInMilli = stopTimeInMilli;
         this.locations = Objects.requireNonNullElseGet(locations, ArrayList::new);
         //TODO: start, stop, avg, duration if locations not null
     }
@@ -130,14 +144,14 @@ public class Track extends PersistentObject {
      * @param name of track
      * @param description of track
      * @param importDate of track
-     * @param startTime of track
-     * @param stopTime of track
+     * @param startTimeInMilli of track
+     * @param stopTimeInMilli of track
      * @param avg of track
      * @param distance of track
      * @param locations of track
      */
     public Track(@NotNull String name, @Nullable String description, @Nullable LocalDate importDate,
-                 long startTime, long stopTime, double avg, double distance, @NotNull List<LocationData> locations) {
+                 long startTimeInMilli, long stopTimeInMilli, double avg, double distance, @NotNull List<LocationData> locations) {
         this.name = name;
         this.description = Objects.requireNonNullElse(description, "No description available.");
         if (importDate == null) {
@@ -145,8 +159,8 @@ public class Track extends PersistentObject {
         } else {
             this.importDate = DateUtil.getDateFromLocalDate(importDate);
         }
-        this.startTime = startTime;
-        this.stopTime = stopTime;
+        this.startTimeInMilli = startTimeInMilli;
+        this.stopTimeInMilli = stopTimeInMilli;
         this.averageSpeed = avg;
         this.distance = distance;
         this.locations = locations;
@@ -194,18 +208,18 @@ public class Track extends PersistentObject {
      *
      * @return The start time of the track in milliseconds to UTC Time
      */
-    public long getStartTime() {
+    public long getStartTimeInMilli() {
         //TODO: if start time equal -1, get the time form last location
-        return startTime;
+        return startTimeInMilli;
     }
 
     /**
      * Set the start time of the track in milliseconds to UTC Time.
      *
-     * @param startTime of the track
+     * @param startTimeInMilli of the track
      */
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
+    public void setStartTimeInMilli(long startTimeInMilli) {
+        this.startTimeInMilli = startTimeInMilli;
     }
 
     /**
@@ -214,18 +228,18 @@ public class Track extends PersistentObject {
      *
      * @return The stop time of the track
      */
-    public long getStopTime() {
+    public long getStopTimeInMilli() {
         //TODO: if stop time equal -1, get the time form last location
-        return stopTime;
+        return stopTimeInMilli;
     }
 
     /**
      * Set the stop time of the track in milliseconds to UTC Time.
      *
-     * @param stopTime of the track.
+     * @param stopTimeInMilli of the track.
      */
-    public void setStopTime(long stopTime) {
-        this.stopTime = stopTime;
+    public void setStopTimeInMilli(long stopTimeInMilli) {
+        this.stopTimeInMilli = stopTimeInMilli;
     }
 
     /**
@@ -311,6 +325,16 @@ public class Track extends PersistentObject {
         return locations;
     }
 
+    /**
+     * Add a list of locations to the track.
+     * Any existing list will be overwritten.
+     *
+     * @param locations to be added to the track.
+     */
+    public void setLocations(@NotNull List<LocationData> locations) {
+        this.locations = locations;
+    }
+
     @Override
     public String getUUID() {
         return uuid;
@@ -326,13 +350,13 @@ public class Track extends PersistentObject {
         return uuid.equals(track.uuid)
                 && name.equals(track.name)
                 && description.equals(track.description)
-                && startTime == track.startTime
-                && stopTime == track.stopTime;
+                && startTimeInMilli == track.startTimeInMilli
+                && stopTimeInMilli == track.stopTimeInMilli;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), uuid, name, description, startTime, stopTime);
+        return Objects.hash(super.hashCode(), uuid, name, description, startTimeInMilli, stopTimeInMilli);
     }
 
     /**
