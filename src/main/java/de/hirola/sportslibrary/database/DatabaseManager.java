@@ -6,12 +6,13 @@ import com.onyx.persistence.factory.PersistenceManagerFactory;
 import com.onyx.persistence.factory.impl.EmbeddedPersistenceManagerFactory;
 import com.onyx.persistence.manager.PersistenceManager;
 import de.hirola.sportslibrary.Global;
+import de.hirola.sportslibrary.SportsLibraryException;
 import de.hirola.sportslibrary.util.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Copyright 2021 by Michael Schmidt, Hirola Consulting
@@ -29,19 +30,20 @@ public class DatabaseManager {
     private final String TAG = DatabaseManager.class.getSimpleName();
 
     private static DatabaseManager instance;
-    private final Logger logger = Logger.getInstance(null);
+    private static Logger logger;
     private PersistenceManagerFactory factory = null;
     private PersistenceManager persistenceManager = null;
 
     /**
      * Get an instance of database manager.
      *
-     * @param appName of the using app or library, used for the database name
+     * @param packageName of the using app or library, used for the database name
      * @return An instance of the database manager.
      */
-    public static DatabaseManager getInstance(@Nullable String appName) {
+    public static DatabaseManager getInstance(@NotNull String packageName) {
         if (instance == null) {
-            instance = new DatabaseManager(appName);
+            logger = Logger.getInstance(packageName);
+            instance = new DatabaseManager(packageName);
         }
         return instance;
     }
@@ -90,21 +92,29 @@ public class DatabaseManager {
         }
     }
 
-    private DatabaseManager(@Nullable String appName) {
-        //TODO: alternative user defined path
-        String databasePath;
-        String databaseName;
-        //TODO: check valid appName
-        if (appName == null) {
-            databaseName = Global.LIBRARY_NAME;
-        } else {
-            if (appName.length() > 0) {
-                databaseName = appName;
-            } else {
-                databaseName = Global.LIBRARY_NAME;
-            }
-        }
+    private DatabaseManager(@NotNull String packageName) {
+        try {
+                String databaseName = initializeDatabasePath(packageName);
+                factory = new EmbeddedPersistenceManagerFactory(databaseName);
+                factory.initialize();
 
+                persistenceManager = factory.getPersistenceManager();
+
+        } catch (SportsLibraryException | OnyxException exception){
+            logger.log(Logger.ERROR, TAG,"Could not determine the runtime environment. Manager is null.", exception);
+        }
+    }
+
+    private String initializeDatabasePath(@NotNull String packageName) throws SportsLibraryException {
+        String databasePath;
+        // build the database name from package name
+        if (!packageName.contains(".")) {
+            // a primitive check for valid package name
+            throw new SportsLibraryException("Not a valid package name.");
+        }
+        int beginIndex = packageName.lastIndexOf('.') + 1;
+        int endIndex = packageName.length();
+        String databaseName = packageName.substring(beginIndex, endIndex);
         // build the path, determine if android or jvm
         // see https://developer.android.com/reference/java/lang/System#getProperties()
         try {
@@ -113,6 +123,8 @@ public class DatabaseManager {
                 if (vendor.equals("The Android Project")) {
                     // path for local database on Android
                     databasePath = "/data/data"
+                            + File.separatorChar
+                            + packageName
                             + File.separatorChar
                             + databaseName
                             + File.separatorChar
@@ -126,18 +138,16 @@ public class DatabaseManager {
                             + File.separatorChar
                             + databaseName + ".db";
                 }
-
-                factory = new EmbeddedPersistenceManagerFactory(databasePath);
-                factory.initialize();
-
-                persistenceManager = factory.getPersistenceManager();
-
             } else {
-                persistenceManager = null;
-                logger.log(Logger.ERROR, TAG,"Could not determine the runtime environment. Manager is null.",null);
+                String errorMessage = "Could not determine the runtime environment.";
+                logger.log(Logger.ERROR, TAG,errorMessage, null);
+                throw new SportsLibraryException(errorMessage);
             }
-        } catch (SecurityException | InitializationException exception){
-            logger.log(Logger.ERROR, TAG,"Could not determine the runtime environment. Manager is null.",exception);
+        } catch (SecurityException exception){
+            String errorMessage = "Could not determine the runtime environment.";
+            logger.log(Logger.ERROR, TAG,errorMessage, exception);
+            throw new SportsLibraryException(errorMessage + ": " + exception.getCause().getMessage());
         }
+        return databasePath;
     }
 }

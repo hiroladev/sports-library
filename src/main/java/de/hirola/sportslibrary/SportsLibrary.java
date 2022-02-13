@@ -27,7 +27,7 @@ public final class SportsLibrary implements DatastoreDelegate {
 
     private final String TAG = Logger.class.getSimpleName();
 
-    private final Logger logger = Logger.getInstance(null);
+    private final Logger logger;
     private final DataRepository dataRepository;
     private List<DatastoreDelegate> delegates;
     private final User appUser;
@@ -35,19 +35,21 @@ public final class SportsLibrary implements DatastoreDelegate {
     /**
      * Create a new library objekt for data management.
      *
-     * @param appName of app using this library
+     * @param packageName of app using this library
      * @param application on Android needed
      * @throws SportsLibraryException if library could not initialize
      * @see SportsLibraryApplication
      */
-    public SportsLibrary(@Nullable String appName,
+    public SportsLibrary(@NotNull String packageName,
                          @Nullable SportsLibraryApplication application) throws SportsLibraryException {
+        // logger
+        logger = Logger.getInstance(packageName);
         // lokalen Datenspeicher mit dem Namen der App anlegen / öffnen
-        DatabaseManager databaseManager = DatabaseManager.getInstance(appName);
-        dataRepository = new DataRepository(databaseManager);
+        DatabaseManager databaseManager = DatabaseManager.getInstance(packageName);
+        dataRepository = new DataRepository(databaseManager, logger);
         // bei neu angelegtem Datenspeicher diesen mit initialen Werten befüllen
         if (dataRepository.isEmpty()) {
-            TemplateLoader templateLoader = new TemplateLoader(dataRepository, application);
+            TemplateLoader templateLoader = new TemplateLoader(dataRepository, application, logger);
             // alle Templates in Datenspeicher laden
             templateLoader.loadAllFromJSON();
         }

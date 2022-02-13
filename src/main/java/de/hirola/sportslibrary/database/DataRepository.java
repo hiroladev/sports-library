@@ -31,7 +31,7 @@ public final class DataRepository {
 
     private final String TAG = DataRepository.class.getSimpleName();
 
-    private final Logger logger = Logger.getInstance(null);
+    private final Logger logger;
     private final DatabaseManager databaseManager;
     private final PersistenceManager persistenceManager; // we use the Onxy Embedded Persistence Manager
 
@@ -40,8 +40,9 @@ public final class DataRepository {
      *
      * @param databaseManager of this library
      */
-    public DataRepository(@NotNull DatabaseManager databaseManager) {
+    public DataRepository(@NotNull DatabaseManager databaseManager, Logger logger) {
         this.databaseManager = databaseManager;
+        this.logger = logger;
         persistenceManager = databaseManager.getPersistenceManager(); // can be null
     }
 

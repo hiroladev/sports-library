@@ -21,7 +21,7 @@ public final class Global {
     /**
      * Name of library, used as name for database and logging files.
      */
-    public static final String LIBRARY_NAME = "sports-library";
+    public static final String LIBRARY_PACKAGE_NAME = "de.hirola.sports-library";
 
     /**
      * enable / disable debug mode
@@ -151,6 +151,7 @@ public final class Global {
     public static final class PreferencesKeys {
         // sollen Trainings (Tracks) gespeichert werden?
         // boolean
+        public static final String lastUsedDatabasePath = "last_used_database_path";
         public static final String saveTrainings = "save_trainings";
         public static final String userTrainingLevel = "user_training_level";
         public static final String userBirthday = "user_birthday";

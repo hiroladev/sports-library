@@ -1,6 +1,7 @@
 package de.hirola.sportslibrary.util;
 
 import de.hirola.sportslibrary.Global;
+import de.hirola.sportslibrary.SportsLibraryException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,12 +43,12 @@ public final class Logger {
     /**
      * Get an instance of logger.
      *
-     * @param logFileName name of the log file
+     * @param packageName of the app using this logger
      * @return The logger object for logging.
      */
-    public static Logger getInstance(@Nullable String logFileName) {
+    public static Logger getInstance(@NotNull String packageName) {
         if (instance == null) {
-            instance = new Logger(logFileName);
+            instance = new Logger(packageName);
         }
         return instance;
     }
@@ -89,25 +90,42 @@ public final class Logger {
         public static final int REMOTE = 5;
     }
 
-    private Logger(String logFileName) {
-        String logfile = Objects.requireNonNullElse(logFileName, Global.LIBRARY_NAME);
+    private Logger(String packageName) {
+        // build the database name from package name
+        if (!packageName.contains(".")) {
+            // a primitive check for valid package name
+            isLogToFileEnabled = false;
+            return;
+        }
+        int beginIndex = packageName.lastIndexOf('.') + 1;
+        int endIndex = packageName.length();
+        String logfileName = packageName.substring(beginIndex, endIndex);
+        String pathString;
         // build the path, determine if android or jvm
         // see https://developer.android.com/reference/java/lang/System#getProperties()
         try {
             String vendor = System.getProperty("java.vm.vendor"); // can be null
             if (vendor != null) {
                 if (vendor.equals("The Android Project")) {
-                    // Android
                     // path for local database on Android
-                    logFilePath = Paths.get("/data/data/" + logfile + "/.log");
+                    pathString = "/data/data"
+                            + File.separatorChar
+                            + packageName
+                            + File.separatorChar
+                            + logfileName
+                            + File.separatorChar
+                            + logfileName + ".log";
                 } else {
-                    // JVM
                     //  path for local database on JVM
-                    String userHomeDir = System.getProperty("user.home"); // can be null
-                    if (userHomeDir != null) {
-                        logFilePath = Paths.get(userHomeDir + File.separator + ".kinto-java" + File.separator + logfile + ".log");
-                    }
+                    String userHomeDir = System.getProperty("user.home");
+                    pathString = userHomeDir
+                            + File.separatorChar
+                            + logfileName
+                            + File.separatorChar
+                            + logfileName + ".log";
                 }
+                // create the path
+                logFilePath = Paths.get(pathString);
             } else {
                 isLogToFileEnabled = false;
             }

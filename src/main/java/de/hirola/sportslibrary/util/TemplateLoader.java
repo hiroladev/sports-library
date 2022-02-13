@@ -32,7 +32,7 @@ public class TemplateLoader {
 
     private final String TAG = Logger.class.getSimpleName();
 
-    private final Logger logger = Logger.getInstance(null);
+    private final Logger logger;
     private final DataRepository dataRepository;
     private final SportsLibraryApplication application; // on Android load json from R.raw
     private final List<RunningPlanTemplate> runningPlanTemplatesImportList;
@@ -40,11 +40,12 @@ public class TemplateLoader {
     private boolean isRunningOnAndroid;
 
 
-    public TemplateLoader(@NotNull DataRepository dataRepository) throws SportsLibraryException {
+    public TemplateLoader(@NotNull DataRepository dataRepository, @NotNull Logger logger) throws SportsLibraryException {
         if (!dataRepository.isOpen()) {
             throw new SportsLibraryException("The local datastore isn't open. Can't import templates.");
         }
         this.dataRepository = dataRepository;
+        this.logger = logger;
         runningPlanTemplatesImportList = new ArrayList<>();
         importedRunningPlans = new ArrayList<>();
         application = null;
@@ -55,12 +56,13 @@ public class TemplateLoader {
         }
     }
 
-    public TemplateLoader(@NotNull DataRepository dataRepository, @Nullable SportsLibraryApplication application) throws SportsLibraryException {
+    public TemplateLoader(@NotNull DataRepository dataRepository, @Nullable SportsLibraryApplication application, @NotNull Logger logger) throws SportsLibraryException {
         if (!dataRepository.isOpen()) {
             throw new SportsLibraryException("The local datastore isn't open. Can't import templates.");
         }
         this.dataRepository = dataRepository;
         this.application = application;
+        this.logger = logger;
         runningPlanTemplatesImportList = new ArrayList<>();
         importedRunningPlans = new ArrayList<>();
         // determine if android or jvm
