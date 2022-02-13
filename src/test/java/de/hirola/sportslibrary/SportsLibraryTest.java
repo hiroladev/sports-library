@@ -12,6 +12,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 class SportsLibraryTest {
@@ -37,7 +38,7 @@ class SportsLibraryTest {
     void testRelations() {
         try {
 
-            sportsLibrary = new SportsLibrary(null, null);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             dataRepository = sportsLibrary.getDataRepository();
 
             // user has an active running plan
@@ -109,13 +110,29 @@ class SportsLibraryTest {
     @Test
     void testObjects() {
         try {
-            sportsLibrary = new SportsLibrary(null, null);
+            sportsLibrary = new SportsLibrary("de.hirola.sportslibrary", null);
             dataRepository = sportsLibrary.getDataRepository();
 
             // test the import from the templates
             // exists 3 running plans in local datastore?
             List<? extends PersistentObject> runningPlans = dataRepository.findAll(RunningPlan.class);
             assertEquals(3,runningPlans.size());
+
+            // test the compare from running plan entry
+            RunningPlanEntry runningPlanEntry1 = new RunningPlanEntry(1,1, new ArrayList<>());
+            RunningPlanEntry runningPlanEntry2 = new RunningPlanEntry(2,1, new ArrayList<>());
+            RunningPlanEntry runningPlanEntry3 = new RunningPlanEntry(3,2, new ArrayList<>());
+            RunningPlanEntry runningPlanEntry4 = new RunningPlanEntry(7,2, new ArrayList<>());
+            List<RunningPlanEntry> entries1 = new ArrayList<>(4);
+            entries1.add(runningPlanEntry3);
+            entries1.add(runningPlanEntry2);
+            entries1.add(runningPlanEntry1);
+            entries1.add(runningPlanEntry4);
+            // sort
+            Collections.sort(entries1);
+            assertEquals(runningPlanEntry1, entries1.get(0), "Entries not sorted by week and day.");
+            assertEquals(runningPlanEntry2, entries1.get(1), "Entries not sorted by week and day.");
+            assertEquals(runningPlanEntry3, entries1.get(2), "Entries not sorted by week and day.");
 
             // test the correct start date
             RunningPlan runningPlan1 = (RunningPlan) runningPlans.get(0);
@@ -142,9 +159,9 @@ class SportsLibraryTest {
                     assertEquals(DayOfWeek.MONDAY, actualStartDate.getDayOfWeek());
                 }
                 // test if duration correction
-                List<RunningPlanEntry> entries = runningPlan2.getEntries();
-                if (!entries.isEmpty()) {
-                    RunningPlanEntry entry = entries.get(0);
+                List<RunningPlanEntry> entries2 = runningPlan2.getEntries();
+                if (!entries2.isEmpty()) {
+                    RunningPlanEntry entry = entries2.get(0);
                     List<RunningUnit> units = entry.getRunningUnits();
                     if (!units.isEmpty()) {
                         RunningUnit unit = units.get(0);
@@ -162,7 +179,7 @@ class SportsLibraryTest {
                 // test the duration values
                 // 1. running plan entry = sum of duration from the units
                 int calculatedDuration = 0;
-                for (RunningPlanEntry runningPlanEntry : entries) {
+                for (RunningPlanEntry runningPlanEntry : entries2) {
                     List<RunningUnit> runningUnits = runningPlanEntry.getRunningUnits();
                     for (RunningUnit runningUnit1 : runningUnits) {
                         calculatedDuration += runningUnit1.getDuration();
@@ -171,7 +188,7 @@ class SportsLibraryTest {
                 assertEquals(runningPlan2.getDuration(), calculatedDuration, "RunningPlan duration is wrong.");
 
                 // complete of running plan
-                for (RunningPlanEntry entry1 : entries) {
+                for (RunningPlanEntry entry1 : entries2) {
                     for (RunningUnit runningUnit : entry1.getRunningUnits()) {
                         runningUnit.setCompleted(true);
                     }
@@ -194,7 +211,7 @@ class SportsLibraryTest {
     @Test
     void testTrackAndLocationsCRUD() {
         try {
-            sportsLibrary = new SportsLibrary(null, null);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             dataRepository = sportsLibrary.getDataRepository();
 
             // create a track with locations
@@ -245,7 +262,7 @@ class SportsLibraryTest {
     @Test
     void testTrackAndTrainingTypeAndTrainingCRUD() {
         try {
-            sportsLibrary = new SportsLibrary(null, null);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             dataRepository = sportsLibrary.getDataRepository();
 
             // create a track with locations
@@ -301,7 +318,7 @@ class SportsLibraryTest {
     @Test
     void testRunningPlanCRUD() {
         try {
-            sportsLibrary = new SportsLibrary(null, null);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             dataRepository = sportsLibrary.getDataRepository();
 
             // create a running plan

@@ -34,7 +34,7 @@ import java.util.Objects;
  *
  */
 @Entity
-public class RunningPlan extends PersistentObject {
+public class RunningPlan extends PersistentObject implements Comparable<RunningPlan> {
 
     @Attribute
     @Identifier
@@ -320,5 +320,11 @@ public class RunningPlan extends PersistentObject {
             actualStartDate = actualStartDate.plusDays(daysToAdd);
             startDate = DateUtil.getDateFromLocalDate(actualStartDate);
         }
+    }
+
+    @Override
+    public int compareTo(@NotNull RunningPlan other) {
+        // sort by order number
+        return Integer.compare(this.orderNumber, other.orderNumber);
     }
 }

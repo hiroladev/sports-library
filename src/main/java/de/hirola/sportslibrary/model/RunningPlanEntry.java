@@ -27,7 +27,7 @@ import java.util.Objects;
  * @since 0.0.1
  */
 @Entity
-public class RunningPlanEntry extends PersistentObject {
+public class RunningPlanEntry extends PersistentObject implements Comparable<RunningPlanEntry> {
 
     @Attribute
     @Identifier
@@ -159,5 +159,31 @@ public class RunningPlanEntry extends PersistentObject {
     @Override
     public String getUUID() {
         return uuid;
+    }
+
+    @Override
+    public int compareTo(@NotNull RunningPlanEntry other) {
+        // first week, then day
+        int weekCompare = Integer.compare(this.week, other.week);
+        int dayCompare = Integer.compare(this.day, other.day);
+        if (weekCompare == 0 && dayCompare == 0) {
+            return 0;
+        }
+        if (weekCompare == 0 && dayCompare == -1) {
+            return -1;
+        }
+        if (weekCompare == 0 && dayCompare == 1) {
+            return 1;
+        }
+        if (weekCompare == 1 && dayCompare == 0) {
+            return 0;
+        }
+        if (weekCompare == -1) {
+            return -1;
+        }
+        if (weekCompare == 1) {
+            return 1;
+        }
+        return 0;
     }
 }
