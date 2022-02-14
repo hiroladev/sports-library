@@ -50,7 +50,7 @@ public class User extends PersistentObject {
     @Relationship(type = RelationshipType.MANY_TO_ONE,
             inverseClass = RunningPlan.class,
             inverse = "relationAttributeForUserToRunningPlan",
-            cascadePolicy = CascadePolicy.SAVE)
+            cascadePolicy = CascadePolicy.NONE)
     private RunningPlan activeRunningPlan; // current training
 
     /**
