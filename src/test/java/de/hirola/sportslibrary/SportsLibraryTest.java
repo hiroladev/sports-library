@@ -394,4 +394,17 @@ class SportsLibraryTest {
         dataRepository.clearAll();
     }
 
+    @Test
+    void testLogger() {
+        try {
+            // empty app name
+            sportsLibrary = new SportsLibrary("de.hirola.sportslibrary", null);
+            assertNotNull(sportsLibrary, "Library not initialize.");
+            dataRepository = sportsLibrary.getDataRepository();
+            assertNotNull(dataRepository, "DataRepository not initialize.");
+
+        } catch (SportsLibraryException exception) {
+            fail(exception.getMessage());
+        }
+    }
 }

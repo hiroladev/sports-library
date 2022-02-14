@@ -126,6 +126,7 @@ public final class Logger {
                 }
                 // create the path
                 logFilePath = Paths.get(pathString);
+                isLogToFileEnabled = true;
             } else {
                 isLogToFileEnabled = false;
             }
@@ -281,9 +282,7 @@ public final class Logger {
             // create dir(s)
             File logFileFolderStructure = new File(logFilePath.getParent().toString());
             try {
-                if (logFileFolderStructure.mkdirs()) {
-                    createLogFile = true;
-                }
+                logFileFolderStructure.mkdirs();
             } catch (SecurityException exception) {
                 if (Global.APP_DEBUG_MODE) {
                     exception.printStackTrace();
@@ -292,7 +291,7 @@ public final class Logger {
             }
         }
         // create log file
-        if (createLogFile) {
+        if (!Files.exists(logFilePath)) {
             try {
                 Files.createFile(logFilePath);
             } catch (IOException exception) {
