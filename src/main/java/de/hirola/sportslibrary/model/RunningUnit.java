@@ -1,14 +1,11 @@
 package de.hirola.sportslibrary.model;
 
-import com.onyx.persistence.annotations.Attribute;
-import com.onyx.persistence.annotations.Entity;
-import com.onyx.persistence.annotations.Identifier;
-import com.onyx.persistence.annotations.Relationship;
-import com.onyx.persistence.annotations.values.CascadePolicy;
-import com.onyx.persistence.annotations.values.FetchPolicy;
-import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.UUIDFactory;
+import org.dizitart.no2.Document;
+import org.dizitart.no2.NitriteId;
+import org.dizitart.no2.mapper.NitriteMapper;
+import org.dizitart.no2.objects.Id;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -26,27 +23,13 @@ import java.util.Objects;
  * @see  RunningPlanEntry
  *
  */
-@Entity
 public class RunningUnit extends PersistentObject {
 
-    @Attribute
-    @Identifier
-    private final String uuid = UUIDFactory.generateUUID();
-    @Attribute
+    @Id
+    private NitriteId uuid;
     private boolean isCompleted;
-    @Attribute
-    private final long duration; // duration in minutes
-    @Relationship(type = RelationshipType.MANY_TO_ONE,
-            inverseClass = MovementType.class,
-            inverse = "associatedRunningUnits",
-            cascadePolicy = CascadePolicy.SAVE)
+    private long duration; // duration in minutes
     private MovementType movementType;
-    @Relationship(type = RelationshipType.MANY_TO_ONE,
-            inverseClass = RunningPlanEntry.class,
-            inverse = "runningUnits",
-            cascadePolicy = CascadePolicy.ALL,
-            fetchPolicy = FetchPolicy.LAZY)
-    private RunningPlanEntry associatedRunningPlanEntry; // used only for modelling relations
 
     /**
      * Default constructor for reflection and database management.
@@ -116,6 +99,37 @@ public class RunningUnit extends PersistentObject {
     }
 
     @Override
+    public Document write(NitriteMapper mapper) {
+        Document document = new Document();
+        document.put("uuid", uuid);
+        document.put("isCompleted", isCompleted);
+        document.put("duration", duration);
+
+        if (movementType != null) {
+            Document movementTypeDocument = movementType.write(mapper);
+            document.put("movementType", movementTypeDocument);
+        }
+
+        return document;
+    }
+
+    @Override
+    public void read(NitriteMapper mapper, Document document) {
+        if (document != null) {
+            uuid = (NitriteId) document.get("uuid");
+            isCompleted = (boolean) document.get("isCompleted");
+            duration = (long) document.get("duration");
+
+            Document movementTypeDocument = (Document) document.get("movementType");
+            if (movementTypeDocument != null) {
+                MovementType movementType = new MovementType();
+                movementType.read(mapper, movementTypeDocument);
+                this.movementType = movementType;
+            }
+        }
+    }
+    
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -129,7 +143,7 @@ public class RunningUnit extends PersistentObject {
     }
 
     @Override
-    public String getUUID() {
+    public NitriteId getUUID() {
         return uuid;
     }
 }

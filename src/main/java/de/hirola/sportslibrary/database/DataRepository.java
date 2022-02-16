@@ -1,12 +1,16 @@
 package de.hirola.sportslibrary.database;
 
-import com.onyx.exception.OnyxException;
-import com.onyx.persistence.manager.PersistenceManager;
 import de.hirola.sportslibrary.Global;
 import de.hirola.sportslibrary.SportsLibraryException;
 import de.hirola.sportslibrary.model.*;
 
 import de.hirola.sportslibrary.util.Logger;
+import org.dizitart.no2.Nitrite;
+import org.dizitart.no2.NitriteId;
+import org.dizitart.no2.objects.Cursor;
+import org.dizitart.no2.objects.ObjectFilter;
+import org.dizitart.no2.objects.ObjectRepository;
+import org.dizitart.no2.objects.filters.ObjectFilters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,6 +20,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -32,8 +37,7 @@ public final class DataRepository {
     private final String TAG = DataRepository.class.getSimpleName();
 
     private final Logger logger;
-    private final DatabaseManager databaseManager;
-    private final PersistenceManager persistenceManager; // we use the Onxy Embedded Persistence Manager
+    private final Nitrite database; // we use Nitrite database
 
     /**
      * Create the local datastore access layer.
@@ -41,9 +45,8 @@ public final class DataRepository {
      * @param databaseManager of this library
      */
     public DataRepository(@NotNull DatabaseManager databaseManager, Logger logger) {
-        this.databaseManager = databaseManager;
         this.logger = logger;
-        persistenceManager = databaseManager.getPersistenceManager(); // can be null
+        database = databaseManager.getDatabase(); // can be null
     }
 
     /**
@@ -56,16 +59,24 @@ public final class DataRepository {
     public boolean isEmpty() {
         // the datastore is "empty" if there are no movement [and training types] and running plans (yet)
         if (isOpen()) {
-            try {
-                List<PersistentObject> result1 = persistenceManager.list(MovementType.class);
-                List<PersistentObject> result2 = persistenceManager.list(TrainingType.class);
-                List<PersistentObject> result3 = persistenceManager.list(RunningPlan.class);
-                if (result1.isEmpty() && result2.isEmpty() && result3.isEmpty()) {
-                    return true;
-                }
-
-            } catch (OnyxException exception) {
-                logger.log(Logger.DEBUG, TAG, "Error occurred while searching.", exception);
+            if (!database.hasRepository(MovementType.class) &&
+                    !database.hasRepository(TrainingType.class) &&
+                            !database.hasRepository(RunningPlan.class)) {
+                return true;
+            }
+            ObjectRepository<MovementType> movementTypeRepository = database.getRepository(MovementType.class);
+            Cursor<MovementType> movementTypeCursor = movementTypeRepository.find(ObjectFilters.ALL);
+            if (movementTypeCursor.size() == 0) {
+                return true;
+            }
+            ObjectRepository<TrainingType> trainingTypeRepository = database.getRepository(TrainingType.class);
+            Cursor<TrainingType> trainingTypeCursor = trainingTypeRepository.find(ObjectFilters.ALL);
+            if (trainingTypeCursor.size() == 0) {
+                return true;
+            }
+            ObjectRepository<RunningPlan> runningPlanRepository = database.getRepository(RunningPlan.class);
+            Cursor<RunningPlan> runningPlanCursor = runningPlanRepository.find(ObjectFilters.ALL);
+            if (runningPlanCursor.size() == 0) {
                 return true;
             }
         }
@@ -78,27 +89,24 @@ public final class DataRepository {
      * @return A flag to determine if the datastore is open.
      */
     public boolean isOpen() {
-        return persistenceManager != null;
+        if (database == null) {
+            return false;
+        }
+        return !database.isClosed();
 
     }
 
     /**
      * Add a new or save an existing object.
      *
-     * @param object to be added
+     * @param object to be saved
      * @throws SportsLibraryException if an error occurred while adding
      */
-    public void save(PersistentObject object) throws SportsLibraryException {
-        // Onyx does not differentiate between updating or inserting entities.
-        // If an entity with a matching primary key already exists,
-        // Onyx Database will assume you are updating the entity specified and overwrite the existing record.
+    public void save(@NotNull PersistentObject object) throws SportsLibraryException {
+        // the concrete type must be specified for each access to a repo
         if (isOpen()) {
-            try {
-                persistenceManager.saveEntity(object);
-            } catch (OnyxException exception) {
-                logger.log(Logger.DEBUG, TAG, "Saving the object with id " + object.getUUID() + " failed.", exception);
-                throw new SportsLibraryException(exception);
-            }
+            // save or update the object
+            saveObject(object);
         } else {
             throw new SportsLibraryException("Database not available.");
         }
@@ -110,31 +118,10 @@ public final class DataRepository {
      * @param object to be removed
      * @throws SportsLibraryException if an error occurred while removing
      */
-    public void delete(PersistentObject object) throws SportsLibraryException {
-        // Embedded objects are created or updated when saving.
-        // Unfortunately, cascading delete doesn't work. To be on the safe side,
-        // the embedded objects are therefore deleted independently.
-        // I tried everything based on this page (https://www.onyx.dev/learn/tutorials/1/relationships/cascade-policy).
-        // Without success. It sucks. Hence, this workaround:
-        // first we delete the "parent" object in the database
+    public void delete(@NotNull PersistentObject object) throws SportsLibraryException {
+        // the concrete type must be specified for each access to a repo
         if (isOpen()) {
-            try {
-                persistenceManager.deleteEntity(object);
-                // now we need to delete all embedded objects (with exceptions)
-                cascadingDeleteForObject(object);
-            } catch (OnyxException exception) {
-                String errorMessage = "Deleting the object with id " + object.getUUID() + " failed.";
-                logger.log(Logger.ERROR, TAG, errorMessage, exception);
-                // rollback
-                try {
-                    persistenceManager.saveEntity(object);
-                } catch (OnyxException exception1) {
-                    // now everything has gone wrong
-                    logger.log(Logger.ERROR, TAG, errorMessage, exception);
-                    throw new SportsLibraryException(errorMessage + " Cascading delete failed: " + exception.getMessage());
-                }
-                throw new SportsLibraryException(errorMessage + ": " + exception.getMessage());
-            }
+            deleteObject(object);
         } else {
             throw new SportsLibraryException("Database not available.");
         }
@@ -173,45 +160,32 @@ public final class DataRepository {
     public List<? extends PersistentObject> findAll(Class<? extends PersistentObject> fromType)  {
         List<? extends PersistentObject> results = new ArrayList<>();
         if (isOpen()) {
-            try {
-                results = persistenceManager.list(fromType);
-                // check and correct the start date if running plan not active
-                for (PersistentObject persistentObject : results) {
-                    if (persistentObject instanceof RunningPlan) {
-                        RunningPlan runningPlan = (RunningPlan) persistentObject;
-                        if (!runningPlan.isCompleted() || !runningPlan.isActive()) {
-                            LocalDate startDate = runningPlan.getStartDate();
-                            LocalDate today = LocalDate.now(ZoneId.systemDefault());
-                            if (startDate.isBefore(today) || startDate.isEqual(today)) {
-                                // the method adjust the start day automatically
-                                runningPlan.setStartDate(today);
-                                try {
-                                    // save the corrected start date to local data store
-                                    persistenceManager.saveEntity(runningPlan);
-                                } catch (OnyxException exception) {
-                                    logger.log(Logger.DEBUG, TAG, "Saving the new start day of running plan with id "
-                                            + runningPlan.getUUID() + " failed.", exception);
-                                }
-                            }
-                        }
-                    }
-                }
 
-            } catch (OnyxException exception) {
-                logger.log(Logger.DEBUG, TAG, "Error occurred while searching all objects from type " + fromType.getSimpleName(), exception);
-            }
         }
         return results;
     }
 
+    /**
+     * Delete all objects from the database.
+     */
     public void clearAll() {
-        databaseManager.clearAll();
+        if (database != null) {
+           for (Class<?> type: Global.PERSISTENT_CLASSES_LIST) {
+               database.getRepository(type).remove(ObjectFilters.ALL);
+           }
+        }
     }
 
+    /**
+     * Close the database.
+     */
     public void close() {
-        databaseManager.close();
+        if (database != null) {
+            database.close();
+        }
     }
 
+    /*
     // workaround for delete embedded objects
     private void cascadingDeleteForObject(PersistentObject object) throws SportsLibraryException {
         // not all types should be deleted as embedded objects
@@ -266,6 +240,44 @@ public final class DataRepository {
                 }
             }
         } catch (IllegalAccessException exception) {
+            throw new SportsLibraryException(exception);
+        }
+    }*/
+
+    private void saveObject(PersistentObject object) throws SportsLibraryException {
+        try {
+            ObjectRepository<PersistentObject> objectRepository = getObjectRepositoryForType(PersistentObject.class);
+            if (objectRepository != null) {
+                // insert or update?
+                if (objectRepository.getById(object.getUUID()) == null) {
+                    // insert
+                    objectRepository.insert(object);
+                } else {
+                    // update
+                    objectRepository.update(object);
+                }
+            }
+        } catch (Exception exception) {
+            logger.log(Logger.DEBUG, TAG, "Saving the object with id " + object.getUUID() + " failed.", exception);
+            throw new SportsLibraryException(exception);
+        }
+    }
+
+    private void deleteObject(PersistentObject object) throws SportsLibraryException {
+        try {
+            ObjectRepository<PersistentObject> objectRepository = getObjectRepositoryForType(PersistentObject.class);
+            if (objectRepository != null) {
+                // insert or update?
+                if (objectRepository.getById(object.getUUID()) == null) {
+                    // insert
+                    objectRepository.insert(object);
+                } else {
+                    // update
+                    objectRepository.update(object);
+                }
+            }
+        } catch (Exception exception) {
+            logger.log(Logger.DEBUG, TAG, "Saving the object with id " + object.getUUID() + " failed.", exception);
             throw new SportsLibraryException(exception);
         }
     }

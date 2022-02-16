@@ -1,15 +1,12 @@
 package de.hirola.sportslibrary.model;
 
-import com.onyx.persistence.annotations.Attribute;
-import com.onyx.persistence.annotations.Entity;
-import com.onyx.persistence.annotations.Identifier;
-import com.onyx.persistence.annotations.Relationship;
-import com.onyx.persistence.annotations.values.CascadePolicy;
-import com.onyx.persistence.annotations.values.FetchPolicy;
-import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.DateUtil;
 import de.hirola.sportslibrary.util.UUIDFactory;
+import org.dizitart.no2.Document;
+import org.dizitart.no2.NitriteId;
+import org.dizitart.no2.mapper.NitriteMapper;
+import org.dizitart.no2.objects.Id;
 
 import java.util.Objects;
 
@@ -22,30 +19,16 @@ import java.util.Objects;
  * @author Michael Schmidt (Hirola)
  * @since 0.0.1
  */
-@Entity
 public class LocationData extends PersistentObject {
 
-    @Attribute
-    @Identifier
-    private final String uuid = UUIDFactory.generateUUID();
-    @Attribute
-    private final long timeStamp; // UTC time of this location, in milliseconds since epoch (January 1, 1970).
-    @Attribute
-    private final String provider;
-    @Attribute
-    private final double latitude;
-    @Attribute
-    private final double longitude;
-    @Attribute
-    private final double altitude;
-    @Attribute
-    private final double speed;
-    @Relationship(type = RelationshipType.MANY_TO_ONE,
-                inverseClass = Track.class,
-                inverse = "locations",
-                cascadePolicy = CascadePolicy.ALL,
-                fetchPolicy = FetchPolicy.LAZY)
-    private Track associatedTrack; // used only for modelling relations
+    @Id
+    private NitriteId uuid;
+    private long timeStamp; // UTC time of this location, in milliseconds since epoch (January 1, 1970).
+    private String provider;
+    private double latitude;
+    private double longitude;
+    private double altitude;
+    private double speed;
 
     /**
      * Default constructor for reflection and database management.
@@ -95,6 +78,34 @@ public class LocationData extends PersistentObject {
     }
 
     @Override
+    public Document write(NitriteMapper mapper) {
+        Document document = new Document();
+        document.put("uuid", uuid);
+        document.put("timeStamp", timeStamp);
+        document.put("provider", provider);
+        document.put("latitude", latitude);
+        document.put("longitude", longitude);
+        document.put("altitude", altitude);
+        document.put("speed", speed);
+
+        return document;
+    }
+
+    @Override
+    public void read(NitriteMapper mapper, Document document) {
+        if (document != null) {
+            uuid = (NitriteId) document.get("uuid");
+            timeStamp = (long) document.get("timeStamp");
+            provider = (String) document.get("provider");
+            latitude = (double) document.get("latitude");
+            longitude = (double) document.get("longitude");
+            altitude = (double) document.get("altitude");
+            speed = (double) document.get("speed");
+
+        }
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -114,7 +125,8 @@ public class LocationData extends PersistentObject {
     }
 
     @Override
-    public String getUUID() {
+    public NitriteId getUUID() {
         return uuid;
     }
+
 }

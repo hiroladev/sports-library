@@ -1,17 +1,17 @@
 package de.hirola.sportslibrary.model;
 
-import com.onyx.persistence.annotations.Attribute;
-import com.onyx.persistence.annotations.Entity;
-import com.onyx.persistence.annotations.Identifier;
-import com.onyx.persistence.annotations.Relationship;
-import com.onyx.persistence.annotations.values.CascadePolicy;
-import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.UUIDFactory;
+import org.dizitart.no2.Document;
+import org.dizitart.no2.IndexType;
+import org.dizitart.no2.NitriteId;
+import org.dizitart.no2.mapper.NitriteMapper;
+import org.dizitart.no2.objects.Id;
+import org.dizitart.no2.objects.Index;
+import org.dizitart.no2.objects.Indices;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -24,25 +24,17 @@ import java.util.Objects;
  * @since 0.0.1
  *
  */
-@Entity
+@Indices({
+        @Index(value = "name", type = IndexType.Unique)
+})
 public class TrainingType extends PersistentObject {
 
-    @Attribute
-    @Identifier
-    private final String uuid = UUIDFactory.generateUUID();
-    @Attribute
+    @Id
+    private NitriteId uuid;
     private String name;
-    @Attribute
     private String imageName; // image for the kind of training
-    @Attribute
     private String remarks;
-    @Attribute
     private double speed;
-    @Relationship(type = RelationshipType.ONE_TO_MANY,
-            inverseClass = Training.class,
-            inverse = "trainingType",
-            cascadePolicy = CascadePolicy.SAVE)
-    private List<Training> associatedTrainings; // only for modelling 1:m relations
 
     /**
      * Default constructor for reflection and database management.
@@ -145,6 +137,29 @@ public class TrainingType extends PersistentObject {
     }
 
     @Override
+    public Document write(NitriteMapper mapper) {
+        Document document = new Document();
+        document.put("uuid", uuid);
+        document.put("name", name);
+        document.put("imageName", imageName);
+        document.put("remarks", remarks);
+        document.put("speed", speed);
+
+        return document;
+    }
+
+    @Override
+    public void read(NitriteMapper mapper, Document document) {
+        if (document != null) {
+            uuid = (NitriteId) document.get("uuid");
+            name = (String) document.get("name");
+            imageName = (String) document.get("imageName");
+            remarks = (String) document.get("remarks");
+            speed = (double) document.get("speed");
+        }
+    }
+    
+    @Override
     public boolean equals(Object o) {
         // gleicher Name = gleiches Objekt
         if (this == o) return true;
@@ -160,7 +175,7 @@ public class TrainingType extends PersistentObject {
     }
 
     @Override
-    public String getUUID() {
+    public NitriteId getUUID() {
         return uuid;
     }
 }

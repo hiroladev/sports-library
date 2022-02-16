@@ -1,14 +1,15 @@
 package de.hirola.sportslibrary.model;
 
-import com.onyx.persistence.annotations.Attribute;
-import com.onyx.persistence.annotations.Entity;
-import com.onyx.persistence.annotations.Identifier;
-import com.onyx.persistence.annotations.Relationship;
-import com.onyx.persistence.annotations.values.CascadePolicy;
-import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.Global;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.UUIDFactory;
+import org.dizitart.no2.Document;
+import org.dizitart.no2.IndexType;
+import org.dizitart.no2.NitriteId;
+import org.dizitart.no2.mapper.NitriteMapper;
+import org.dizitart.no2.objects.Id;
+import org.dizitart.no2.objects.Index;
+import org.dizitart.no2.objects.Indices;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,30 +28,20 @@ import java.util.Objects;
  * @author Michael Schmidt (Hirola)
  * @since 0.0.1
  */
-@Entity
+@Indices({
+        @Index(value = "emailAddress", type = IndexType.Unique)
+})
 public class User extends PersistentObject {
 
-    @Attribute
-    @Identifier
-    private final String uuid = UUIDFactory.generateUUID();
-     @Attribute
+    @Id
+    private NitriteId uuid;
     private String firstName;
-    @Attribute
     private String lastName;
-    @Attribute
     private String emailAddress;
-    @Attribute
     private Date birthday; // required to calculate the heart rate
-    @Attribute
     private int gender; // required to calculate the heart rate
-     @Attribute
     private int trainingLevel; // from Global
-    @Attribute
     private int maxPulse; // calculate with birthday and gender
-    @Relationship(type = RelationshipType.MANY_TO_ONE,
-            inverseClass = RunningPlan.class,
-            inverse = "relationAttributeForUserToRunningPlan",
-            cascadePolicy = CascadePolicy.SAVE)
     private RunningPlan activeRunningPlan; // current training
 
     /**
@@ -206,6 +197,47 @@ public class User extends PersistentObject {
         this.maxPulse = maxPulse;
     }
 
+    @Override
+    public Document write(NitriteMapper mapper) {
+        Document document = new Document();
+        document.put("uuid", uuid);
+        document.put("firstName", firstName);
+        document.put("lastName", lastName);
+        document.put("emailAddress", emailAddress);
+        document.put("birthday", birthday);
+        document.put("gender", gender);
+        document.put("trainingLevel", trainingLevel);
+        document.put("maxPulse", maxPulse);
+
+        if (activeRunningPlan != null) {
+            Document activeRunningPlanDocument = activeRunningPlan.write(mapper);
+            document.put("activeRunningPlan", activeRunningPlanDocument);
+        }
+
+        return document;
+    }
+
+    @Override
+    public void read(NitriteMapper mapper, Document document) {
+        if (document != null) {
+            uuid = (NitriteId) document.get("uuid");
+            firstName = (String) document.get("firstName");
+            lastName = (String) document.get("lastName");
+            emailAddress = (String) document.get("emailAddress");
+            birthday = (Date) document.get("birthday");
+            gender = (int) document.get("gender");
+            trainingLevel = (int) document.get("trainingLevel");
+            maxPulse = (int) document.get("maxPulse");
+
+            Document activeRunningPlanDocument = (Document) document.get("activeRunningPlan");
+            if (activeRunningPlanDocument != null) {
+                RunningPlan activeRunningPlan = new RunningPlan();
+                activeRunningPlan.read(mapper, activeRunningPlanDocument);
+                this.activeRunningPlan = activeRunningPlan;
+            }
+        }
+    }
+    
     /**
      * Get the first name of user.
      *
@@ -241,7 +273,7 @@ public class User extends PersistentObject {
     }
 
     @Override
-    public String getUUID() {
+    public NitriteId getUUID() {
         return uuid;
     }
 }

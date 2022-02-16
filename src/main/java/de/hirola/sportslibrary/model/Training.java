@@ -1,14 +1,15 @@
 package de.hirola.sportslibrary.model;
 
-import com.onyx.persistence.annotations.Attribute;
-import com.onyx.persistence.annotations.Entity;
-import com.onyx.persistence.annotations.Identifier;
-import com.onyx.persistence.annotations.Relationship;
-import com.onyx.persistence.annotations.values.CascadePolicy;
-import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.DateUtil;
 import de.hirola.sportslibrary.util.UUIDFactory;
+import org.dizitart.no2.Document;
+import org.dizitart.no2.IndexType;
+import org.dizitart.no2.NitriteId;
+import org.dizitart.no2.mapper.NitriteMapper;
+import org.dizitart.no2.objects.Id;
+import org.dizitart.no2.objects.Index;
+import org.dizitart.no2.objects.Indices;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,35 +29,21 @@ import java.util.Objects;
  * @since 0.0.1
  *
  */
-@Entity
+@Indices({
+        @Index(value = "name", type = IndexType.Unique)
+})
 public class Training extends PersistentObject {
 
-    @Attribute
-    @Identifier
-    private final String uuid = UUIDFactory.generateUUID();
-    @Attribute
+    @Id
+    private NitriteId uuid;
     private String name;
-    @Attribute
     private String remarks;
-    @Attribute
     private long duration; // in minutes
-    @Attribute
     private double distance; // if -1 then calculate from track
-    @Attribute
     private double altitudeDifference; // if -1 then calculate from track
-    @Attribute
     private double averageSpeed; // if -1 then calculate from track
-    @Attribute
     private Date trainingDate;
-    @Relationship(type = RelationshipType.MANY_TO_ONE,
-            inverseClass = TrainingType.class,
-            inverse = "associatedTrainings",
-            cascadePolicy = CascadePolicy.NONE)
     private TrainingType trainingType; // biking, running, ...
-    @Relationship(type = RelationshipType.MANY_TO_ONE,
-            inverseClass = Track.class,
-            inverse = "associatedTrainings",
-            cascadePolicy = CascadePolicy.SAVE)
     private Track track; // track of the training
 
     /**
@@ -272,6 +259,57 @@ public class Training extends PersistentObject {
     }
 
     @Override
+    public Document write(NitriteMapper mapper) {
+        Document document = new Document();
+        document.put("uuid", uuid);
+        document.put("name", name);
+        document.put("duration", duration);
+        document.put("distance", distance);
+        document.put("altitudeDifference", altitudeDifference);
+        document.put("averageSpeed", averageSpeed);
+        document.put("trainingDate", trainingDate);
+
+        if (trainingType != null) {
+            Document trainingTypeDocument = trainingType.write(mapper);
+            document.put("trainingType", trainingTypeDocument);
+        }
+
+        if (track != null) {
+            Document trackDocument = track.write(mapper);
+            document.put("track", trackDocument);
+        }
+
+        return document;
+    }
+
+    @Override
+    public void read(NitriteMapper mapper, Document document) {
+        if (document != null) {
+            uuid = (NitriteId) document.get("uuid");
+            name = (String) document.get("name");
+            duration = (long) document.get("duration");
+            distance = (double) document.get("distance");
+            altitudeDifference = (double) document.get("altitudeDifference");
+            averageSpeed = (double) document.get("averageSpeed");
+            trainingDate = (Date) document.get("trainingDate");
+
+            Document trainingTypeDocument = (Document) document.get("trainingType");
+            if (trainingTypeDocument != null) {
+                TrainingType trainingType = new TrainingType();
+                trainingType.read(mapper, trainingTypeDocument);
+                this.trainingType = trainingType;
+            }
+
+            Document trackDocument = (Document) document.get("track");
+            if (trackDocument != null) {
+                Track track = new Track();
+                track.read(mapper, trackDocument);
+                this.track = track;
+            }
+        }
+    }
+    
+    @Override
     public boolean equals(Object o) {
         // gleicher Name = gleiches Objekt
         if (this == o) return true;
@@ -287,7 +325,7 @@ public class Training extends PersistentObject {
     }
 
     @Override
-    public String getUUID() {
+    public NitriteId getUUID() {
         return uuid;
     }
 }

@@ -1,13 +1,10 @@
 package de.hirola.sportslibrary.database;
 
-import com.onyx.exception.InitializationException;
-import com.onyx.exception.OnyxException;
-import com.onyx.persistence.factory.PersistenceManagerFactory;
-import com.onyx.persistence.factory.impl.EmbeddedPersistenceManagerFactory;
-import com.onyx.persistence.manager.PersistenceManager;
 import de.hirola.sportslibrary.Global;
 import de.hirola.sportslibrary.SportsLibraryException;
 import de.hirola.sportslibrary.util.Logger;
+import org.dizitart.no2.Nitrite;
+import org.dizitart.no2.exceptions.NitriteIOException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,8 +28,7 @@ public class DatabaseManager {
 
     private static DatabaseManager instance;
     private static Logger logger;
-    private PersistenceManagerFactory factory = null;
-    private PersistenceManager persistenceManager = null;
+    private Nitrite database;
 
     /**
      * Get an instance of database manager.
@@ -56,52 +52,23 @@ public class DatabaseManager {
      * @return The manger for data management
      */
     @Nullable
-    public PersistenceManager getPersistenceManager() {
-        return persistenceManager;
-    }
-
-    /**
-     * Delete all objects from the database.
-     */
-    public void clearAll() {
-        if (persistenceManager != null) {
-            for (Class<? extends PersistentObject> type : Global.PERSISTENT_CLASSES_LIST) {
-                try {
-                    List<? extends PersistentObject> allObjectsFromType = persistenceManager.list(type);
-                    persistenceManager.deleteEntities(allObjectsFromType);
-                    String logMessage = allObjectsFromType.size()
-                            + " objects from type "
-                            + type.getSimpleName()
-                            + " deleted.";
-                    logger.log(Logger.DEBUG, TAG, logMessage, null);
-                } catch (OnyxException exception) {
-                    String errorMessage = "Error occurred while deleting all objects from type "
-                            + type;
-                    logger.log(Logger.ERROR, TAG, errorMessage, exception);
-                }
-            }
-        }
-    }
-
-    /**
-     * Close the database.
-     */
-    public void close() {
-        if (factory != null) {
-            factory.close();
-        }
+    public Nitrite getDatabase() {
+        return database;
     }
 
     private DatabaseManager(@NotNull String packageName) {
         try {
-                String databaseName = initializeDatabasePath(packageName);
-                factory = new EmbeddedPersistenceManagerFactory(databaseName);
-                factory.initialize();
+            // Nitrite by default compacts the database file before close.
+            // If compaction is enabled chunks will be moved next to each other.
+            // Disabling compaction will increase the performance during database close.
+                String databasePath = initializeDatabasePath(packageName);
+                database = Nitrite.builder()
+                        .filePath(databasePath)
+                        .disableAutoCompact()
+                        .openOrCreate();
 
-                persistenceManager = factory.getPersistenceManager();
-
-        } catch (SportsLibraryException | OnyxException exception){
-            logger.log(Logger.ERROR, TAG,"Could not determine the runtime environment. Manager is null.", exception);
+        } catch (SportsLibraryException | NitriteIOException exception){
+            logger.log(Logger.ERROR, TAG,"Could not determine the runtime environment. Database is null.", exception);
         }
     }
 
@@ -150,4 +117,5 @@ public class DatabaseManager {
         }
         return databasePath;
     }
+
 }

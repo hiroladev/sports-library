@@ -1,19 +1,16 @@
 package de.hirola.sportslibrary.model;
 
-import com.onyx.persistence.annotations.Attribute;
-import com.onyx.persistence.annotations.Entity;
-import com.onyx.persistence.annotations.Identifier;
-import com.onyx.persistence.annotations.Relationship;
-import com.onyx.persistence.annotations.values.CascadePolicy;
-import com.onyx.persistence.annotations.values.FetchPolicy;
-import com.onyx.persistence.annotations.values.RelationshipType;
+import de.hirola.sportslibrary.SportsLibraryException;
+import de.hirola.sportslibrary.database.ListMapper;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.UUIDFactory;
+import org.dizitart.no2.Document;
+import org.dizitart.no2.NitriteId;
+import org.dizitart.no2.mapper.NitriteMapper;
+import org.dizitart.no2.objects.Id;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Copyright 2021 by Michael Schmidt, Hirola Consulting
@@ -26,28 +23,13 @@ import java.util.Objects;
  * @author Michael Schmidt (Hirola)
  * @since 0.0.1
  */
-@Entity
 public class RunningPlanEntry extends PersistentObject implements Comparable<RunningPlanEntry> {
 
-    @Attribute
-    @Identifier
-    private final String uuid = UUIDFactory.generateUUID();
-    @Attribute
-    private final int week; // number of week, begins with 1
-    @Attribute
-    private final int day; // day of week, begins with 1 (monday)
-    @Relationship(type = RelationshipType.ONE_TO_MANY,
-            inverseClass = RunningUnit.class,
-            inverse = "associatedRunningPlanEntry",
-            cascadePolicy = CascadePolicy.ALL,
-            fetchPolicy = FetchPolicy.LAZY)
-    private final List<RunningUnit> runningUnits; // units if training day
-    @Relationship(type = RelationshipType.MANY_TO_ONE,
-            inverseClass = RunningPlan.class,
-            inverse = "entries",
-            cascadePolicy = CascadePolicy.ALL,
-            fetchPolicy = FetchPolicy.LAZY)
-    private RunningPlan associatedRunningPlan; // used only for modelling relations
+    @Id
+    private NitriteId uuid;
+    private int week; // number of week, begins with 1
+    private int day; // day of week, begins with 1 (monday)
+    private List<RunningUnit> runningUnits; // units if training day
 
     /**
      * Default constructor for reflection and database management.
@@ -142,6 +124,38 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
     }
 
     @Override
+    public Document write(NitriteMapper mapper) {
+        Document document = new Document();
+        document.put("uuid", uuid);
+        document.put("week", week);
+        document.put("day", day);
+
+        if (runningUnits != null) {
+            document.put("runningUnits", ListMapper.toDocumentsList(mapper, runningUnits));
+        }
+
+        return document;
+    }
+
+    @Override
+    public void read(NitriteMapper mapper, Document document) {
+        if (document != null) {
+            uuid = (NitriteId) document.get("uuid");
+            week = (int) document.get("week");
+            day = (int) document.get("day");
+
+            try {
+                @SuppressWarnings("unchecked")
+                List<Document> objectsDocument = (List<Document>) document.get("runningUnits");
+                runningUnits = ListMapper.toElementsList(mapper, objectsDocument, RunningUnit.class);
+            } catch (ClassCastException | SportsLibraryException exception) {
+                //TODO: logging?
+                runningUnits = new ArrayList<>();
+            }
+        }
+    }
+    
+    @Override
     public boolean equals(Object o) {
         // gleicher Tag in gleicher Woche = Object ist identisch
         if (this == o) return true;
@@ -157,7 +171,7 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
     }
 
     @Override
-    public String getUUID() {
+    public NitriteId getUUID() {
         return uuid;
     }
 
@@ -186,4 +200,5 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
         }
         return 0;
     }
+
 }

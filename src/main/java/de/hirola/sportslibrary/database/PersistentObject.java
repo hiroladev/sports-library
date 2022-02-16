@@ -1,8 +1,7 @@
 package de.hirola.sportslibrary.database;
 
-import com.onyx.persistence.IManagedEntity;
-import com.onyx.persistence.ManagedEntity;
-import com.onyx.persistence.annotations.Entity;
+import org.dizitart.no2.NitriteId;
+import org.dizitart.no2.mapper.Mappable;
 
 /**
  * Copyright 2021 by Michael Schmidt, Hirola Consulting
@@ -14,7 +13,6 @@ import com.onyx.persistence.annotations.Entity;
  * @author Michael Schmidt (Hirola)
  * @since 0.0.1
  */
-@Entity
-public abstract class PersistentObject extends ManagedEntity implements IManagedEntity {
-    public abstract String getUUID();
+public abstract class PersistentObject implements Mappable {
+    public abstract NitriteId getUUID();
 }

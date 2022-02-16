@@ -1,19 +1,18 @@
 package de.hirola.sportslibrary.model;
 
-import com.onyx.persistence.annotations.Attribute;
-import com.onyx.persistence.annotations.Entity;
-import com.onyx.persistence.annotations.Identifier;
-import com.onyx.persistence.annotations.Relationship;
-import com.onyx.persistence.annotations.values.CascadePolicy;
-import com.onyx.persistence.annotations.values.FetchPolicy;
-import com.onyx.persistence.annotations.values.RelationshipType;
 import de.hirola.sportslibrary.Global;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.UUIDFactory;
+import org.dizitart.no2.Document;
+import org.dizitart.no2.IndexType;
+import org.dizitart.no2.NitriteId;
+import org.dizitart.no2.mapper.NitriteMapper;
+import org.dizitart.no2.objects.Id;
+import org.dizitart.no2.objects.Index;
+import org.dizitart.no2.objects.Indices;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -30,32 +29,24 @@ import java.util.Objects;
  * @since 0.0.1
  *
  */
-@Entity
+@Indices({
+        @Index(value = "key", type = IndexType.Unique)
+})
 public class MovementType extends PersistentObject {
 
-    @Attribute
-    @Identifier
-    private final String key;  // token for the type of moving, e.g. L is running, must be unique
-    @Attribute
-    private final String stringForKey; // the text for the token
+    @Id
+    private NitriteId uuid;
+    private String key;  // token for the type of moving, e.g. L is running, must be unique
+    private String stringForKey; // the text for the token
     private String colorKeyString; // the color for the token, dynamically on different platforms
-    @Attribute
     private double speed; // speed of movement type in km/h
-    @Attribute
     private double pace; // pace of movement type, user defined in relation to the speed
-    @Relationship(type = RelationshipType.ONE_TO_MANY,
-            inverseClass = RunningUnit.class,
-            inverse = "movementType",
-            cascadePolicy = CascadePolicy.NONE,
-            fetchPolicy = FetchPolicy.LAZY)
-    private List<RunningUnit> associatedRunningUnits; // used only for modelling relations
 
     /**
      * Default constructor for reflection and database management.
      */
     public MovementType() {
         super();
-        key = UUIDFactory.generateUUID();
         stringForKey = UUIDFactory.generateUUID();
         this.colorKeyString = Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR;
         speed = 0.0;
@@ -155,6 +146,31 @@ public class MovementType extends PersistentObject {
     }
 
     @Override
+    public Document write(NitriteMapper mapper) {
+        Document document = new Document();
+        document.put("uuid", uuid);
+        document.put("key", key);
+        document.put("stringForKey", stringForKey);
+        document.put("colorKeyString", colorKeyString);
+        document.put("speed", speed);
+        document.put("pace", pace);
+
+        return document;
+    }
+
+    @Override
+    public void read(NitriteMapper mapper, Document document) {
+        if (document != null) {
+            uuid = (NitriteId) document.get("uuid");
+            key = (String) document.get("key");
+            stringForKey = (String) document.get("stringForKey");
+            colorKeyString = (String) document.get("colorKeyString");
+            speed = (double) document.get("speed");
+            pace = (double) document.get("pace");
+        }
+    }
+    
+    @Override
     public boolean equals(Object o) {
         // gleicher Schlüssel = gleiches Objekt
         if (this == o) return true;
@@ -169,7 +185,7 @@ public class MovementType extends PersistentObject {
     }
 
     @Override
-    public String getUUID() {
-        return key;
+    public NitriteId getUUID() {
+        return uuid;
     }
 }

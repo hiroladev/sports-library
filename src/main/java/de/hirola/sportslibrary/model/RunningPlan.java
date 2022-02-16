@@ -1,15 +1,14 @@
 package de.hirola.sportslibrary.model;
 
-import com.onyx.persistence.annotations.Attribute;
-import com.onyx.persistence.annotations.Entity;
-import com.onyx.persistence.annotations.Identifier;
-import com.onyx.persistence.annotations.Relationship;
-import com.onyx.persistence.annotations.values.CascadePolicy;
-import com.onyx.persistence.annotations.values.FetchPolicy;
-import com.onyx.persistence.annotations.values.RelationshipType;
+import de.hirola.sportslibrary.SportsLibraryException;
+import de.hirola.sportslibrary.database.ListMapper;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.DateUtil;
 import de.hirola.sportslibrary.util.UUIDFactory;
+import org.dizitart.no2.Document;
+import org.dizitart.no2.NitriteId;
+import org.dizitart.no2.mapper.NitriteMapper;
+import org.dizitart.no2.objects.Id;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,35 +32,17 @@ import java.util.Objects;
  * @since 0.0.1
  *
  */
-@Entity
 public class RunningPlan extends PersistentObject implements Comparable<RunningPlan> {
 
-    @Attribute
-    @Identifier
-    private final String uuid = UUIDFactory.generateUUID();
-    @Attribute
+    @Id
+    private NitriteId uuid;
     private String name;
-    @Attribute
     private String remarks;
     // Order number of plan, "Build-Up Training" starts with a low-numbered run plan
-    @Attribute
     private int orderNumber;
-    @Attribute
     private Date startDate;
-    @Attribute
-    private final boolean isTemplate; // templates must be not changed
-    @Relationship(type = RelationshipType.ONE_TO_MANY,
-            inverseClass = RunningPlanEntry.class,
-            inverse = "associatedRunningPlan",
-            cascadePolicy = CascadePolicy.ALL,
-            fetchPolicy = FetchPolicy.LAZY)
+    private boolean isTemplate; // templates must be not changed
     private List<RunningPlanEntry> entries; // training day with different units
-    @Relationship(type = RelationshipType.ONE_TO_MANY,
-                 inverseClass = User.class,
-                 inverse = "activeRunningPlan",
-                 cascadePolicy = CascadePolicy.SAVE,
-                 fetchPolicy = FetchPolicy.LAZY)
-    private List<User> relationAttributeForUserToRunningPlan; // only for modelling relations
 
     /**
      * Default constructor for reflection and database management.
@@ -286,6 +267,44 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
     }
 
     @Override
+    public Document write(NitriteMapper mapper) {
+        Document document = new Document();
+        document.put("uuid", uuid);
+        document.put("name", name);
+        document.put("remarks", remarks);
+        document.put("orderNumber", orderNumber);
+        document.put("startDate", startDate);
+        document.put("isTemplate", isTemplate);
+
+        if (entries != null) {
+            document.put("entries", ListMapper.toDocumentsList(mapper, entries));
+        }
+
+        return document;
+    }
+
+    @Override
+    public void read(NitriteMapper mapper, Document document) {
+        if (document != null) {
+            uuid = (NitriteId) document.get("uuid");
+            name = (String) document.get("name");
+            remarks = (String) document.get("remarks");
+            orderNumber = (int) document.get("orderNumber");
+            startDate = (Date) document.get("startDate");
+            isTemplate = (boolean) document.get("isTemplate");
+
+            try {
+                @SuppressWarnings("unchecked")
+                List<Document> objectsDocument = (List<Document>) document.get("entries");
+                entries = ListMapper.toElementsList(mapper, objectsDocument, RunningPlanEntry.class);
+            } catch (ClassCastException | SportsLibraryException exception) {
+                //TODO: logging?
+                entries = new ArrayList<>();
+            }
+        }
+    }
+
+    @Override
     public boolean equals(Object o) {
         // gleicher Name = Objekt ist identisch
         if (this == o) return true;
@@ -301,7 +320,7 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
     }
 
     @Override
-    public String getUUID() {
+    public NitriteId getUUID() {
         return uuid;
     }
 
