@@ -35,7 +35,7 @@ import java.util.Objects;
 public class MovementType extends PersistentObject {
 
     @Id
-    private NitriteId uuid;
+    private NitriteId nitriteId;
     private String key;  // token for the type of moving, e.g. L is running, must be unique
     private String stringForKey; // the text for the token
     private String colorKeyString; // the color for the token, dynamically on different platforms
@@ -148,7 +148,6 @@ public class MovementType extends PersistentObject {
     @Override
     public Document write(NitriteMapper mapper) {
         Document document = new Document();
-        document.put("uuid", uuid);
         document.put("key", key);
         document.put("stringForKey", stringForKey);
         document.put("colorKeyString", colorKeyString);
@@ -161,7 +160,7 @@ public class MovementType extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            uuid = (NitriteId) document.get("uuid");
+            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
             key = (String) document.get("key");
             stringForKey = (String) document.get("stringForKey");
             colorKeyString = (String) document.get("colorKeyString");
@@ -185,7 +184,12 @@ public class MovementType extends PersistentObject {
     }
 
     @Override
-    public NitriteId getUUID() {
-        return uuid;
+    public String getUUID() {
+        return key;
+    }
+
+    @Override
+    public NitriteId getNitriteId() {
+        return nitriteId;
     }
 }

@@ -29,12 +29,13 @@ import java.util.Objects;
  * @since 0.0.1
  */
 @Indices({
-        @Index(value = "emailAddress", type = IndexType.Unique)
+        @Index(value = "uuid", type = IndexType.Unique)
 })
 public class User extends PersistentObject {
 
     @Id
-    private NitriteId uuid;
+    private NitriteId nitriteId;
+    private String uuid = UUIDFactory.generateUUID();
     private String firstName;
     private String lastName;
     private String emailAddress;
@@ -220,7 +221,8 @@ public class User extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            uuid = (NitriteId) document.get("uuid");
+            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
+            uuid = (String) document.get("uuid");
             firstName = (String) document.get("firstName");
             lastName = (String) document.get("lastName");
             emailAddress = (String) document.get("emailAddress");
@@ -273,7 +275,12 @@ public class User extends PersistentObject {
     }
 
     @Override
-    public NitriteId getUUID() {
+    public String getUUID() {
         return uuid;
+    }
+
+    @Override
+    public NitriteId getNitriteId() {
+        return nitriteId;
     }
 }

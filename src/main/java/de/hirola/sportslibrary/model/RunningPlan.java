@@ -6,9 +6,12 @@ import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.DateUtil;
 import de.hirola.sportslibrary.util.UUIDFactory;
 import org.dizitart.no2.Document;
+import org.dizitart.no2.IndexType;
 import org.dizitart.no2.NitriteId;
 import org.dizitart.no2.mapper.NitriteMapper;
 import org.dizitart.no2.objects.Id;
+import org.dizitart.no2.objects.Index;
+import org.dizitart.no2.objects.Indices;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,10 +35,14 @@ import java.util.Objects;
  * @since 0.0.1
  *
  */
+@Indices({
+        @Index(value = "uuid", type = IndexType.Unique)
+})
 public class RunningPlan extends PersistentObject implements Comparable<RunningPlan> {
 
     @Id
-    private NitriteId uuid;
+    private NitriteId nitriteId;
+    private String uuid = UUIDFactory.generateUUID();
     private String name;
     private String remarks;
     // Order number of plan, "Build-Up Training" starts with a low-numbered run plan
@@ -286,7 +293,8 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            uuid = (NitriteId) document.get("uuid");
+            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
+            uuid = (String) document.get("uuid");
             name = (String) document.get("name");
             remarks = (String) document.get("remarks");
             orderNumber = (int) document.get("orderNumber");
@@ -320,8 +328,19 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
     }
 
     @Override
-    public NitriteId getUUID() {
+    public int compareTo(@NotNull RunningPlan other) {
+        // sort by order number
+        return Integer.compare(this.orderNumber, other.orderNumber);
+    }
+
+    @Override
+    public String getUUID() {
         return uuid;
+    }
+
+    @Override
+    public NitriteId getNitriteId() {
+        return nitriteId;
     }
 
     // start day is monday
@@ -341,9 +360,4 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
         }
     }
 
-    @Override
-    public int compareTo(@NotNull RunningPlan other) {
-        // sort by order number
-        return Integer.compare(this.orderNumber, other.orderNumber);
-    }
 }

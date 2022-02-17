@@ -5,9 +5,12 @@ import de.hirola.sportslibrary.database.ListMapper;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.UUIDFactory;
 import org.dizitart.no2.Document;
+import org.dizitart.no2.IndexType;
 import org.dizitart.no2.NitriteId;
 import org.dizitart.no2.mapper.NitriteMapper;
 import org.dizitart.no2.objects.Id;
+import org.dizitart.no2.objects.Index;
+import org.dizitart.no2.objects.Indices;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -23,10 +26,14 @@ import java.util.*;
  * @author Michael Schmidt (Hirola)
  * @since 0.0.1
  */
+@Indices({
+        @Index(value = "uuid", type = IndexType.Unique)
+})
 public class RunningPlanEntry extends PersistentObject implements Comparable<RunningPlanEntry> {
 
     @Id
-    private NitriteId uuid;
+    private NitriteId nitriteId;
+    private String uuid = UUIDFactory.generateUUID();
     private int week; // number of week, begins with 1
     private int day; // day of week, begins with 1 (monday)
     private List<RunningUnit> runningUnits; // units if training day
@@ -140,7 +147,8 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            uuid = (NitriteId) document.get("uuid");
+            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
+            uuid = (String) document.get("uuid");
             week = (int) document.get("week");
             day = (int) document.get("day");
 
@@ -171,8 +179,13 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
     }
 
     @Override
-    public NitriteId getUUID() {
+    public String getUUID() {
         return uuid;
+    }
+
+    @Override
+    public NitriteId getNitriteId() {
+        return nitriteId;
     }
 
     @Override

@@ -8,7 +8,6 @@ import de.hirola.sportslibrary.util.Logger;
 import org.dizitart.no2.Nitrite;
 import org.dizitart.no2.NitriteId;
 import org.dizitart.no2.objects.Cursor;
-import org.dizitart.no2.objects.ObjectFilter;
 import org.dizitart.no2.objects.ObjectRepository;
 import org.dizitart.no2.objects.filters.ObjectFilters;
 import org.jetbrains.annotations.NotNull;
@@ -16,11 +15,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -35,6 +31,9 @@ import java.util.Map;
 public final class DataRepository {
 
     private final String TAG = DataRepository.class.getSimpleName();
+    private final int INSERT_ACTION = 0;
+    private final int UPDATE_ACTION = 1;
+    private final int REMOVE_ACTION = 2;
 
     private final Logger logger;
     private final Nitrite database; // we use Nitrite database
@@ -105,8 +104,13 @@ public final class DataRepository {
     public void save(@NotNull PersistentObject object) throws SportsLibraryException {
         // the concrete type must be specified for each access to a repo
         if (isOpen()) {
-            // save or update the object
-            saveObject(object);
+            ObjectRepository<? extends PersistentObject> repository = database.getRepository(object.getClass());
+            if (repository != null) {
+                // insert
+                doActionWithObject(INSERT_ACTION, object);
+            } else {
+                doActionWithObject(UPDATE_ACTION, object);
+            }
         } else {
             throw new SportsLibraryException("Database not available.");
         }
@@ -121,7 +125,13 @@ public final class DataRepository {
     public void delete(@NotNull PersistentObject object) throws SportsLibraryException {
         // the concrete type must be specified for each access to a repo
         if (isOpen()) {
-            deleteObject(object);
+            ObjectRepository<? extends PersistentObject> repository = database.getRepository(object.getClass());
+            if (repository != null) {
+                // insert
+                doActionWithObject(REMOVE_ACTION, object);
+            } else {
+                throw new SportsLibraryException("Can not remove object, it was not found in database.");
+            }
         } else {
             throw new SportsLibraryException("Database not available.");
         }
@@ -138,11 +148,14 @@ public final class DataRepository {
     @Nullable
     public PersistentObject findByUUID(@NotNull Class<? extends PersistentObject> withType, @NotNull String uuid) {
         if (isOpen()) {
-            try {
-                return persistenceManager.findById(withType, uuid);
-            } catch (OnyxException exception) {
-                logger.log(Logger.DEBUG, TAG, "Error while searching an object from type "
-                        + withType + " and id " + uuid, exception);
+            ObjectRepository<? extends PersistentObject> repository = database.getRepository(withType);
+            Cursor<? extends PersistentObject> cursor = repository.find(ObjectFilters.eq("uuid", uuid));
+            if (cursor.size() == 1 ) {
+                return cursor.firstOrDefault();
+            }
+            if (cursor.size() > 1) {
+                // very bad
+                logger.log(Logger.DEBUG, TAG, "findByUUID has more than one result", null);
             }
         }
         return null;
@@ -160,7 +173,9 @@ public final class DataRepository {
     public List<? extends PersistentObject> findAll(Class<? extends PersistentObject> fromType)  {
         List<? extends PersistentObject> results = new ArrayList<>();
         if (isOpen()) {
-
+            ObjectRepository<? extends PersistentObject> repository = database.getRepository(fromType);
+            Cursor<? extends PersistentObject> cursor = repository.find();
+            return cursor.toList();
         }
         return results;
     }
@@ -185,7 +200,6 @@ public final class DataRepository {
         }
     }
 
-    /*
     // workaround for delete embedded objects
     private void cascadingDeleteForObject(PersistentObject object) throws SportsLibraryException {
         // not all types should be deleted as embedded objects
@@ -242,40 +256,85 @@ public final class DataRepository {
         } catch (IllegalAccessException exception) {
             throw new SportsLibraryException(exception);
         }
-    }*/
-
-    private void saveObject(PersistentObject object) throws SportsLibraryException {
-        try {
-            ObjectRepository<PersistentObject> objectRepository = getObjectRepositoryForType(PersistentObject.class);
-            if (objectRepository != null) {
-                // insert or update?
-                if (objectRepository.getById(object.getUUID()) == null) {
-                    // insert
-                    objectRepository.insert(object);
-                } else {
-                    // update
-                    objectRepository.update(object);
-                }
-            }
-        } catch (Exception exception) {
-            logger.log(Logger.DEBUG, TAG, "Saving the object with id " + object.getUUID() + " failed.", exception);
-            throw new SportsLibraryException(exception);
-        }
     }
 
-    private void deleteObject(PersistentObject object) throws SportsLibraryException {
+    private void doActionWithObject(int action, PersistentObject object) throws SportsLibraryException {
+        // the concrete type must be specified for each access to a repo
         try {
-            ObjectRepository<PersistentObject> objectRepository = getObjectRepositoryForType(PersistentObject.class);
-            if (objectRepository != null) {
-                // insert or update?
-                if (objectRepository.getById(object.getUUID()) == null) {
-                    // insert
-                    objectRepository.insert(object);
-                } else {
-                    // update
-                    objectRepository.update(object);
+            if (object instanceof User) {
+                ObjectRepository<User> objectRepository = database.getRepository(User.class);
+                switch (action) {
+                    case INSERT_ACTION: objectRepository.insert((User) object); return;
+                    case UPDATE_ACTION: objectRepository.update((User) object); return;
+                    case REMOVE_ACTION: objectRepository.remove((User) object); return;
+                }
+
+            }
+            if (object instanceof LocationData) {
+                ObjectRepository<LocationData> objectRepository = database.getRepository(LocationData.class);
+                switch (action) {
+                    case INSERT_ACTION: objectRepository.insert((LocationData) object); return;
+                    case UPDATE_ACTION: objectRepository.update((LocationData) object); return;
+                    case REMOVE_ACTION: objectRepository.remove((LocationData) object); return;
                 }
             }
+            if (object instanceof Track) {
+                ObjectRepository<Track> objectRepository = database.getRepository(Track.class);
+                switch (action) {
+                    case INSERT_ACTION: objectRepository.insert((Track) object); return;
+                    case UPDATE_ACTION: objectRepository.update((Track) object); return;
+                    case REMOVE_ACTION: objectRepository.remove((Track) object); return;
+                }
+            }
+            if (object instanceof TrainingType) {
+                ObjectRepository<TrainingType> objectRepository = database.getRepository(TrainingType.class);
+                switch (action) {
+                    case INSERT_ACTION: objectRepository.insert((TrainingType) object); return;
+                    case UPDATE_ACTION: objectRepository.update((TrainingType) object); return;
+                    case REMOVE_ACTION: objectRepository.remove((TrainingType) object); return;
+                }
+            }
+            if (object instanceof Training) {
+                ObjectRepository<Training> objectRepository = database.getRepository(Training.class);
+                switch (action) {
+                    case INSERT_ACTION: objectRepository.insert((Training) object); return;
+                    case UPDATE_ACTION: objectRepository.update((Training) object); return;
+                    case REMOVE_ACTION: objectRepository.remove((Training) object); return;
+                }
+            }
+            if (object instanceof MovementType) {
+                ObjectRepository<MovementType> objectRepository = database.getRepository(MovementType.class);
+                switch (action) {
+                    case INSERT_ACTION: objectRepository.insert((MovementType) object); return;
+                    case UPDATE_ACTION: objectRepository.update((MovementType) object); return;
+                    case REMOVE_ACTION: objectRepository.remove((MovementType) object); return;
+                }
+            }
+            if (object instanceof RunningUnit) {
+                ObjectRepository<RunningUnit> objectRepository = database.getRepository(RunningUnit.class);
+                switch (action) {
+                    case INSERT_ACTION: objectRepository.insert((RunningUnit) object); return;
+                    case UPDATE_ACTION: objectRepository.update((RunningUnit) object); return;
+                    case REMOVE_ACTION: objectRepository.remove((RunningUnit) object); return;
+                }
+            }
+            if (object instanceof RunningPlanEntry) {
+                ObjectRepository<RunningPlanEntry> objectRepository = database.getRepository(RunningPlanEntry.class);
+                switch (action) {
+                    case INSERT_ACTION: objectRepository.insert((RunningPlanEntry) object); return;
+                    case UPDATE_ACTION: objectRepository.update((RunningPlanEntry) object); return;
+                    case REMOVE_ACTION: objectRepository.remove((RunningPlanEntry) object); return;
+                }
+            }
+            if (object instanceof RunningPlan) {
+                ObjectRepository<RunningPlan> objectRepository = database.getRepository(RunningPlan.class);
+                switch (action) {
+                    case INSERT_ACTION: objectRepository.insert((RunningPlan) object); return;
+                    case UPDATE_ACTION: objectRepository.update((RunningPlan) object); return;
+                    case REMOVE_ACTION: objectRepository.remove((RunningPlan) object); return;
+                }
+            }
+            throw new SportsLibraryException("Unsupported type of object.");
         } catch (Exception exception) {
             logger.log(Logger.DEBUG, TAG, "Saving the object with id " + object.getUUID() + " failed.", exception);
             throw new SportsLibraryException(exception);

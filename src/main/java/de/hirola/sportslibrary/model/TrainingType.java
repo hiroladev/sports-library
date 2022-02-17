@@ -25,12 +25,14 @@ import java.util.Objects;
  *
  */
 @Indices({
+        @Index(value = "uuid", type = IndexType.Unique),
         @Index(value = "name", type = IndexType.Unique)
 })
 public class TrainingType extends PersistentObject {
 
     @Id
-    private NitriteId uuid;
+    private NitriteId nitriteId;
+    private String uuid = UUIDFactory.generateUUID();
     private String name;
     private String imageName; // image for the kind of training
     private String remarks;
@@ -151,7 +153,8 @@ public class TrainingType extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            uuid = (NitriteId) document.get("uuid");
+            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
+            uuid = (String) document.get("uuid");
             name = (String) document.get("name");
             imageName = (String) document.get("imageName");
             remarks = (String) document.get("remarks");
@@ -175,8 +178,13 @@ public class TrainingType extends PersistentObject {
     }
 
     @Override
-    public NitriteId getUUID() {
+    public String getUUID() {
         return uuid;
+    }
+
+    @Override
+    public NitriteId getNitriteId() {
+        return nitriteId;
     }
 }
 

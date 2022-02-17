@@ -4,9 +4,12 @@ import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.DateUtil;
 import de.hirola.sportslibrary.util.UUIDFactory;
 import org.dizitart.no2.Document;
+import org.dizitart.no2.IndexType;
 import org.dizitart.no2.NitriteId;
 import org.dizitart.no2.mapper.NitriteMapper;
 import org.dizitart.no2.objects.Id;
+import org.dizitart.no2.objects.Index;
+import org.dizitart.no2.objects.Indices;
 
 import java.util.Objects;
 
@@ -19,10 +22,14 @@ import java.util.Objects;
  * @author Michael Schmidt (Hirola)
  * @since 0.0.1
  */
+@Indices({
+        @Index(value = "uuid", type = IndexType.Unique)
+})
 public class LocationData extends PersistentObject {
 
     @Id
-    private NitriteId uuid;
+    private NitriteId nitriteId;
+    private String uuid = UUIDFactory.generateUUID();
     private long timeStamp; // UTC time of this location, in milliseconds since epoch (January 1, 1970).
     private String provider;
     private double latitude;
@@ -94,7 +101,8 @@ public class LocationData extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            uuid = (NitriteId) document.get("uuid");
+            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
+            uuid = (String) document.get("uuid");
             timeStamp = (long) document.get("timeStamp");
             provider = (String) document.get("provider");
             latitude = (double) document.get("latitude");
@@ -125,8 +133,13 @@ public class LocationData extends PersistentObject {
     }
 
     @Override
-    public NitriteId getUUID() {
+    public String getUUID() {
         return uuid;
+    }
+
+    @Override
+    public NitriteId getNitriteId() {
+        return nitriteId;
     }
 
 }
