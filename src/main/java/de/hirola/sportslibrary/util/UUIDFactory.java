@@ -17,6 +17,12 @@ public final class UUIDFactory {
         return UUID.randomUUID().toString().replace("-", "").toUpperCase().substring(0, 15);
     }
     public static String generateTrainingType() {
-        return "Trainingstype~" + UUID.randomUUID().toString().replace("-", "").toUpperCase().substring(0, 8);
+        return "Trainingstype~"
+                + UUID.randomUUID().toString().replace("-", "").toUpperCase().substring(0, 8);
+    }
+    public static String generateEMailAddress() {
+        return "app.user@"
+                + UUID.randomUUID().toString().replace("-", "").toUpperCase().substring(0, 5)
+                + ".de";
     }
 }

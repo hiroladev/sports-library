@@ -29,7 +29,7 @@ class SportsLibraryTest {
             dataRepository = sportsLibrary.getDataRepository();
             assertNotNull(dataRepository, "DataRepository not initialize.");
             List<? extends PersistentObject> users = dataRepository.findAll(User.class);
-            assertEquals(users.size(), 1, "More tha a user.");
+            assertEquals(users.size(), 1, "More than a user.");
 
         } catch (SportsLibraryException exception) {
             fail(exception.getMessage());
@@ -121,9 +121,22 @@ class SportsLibraryTest {
             assertEquals(3,runningPlans.size());
 
             // test user
-            User appUser = sportsLibrary.getAppUser();
-            appUser.setMaxPulse(160);
-            appUser.setActiveRunningPlan((RunningPlan) runningPlans.get(0));
+            User appUser1 = sportsLibrary.getAppUser();
+            String appUser1UUID = appUser1.getUUID();
+            appUser1.setMaxPulse(160);
+            dataRepository.save(appUser1);
+            User appUser2 = (User) dataRepository.findByUUID(User.class, appUser1UUID);
+            assertNotNull(appUser2, "User not found in database.");
+            assertEquals(appUser2.getUUID(), appUser1UUID, "Not the same object.");
+            assertEquals(160, appUser2.getMaxPulse(), "Pulse not saved");
+
+            RunningPlan runningPlan1 = (RunningPlan) runningPlans.get(0);
+            appUser2.setActiveRunningPlan(runningPlan1);
+            dataRepository.save(appUser2);
+            User appUser3 = (User) dataRepository.findByUUID(User.class, appUser1UUID);
+            assertNotNull(appUser3, "User not found in database.");
+            assertEquals(appUser3.getUUID(), appUser1UUID, "Not the same object.");
+            assertEquals(runningPlan1, appUser3.getActiveRunningPlan(), "Running plan not saved.");
 
             // test the compare from running plan entry
             RunningPlanEntry runningPlanEntry1 = new RunningPlanEntry(1,1, new ArrayList<>());
@@ -142,10 +155,10 @@ class SportsLibraryTest {
             assertEquals(runningPlanEntry3, entries1.get(2), "Entries not sorted by week and day.");
 
             // test the correct start date
-            RunningPlan runningPlan1 = (RunningPlan) runningPlans.get(0);
+            RunningPlan runningPlan2 = (RunningPlan) runningPlans.get(1);
             LocalDate newStartDate = DateUtil.getLocalDateFromNow().plusWeeks(2);
-            runningPlan1.setStartDate(newStartDate);
-            LocalDate correctedStartDate = runningPlan1.getStartDate();
+            runningPlan2.setStartDate(newStartDate);
+            LocalDate correctedStartDate = runningPlan2.getStartDate();
             // the new start date must be monday in 2 weeks
             assertEquals(correctedStartDate.getDayOfWeek(), DayOfWeek.MONDAY,  "Date not corrected.");
 
@@ -154,15 +167,15 @@ class SportsLibraryTest {
             assertEquals(1, users.size());
 
             // test running plan
-            PersistentObject object = runningPlans.get(1);
+            PersistentObject object = runningPlans.get(2);
             if (object instanceof RunningPlan) {
-                RunningPlan runningPlan2= (RunningPlan) object;
+                RunningPlan runningPlan3 = (RunningPlan) object;
                 // test correct start date
                 for (int i = 0; i < 7; i++) {
                     LocalDate startDate2 = LocalDate.now(ZoneId.systemDefault());
                     startDate2 = startDate2.plusDays(i);
                     runningPlan2.setStartDate(startDate2);
-                    LocalDate actualStartDate = runningPlan2.getStartDate();
+                    LocalDate actualStartDate = runningPlan3.getStartDate();
                     assertEquals(DayOfWeek.MONDAY, actualStartDate.getDayOfWeek());
                 }
                 // test if duration correction

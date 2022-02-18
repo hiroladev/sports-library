@@ -29,7 +29,8 @@ import java.util.Objects;
  * @since 0.0.1
  */
 @Indices({
-        @Index(value = "uuid", type = IndexType.Unique)
+        @Index(value = "uuid", type = IndexType.Unique),
+        @Index(value = "emailAddress", type = IndexType.Unique)
 })
 public class User extends PersistentObject {
 
@@ -38,7 +39,7 @@ public class User extends PersistentObject {
     private String uuid = UUIDFactory.generateUUID();
     private String firstName;
     private String lastName;
-    private String emailAddress;
+    private String emailAddress = UUIDFactory.generateEMailAddress();
     private Date birthday; // required to calculate the heart rate
     private int gender; // required to calculate the heart rate
     private int trainingLevel; // from Global
@@ -49,10 +50,8 @@ public class User extends PersistentObject {
      * Default constructor for reflection and database management.
      */
     public User() {
-        super();
         firstName = "";
         lastName = "Athlete";
-        emailAddress = "";
         birthday = Date.from(Instant.now());
         gender = 0;
         trainingLevel = 0;
