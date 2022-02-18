@@ -30,7 +30,7 @@ import java.util.Objects;
  *
  */
 @Indices({
-        @Index(value = "key", type = IndexType.Unique)
+       @Index(value = "key", type = IndexType.Unique)
 })
 public class MovementType extends PersistentObject {
 
@@ -46,8 +46,8 @@ public class MovementType extends PersistentObject {
      * Default constructor for reflection and database management.
      */
     public MovementType() {
-        super();
-        stringForKey = UUIDFactory.generateUUID();
+        key = UUIDFactory.generateUUID();
+        stringForKey = "";
         this.colorKeyString = Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR;
         speed = 0.0;
         pace = 0.0;
@@ -64,7 +64,6 @@ public class MovementType extends PersistentObject {
      */
     public MovementType(@NotNull String key, @NotNull String stringForKey, @Nullable String colorKeyString,
                         double speed, double pace) {
-        super();
         this.key = key;
         this.stringForKey = stringForKey;
         this.colorKeyString = Objects.requireNonNullElse(colorKeyString, Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR);
@@ -160,7 +159,7 @@ public class MovementType extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
+            nitriteId = document.getId();
             key = (String) document.get("key");
             stringForKey = (String) document.get("stringForKey");
             colorKeyString = (String) document.get("colorKeyString");

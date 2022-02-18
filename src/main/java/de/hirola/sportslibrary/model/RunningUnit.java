@@ -123,7 +123,7 @@ public class RunningUnit extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
+            nitriteId = document.getId();
             uuid = (String) document.get("uuid");
             isCompleted = (boolean) document.get("isCompleted");
             duration = (long) document.get("duration");

@@ -147,7 +147,7 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
+            nitriteId = document.getId();
             uuid = (String) document.get("uuid");
             week = (int) document.get("week");
             day = (int) document.get("day");

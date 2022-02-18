@@ -13,8 +13,6 @@ import org.dizitart.no2.objects.filters.ObjectFilters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -104,8 +102,7 @@ public final class DataRepository {
     public void save(@NotNull PersistentObject object) throws SportsLibraryException {
         // the concrete type must be specified for each access to a repo
         if (isOpen()) {
-            ObjectRepository<? extends PersistentObject> repository = database.getRepository(object.getClass());
-            if (repository != null) {
+            if (findByUUID(object.getClass(), object.getUUID()) == null) {
                 // insert
                 doActionWithObject(INSERT_ACTION, object);
             } else {
@@ -125,12 +122,11 @@ public final class DataRepository {
     public void delete(@NotNull PersistentObject object) throws SportsLibraryException {
         // the concrete type must be specified for each access to a repo
         if (isOpen()) {
-            ObjectRepository<? extends PersistentObject> repository = database.getRepository(object.getClass());
-            if (repository != null) {
-                // insert
+            if (findByUUID(object.getClass(), object.getUUID()) != null) {
+                // remove
                 doActionWithObject(REMOVE_ACTION, object);
             } else {
-                throw new SportsLibraryException("Can not remove object, it was not found in database.");
+                throw new SportsLibraryException("The object was not found in database. Can not delete it.");
             }
         } else {
             throw new SportsLibraryException("Database not available.");
@@ -149,7 +145,16 @@ public final class DataRepository {
     public PersistentObject findByUUID(@NotNull Class<? extends PersistentObject> withType, @NotNull String uuid) {
         if (isOpen()) {
             ObjectRepository<? extends PersistentObject> repository = database.getRepository(withType);
-            Cursor<? extends PersistentObject> cursor = repository.find(ObjectFilters.eq("uuid", uuid));
+            Cursor<? extends PersistentObject> cursor;
+            if (withType.getSimpleName().equals("MovementType")) {
+                // movement type has a unique key
+                cursor = repository.find(ObjectFilters.eq("key", uuid));
+            } else if (withType.getSimpleName().equals("TrainingType")) {
+                // training type has a unique name
+                cursor = repository.find(ObjectFilters.eq("name", uuid));
+            } else {
+                cursor = repository.find(ObjectFilters.eq("uuid", uuid));
+            }
             if (cursor.size() == 1 ) {
                 return cursor.firstOrDefault();
             }
@@ -200,64 +205,6 @@ public final class DataRepository {
         }
     }
 
-    // workaround for delete embedded objects
-    private void cascadingDeleteForObject(PersistentObject object) throws SportsLibraryException {
-        // not all types should be deleted as embedded objects
-        try {
-            Field[] attributes = object.getClass().getDeclaredFields();
-            for (Field attribute : attributes) {
-                Class<?> clazz = attribute.getType();
-                // embedded list object
-                if (clazz.getSimpleName().equalsIgnoreCase("List")) {
-                    // get a list element
-                    Class<?> listElementClazz = ((Class<?>) ((ParameterizedType) attribute.getGenericType()).getActualTypeArguments()[0]);
-                    // contains the list objects from type PersistentObject?
-                    if (PersistentObject.class.isAssignableFrom(listElementClazz)) {
-                        // should this type delete?
-                        if (Global.CASCADING_DELETED_CLASSES.contains(listElementClazz)) {
-                            // try to delete all objects from this list
-                            attribute.setAccessible(true);
-                            Object listAttributeObject = attribute.get(object);
-                            if (listAttributeObject instanceof List) {
-                                @SuppressWarnings("unchecked")
-                                List<PersistentObject> persistentObjectList = (List<PersistentObject>) listAttributeObject;
-                                // the object can contain other embedded objects
-                                for (PersistentObject persistentObject : persistentObjectList) {
-                                    // check if the object (still) exists
-                                    String uuid = persistentObject.getUUID();
-                                    PersistentObject savedPersistentObject = findByUUID(persistentObject.getClass(), uuid);
-                                    if (savedPersistentObject != null) {
-                                        // recalls this func
-                                        delete(persistentObject);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                // persistent object
-                else {
-                    // contains the list objects from type PersistentObject?
-                    if (PersistentObject.class.isAssignableFrom(clazz)) {
-                        // should this type delete?
-                        if (Global.CASCADING_DELETED_CLASSES.contains(clazz)) {
-                            attribute.setAccessible(true);
-                            PersistentObject persistentObject = (PersistentObject) attribute.get(object);
-                            String uuid = persistentObject.getUUID();
-                            PersistentObject savedPersistentObject = findByUUID(persistentObject.getClass(), uuid);
-                            if (savedPersistentObject != null) {
-                                // recalls this func
-                                delete(persistentObject);
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (IllegalAccessException exception) {
-            throw new SportsLibraryException(exception);
-        }
-    }
-
     private void doActionWithObject(int action, PersistentObject object) throws SportsLibraryException {
         // the concrete type must be specified for each access to a repo
         try {
@@ -279,11 +226,10 @@ public final class DataRepository {
                 }
             }
             if (object instanceof Track) {
-                ObjectRepository<Track> objectRepository = database.getRepository(Track.class);
                 switch (action) {
-                    case INSERT_ACTION: objectRepository.insert((Track) object); return;
-                    case UPDATE_ACTION: objectRepository.update((Track) object); return;
-                    case REMOVE_ACTION: objectRepository.remove((Track) object); return;
+                    case INSERT_ACTION: doActionWithTrack(INSERT_ACTION, (Track) object); return;
+                    case UPDATE_ACTION: doActionWithTrack(UPDATE_ACTION, (Track) object); return;
+                    case REMOVE_ACTION: doActionWithTrack(REMOVE_ACTION, (Track) object); return;
                 }
             }
             if (object instanceof TrainingType) {
@@ -295,11 +241,10 @@ public final class DataRepository {
                 }
             }
             if (object instanceof Training) {
-                ObjectRepository<Training> objectRepository = database.getRepository(Training.class);
                 switch (action) {
-                    case INSERT_ACTION: objectRepository.insert((Training) object); return;
-                    case UPDATE_ACTION: objectRepository.update((Training) object); return;
-                    case REMOVE_ACTION: objectRepository.remove((Training) object); return;
+                    case INSERT_ACTION: doActionWithTraining(INSERT_ACTION, (Training) object); return;
+                    case UPDATE_ACTION: doActionWithTraining(UPDATE_ACTION, (Training) object); return;
+                    case REMOVE_ACTION: doActionWithTraining(REMOVE_ACTION, (Training) object); return;
                 }
             }
             if (object instanceof MovementType) {
@@ -327,17 +272,212 @@ public final class DataRepository {
                 }
             }
             if (object instanceof RunningPlan) {
-                ObjectRepository<RunningPlan> objectRepository = database.getRepository(RunningPlan.class);
                 switch (action) {
-                    case INSERT_ACTION: objectRepository.insert((RunningPlan) object); return;
-                    case UPDATE_ACTION: objectRepository.update((RunningPlan) object); return;
-                    case REMOVE_ACTION: objectRepository.remove((RunningPlan) object); return;
+                    case INSERT_ACTION: doActionWithRunningPlan(INSERT_ACTION, (RunningPlan) object); return;
+                    case UPDATE_ACTION: doActionWithRunningPlan(UPDATE_ACTION, (RunningPlan) object); return;
+                    case REMOVE_ACTION: doActionWithRunningPlan(REMOVE_ACTION, (RunningPlan) object); return;
                 }
             }
             throw new SportsLibraryException("Unsupported type of object.");
         } catch (Exception exception) {
-            logger.log(Logger.DEBUG, TAG, "Saving the object with id " + object.getUUID() + " failed.", exception);
+            String errorMessage = "Saving the object from type "
+                    + object.getClass().getSimpleName()
+                    +" and with id " + object.getUUID() + " failed.";
+            logger.log(Logger.DEBUG, TAG, errorMessage, exception);
             throw new SportsLibraryException(exception);
+        }
+    }
+
+    // handle a track with embedded locations
+    private void doActionWithTrack(int action, @NotNull Track track) throws SportsLibraryException {
+        // create or get the repositories
+        ObjectRepository<Track> trackRepository = database.getRepository(Track.class);
+        ObjectRepository<LocationData> locationsRepository = database.getRepository(LocationData.class);
+        List<LocationData> locations = track.getLocations();
+        switch (action) {
+            case INSERT_ACTION:
+                // save locations
+                for(LocationData locationData: locations) {
+                    if (findByUUID(Track.class, locationData.getUUID()) == null) {
+                        // insert
+                        locationsRepository.insert(locationData);
+                    } else {
+                        // update
+                        locationsRepository.update(locationData);
+                    }
+                }
+                // save the track
+                trackRepository.insert(track);
+                return;
+
+            case UPDATE_ACTION:
+                // update locations
+                for(LocationData locationData: locations) {
+                    if (findByUUID(Track.class, locationData.getUUID()) == null) {
+                        // insert a new location in the list
+                        locationsRepository.insert(locationData);
+                    } else {
+                        // update
+                        locationsRepository.update(locationData);
+                    }
+                }
+                // update the track
+                trackRepository.update(track);
+                return;
+
+            case REMOVE_ACTION:
+                // remove locations
+                for(LocationData locationData: locations) {
+                    if (findByUUID(LocationData.class, locationData.getUUID()) != null) {
+                        // remove the location
+                        locationsRepository.remove(locationData);
+                    }
+                }
+                // remove the track
+                trackRepository.remove(track);
+        }
+    }
+
+    // handle a training with embedded training type and track (and the locations of the track)
+    // training type must exist in database
+    private void doActionWithTraining(int action, @NotNull Training training) throws SportsLibraryException {
+        // create or get the repositories
+        ObjectRepository<Training> trainingRepository = database.getRepository(Training.class);
+        ObjectRepository<TrainingType> trainingTypeRepository = database.getRepository(TrainingType.class);
+        TrainingType trainingType = training.getTrainingType();
+        Track track = training.getTrack();
+        switch (action) {
+            case INSERT_ACTION:
+                // add a new training type
+                if (findByUUID(TrainingType.class, trainingType.getUUID()) == null) {
+                    trainingTypeRepository.insert(trainingType);
+                }
+                // add a new track
+                if (track != null) {
+                    if (findByUUID(Track.class, track.getUUID()) == null) {
+                        // add the track with locations
+                        doActionWithTrack(INSERT_ACTION, track);
+                    }
+                }
+                // save the training
+                trainingRepository.insert(training);
+                return;
+
+            case UPDATE_ACTION:
+                // add a new training type
+                if (findByUUID(TrainingType.class, trainingType.getUUID()) == null) {
+                    trainingTypeRepository.insert(trainingType);
+                }
+                // add a new track
+                if (track != null) {
+                    if (findByUUID(Track.class, track.getUUID()) == null) {
+                        // add the track with locations
+                        doActionWithTrack(INSERT_ACTION, track);
+                    }
+                }
+                // save the training
+                trainingRepository.update(training);
+                return;
+
+            case REMOVE_ACTION:
+                // training type and track will be not remove
+                // they may have references to other objects
+                // remove the training
+                trainingRepository.remove(training);
+        }
+    }
+
+    // handle a running plan with embedded entries and units
+    // movement type must exist in database
+    private void doActionWithRunningPlan(int action, @NotNull RunningPlan runningPlan) throws SportsLibraryException {
+        // create or get the repositories
+        ObjectRepository<RunningPlan> runningPlanRepository = database.getRepository(RunningPlan.class);
+        ObjectRepository<RunningPlanEntry> runningPlanEntryRepository = database.getRepository(RunningPlanEntry.class);
+        ObjectRepository<RunningUnit> runningUnitRepository = database.getRepository(RunningUnit.class);
+        ObjectRepository<MovementType> movementTypeRepository = database.getRepository(MovementType.class);
+        List<RunningPlanEntry> entries = runningPlan.getEntries();
+        switch (action) {
+            case INSERT_ACTION:
+                // save running plan entries
+                for(RunningPlanEntry entry: entries) {
+                    if (findByUUID(RunningPlanEntry.class, entry.getUUID()) == null) {
+                        // insert the units
+                        List<RunningUnit> units = entry.getRunningUnits();
+                        for(RunningUnit unit: units) {
+                            if (findByUUID(RunningUnit.class, unit.getUUID()) == null) {
+                                // insert the unit
+                                runningUnitRepository.insert(unit);
+                            } else {
+                                // update the unit
+                                runningUnitRepository.update(unit);
+                            }
+                            // insert a new movement type
+                            MovementType movementType = unit.getMovementType();
+                            if (findByUUID(MovementType.class, movementType.getUUID()) == null) {
+                                movementTypeRepository.insert(movementType);
+                            }
+                        }
+                        // insert the entry
+                        runningPlanEntryRepository.insert(entry);
+                    } else {
+                        // update the entry
+                        runningPlanEntryRepository.update(entry);
+                    }
+                }
+                // save the running plan
+                runningPlanRepository.insert(runningPlan);
+                return;
+
+            case UPDATE_ACTION:
+                // save or update running plan entries
+                for(RunningPlanEntry entry: entries) {
+                    if (findByUUID(RunningPlanEntry.class, entry.getUUID()) == null) {
+                        // insert the units
+                        List<RunningUnit> units = entry.getRunningUnits();
+                        for(RunningUnit unit: units) {
+                            if (findByUUID(RunningUnit.class, unit.getUUID()) == null) {
+                                // insert the unit
+                                runningUnitRepository.insert(unit);
+                            } else {
+                                // update the unit
+                                runningUnitRepository.update(unit);
+                            }
+                            // insert a new movement type
+                            MovementType movementType = unit.getMovementType();
+                            if (findByUUID(MovementType.class, movementType.getUUID()) == null) {
+                                movementTypeRepository.insert(movementType);
+                            }
+                        }
+                        // insert the entry
+                        runningPlanEntryRepository.insert(entry);
+                    } else {
+                        // update the entry
+                        runningPlanEntryRepository.update(entry);
+                    }
+                }
+                // update the running plan
+                runningPlanRepository.update(runningPlan);
+                return;
+
+            case REMOVE_ACTION:
+                // save or update running plan entries
+                for(RunningPlanEntry entry: entries) {
+                    if (findByUUID(RunningPlanEntry.class, entry.getUUID()) != null) {
+                        // insert the units
+                        List<RunningUnit> units = entry.getRunningUnits();
+                        for(RunningUnit unit: units) {
+                            if (findByUUID(RunningUnit.class, unit.getUUID()) != null) {
+                                // remove the unit
+                                // movement type are not deleted
+                                runningUnitRepository.remove(unit);
+                            }
+                        }
+                        // remove the entry
+                        runningPlanEntryRepository.remove(entry);
+                    }
+                }
+                // remove the running plan
+                runningPlanRepository.remove(runningPlan);
         }
     }
 }

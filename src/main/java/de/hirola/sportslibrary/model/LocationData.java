@@ -101,7 +101,7 @@ public class LocationData extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
+            nitriteId = document.getId();
             uuid = (String) document.get("uuid");
             timeStamp = (long) document.get("timeStamp");
             provider = (String) document.get("provider");

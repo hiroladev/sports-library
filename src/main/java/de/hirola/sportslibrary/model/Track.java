@@ -343,7 +343,7 @@ public class Track extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
+            nitriteId = document.getId();
             uuid = (String) document.get("uuid");
             name = (String) document.get("name");
             importDate = (Date) document.get("importDate");
@@ -359,6 +359,7 @@ public class Track extends PersistentObject {
                 locations = ListMapper.toElementsList(mapper, objectsDocument, LocationData.class);
             } catch (ClassCastException | SportsLibraryException exception) {
                 //TODO: logging?
+                exception.printStackTrace();
                 locations = new ArrayList<>();
             }
         }

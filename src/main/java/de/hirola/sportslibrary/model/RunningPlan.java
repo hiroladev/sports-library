@@ -55,7 +55,6 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
      * Default constructor for reflection and database management.
      */
     public RunningPlan() {
-        super();
         name = "";
         remarks = "";
         orderNumber = 0;
@@ -293,7 +292,7 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
+            nitriteId = document.getId();
             uuid = (String) document.get("uuid");
             name = (String) document.get("name");
             remarks = (String) document.get("remarks");

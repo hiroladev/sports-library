@@ -286,7 +286,7 @@ public class Training extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
+            nitriteId = document.getId();
             uuid = (String) document.get("uuid");
             name = (String) document.get("name");
             duration = (long) document.get("duration");

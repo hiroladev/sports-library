@@ -24,10 +24,12 @@ class SportsLibraryTest {
     void testLibrary() {
         try {
             // empty app name
-            sportsLibrary = new SportsLibrary("", null);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             assertNotNull(sportsLibrary, "Library not initialize.");
             dataRepository = sportsLibrary.getDataRepository();
             assertNotNull(dataRepository, "DataRepository not initialize.");
+            List<? extends PersistentObject> users = dataRepository.findAll(User.class);
+            assertEquals(users.size(), 1, "More tha a user.");
 
         } catch (SportsLibraryException exception) {
             fail(exception.getMessage());
@@ -117,6 +119,11 @@ class SportsLibraryTest {
             // exists 3 running plans in local datastore?
             List<? extends PersistentObject> runningPlans = dataRepository.findAll(RunningPlan.class);
             assertEquals(3,runningPlans.size());
+
+            // test user
+            User appUser = sportsLibrary.getAppUser();
+            appUser.setMaxPulse(160);
+            appUser.setActiveRunningPlan((RunningPlan) runningPlans.get(0));
 
             // test the compare from running plan entry
             RunningPlanEntry runningPlanEntry1 = new RunningPlanEntry(1,1, new ArrayList<>());
@@ -305,7 +312,7 @@ class SportsLibraryTest {
             List<? extends PersistentObject> notDeletedLocations = dataRepository.findAll(LocationData.class);
             assertEquals(2, notDeletedLocations.size(), "LocationData was deleted.");
             PersistentObject notDeletedTrainingType = dataRepository.findByUUID(TrainingType.class, trainingTypeUUID);
-            assertNull(notDeletedTrainingType, "TrainingType was deleted");
+            assertNotNull(notDeletedTrainingType, "TrainingType was deleted");
 
         } catch (SportsLibraryException exception) {
             fail(exception.getMessage());
@@ -325,7 +332,7 @@ class SportsLibraryTest {
             // this movement type (with the key 'L') already exists!
             // saving th running plan updates an existing object
             MovementType movementType1 = new MovementType("L", "Running", "red", 5, 5);
-            // a new  movement type
+            // add a new  movement type
             MovementType movementType2 = new MovementType("Y", "Yoga", "red", 0.0, 0.0);
 
             RunningUnit runningUnit1 = new RunningUnit(30, movementType1);

@@ -16,4 +16,7 @@ public final class UUIDFactory {
     public static String generateUUID() {
         return UUID.randomUUID().toString().replace("-", "").toUpperCase().substring(0, 15);
     }
+    public static String generateTrainingType() {
+        return "Trainingstype~" + UUID.randomUUID().toString().replace("-", "").toUpperCase().substring(0, 8);
+    }
 }

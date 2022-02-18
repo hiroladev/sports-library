@@ -221,7 +221,7 @@ public class User extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
+            nitriteId = document.getId();
             uuid = (String) document.get("uuid");
             firstName = (String) document.get("firstName");
             lastName = (String) document.get("lastName");

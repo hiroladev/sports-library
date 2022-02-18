@@ -25,14 +25,12 @@ import java.util.Objects;
  *
  */
 @Indices({
-        @Index(value = "uuid", type = IndexType.Unique),
         @Index(value = "name", type = IndexType.Unique)
 })
 public class TrainingType extends PersistentObject {
 
     @Id
     private NitriteId nitriteId;
-    private String uuid = UUIDFactory.generateUUID();
     private String name;
     private String imageName; // image for the kind of training
     private String remarks;
@@ -42,8 +40,7 @@ public class TrainingType extends PersistentObject {
      * Default constructor for reflection and database management.
      */
     public TrainingType() {
-        super();
-        name = "Training";
+        name = UUIDFactory.generateTrainingType();
         //TODO: default image for JVM and Android in resources
         imageName = "training-default";
         speed = 0.0;
@@ -141,7 +138,6 @@ public class TrainingType extends PersistentObject {
     @Override
     public Document write(NitriteMapper mapper) {
         Document document = new Document();
-        document.put("uuid", uuid);
         document.put("name", name);
         document.put("imageName", imageName);
         document.put("remarks", remarks);
@@ -153,8 +149,7 @@ public class TrainingType extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = NitriteId.createId((Long) document.get("nitriteId"));
-            uuid = (String) document.get("uuid");
+            nitriteId = document.getId();
             name = (String) document.get("name");
             imageName = (String) document.get("imageName");
             remarks = (String) document.get("remarks");
@@ -174,12 +169,12 @@ public class TrainingType extends PersistentObject {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), uuid, name);
+        return Objects.hash(super.hashCode(), name);
     }
 
     @Override
     public String getUUID() {
-        return uuid;
+        return name;
     }
 
     @Override

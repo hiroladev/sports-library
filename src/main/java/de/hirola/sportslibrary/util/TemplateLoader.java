@@ -296,7 +296,6 @@ public class TemplateLoader {
     // TODO: rollback on error
     private void addRunningPlansFromTemplate() throws SportsLibraryException {
         //  Liste der Bewegungsgarten - notwendig für das Anlegen von Laufplänen
-
         List<? extends PersistentObject> listOfObjects = dataRepository.findAll(MovementType.class);
         //  Bewegungsarten müssen bereits vorhanden sein, ansonsten können keine Laufpläne angelegt werden
         if (listOfObjects.size() == 0) {
