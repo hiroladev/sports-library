@@ -35,7 +35,6 @@ import java.util.Objects;
 public class User extends PersistentObject {
 
     @Id
-    private NitriteId nitriteId;
     private String uuid = UUIDFactory.generateUUID();
     private String firstName;
     private String lastName;
@@ -220,7 +219,6 @@ public class User extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = document.getId();
             uuid = (String) document.get("uuid");
             firstName = (String) document.get("firstName");
             lastName = (String) document.get("lastName");
@@ -264,8 +262,8 @@ public class User extends PersistentObject {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
-        User user = (User) o;
-        return uuid.equals(user.uuid) && Objects.equals(emailAddress, user.emailAddress);
+        User that = (User) o;
+        return uuid.equals(that.uuid) && Objects.equals(emailAddress, that.emailAddress);
     }
 
     @Override
@@ -278,8 +276,4 @@ public class User extends PersistentObject {
         return uuid;
     }
 
-    @Override
-    public NitriteId getNitriteId() {
-        return nitriteId;
-    }
 }

@@ -15,5 +15,4 @@ import org.dizitart.no2.mapper.Mappable;
  */
 public abstract class PersistentObject implements Mappable {
     public abstract String getUUID();
-    public abstract NitriteId getNitriteId();
 }

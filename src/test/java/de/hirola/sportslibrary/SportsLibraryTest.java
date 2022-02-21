@@ -136,7 +136,7 @@ class SportsLibraryTest {
             User appUser3 = (User) dataRepository.findByUUID(User.class, appUser1UUID);
             assertNotNull(appUser3, "User not found in database.");
             assertEquals(appUser3.getUUID(), appUser1UUID, "Not the same object.");
-            assertEquals(runningPlan1, appUser3.getActiveRunningPlan(), "Running plan not saved.");
+            assertEquals(runningPlan1, appUser3.getActiveRunningPlan(), "User's running plan not saved.");
 
             // test the compare from running plan entry
             RunningPlanEntry runningPlanEntry1 = new RunningPlanEntry(1,1, new ArrayList<>());

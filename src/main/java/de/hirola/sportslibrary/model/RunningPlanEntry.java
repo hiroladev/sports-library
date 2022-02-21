@@ -26,13 +26,10 @@ import java.util.*;
  * @author Michael Schmidt (Hirola)
  * @since 0.0.1
  */
-@Indices({
-        @Index(value = "uuid", type = IndexType.Unique)
-})
+
 public class RunningPlanEntry extends PersistentObject implements Comparable<RunningPlanEntry> {
 
     @Id
-    private NitriteId nitriteId;
     private String uuid = UUIDFactory.generateUUID();
     private int week; // number of week, begins with 1
     private int day; // day of week, begins with 1 (monday)
@@ -147,7 +144,6 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = document.getId();
             uuid = (String) document.get("uuid");
             week = (int) document.get("week");
             day = (int) document.get("day");
@@ -170,7 +166,7 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         RunningPlanEntry that = (RunningPlanEntry) o;
-        return week == that.week && day == that.day;
+        return uuid.equals(that.uuid);
     }
 
     @Override
@@ -183,10 +179,7 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
         return uuid;
     }
 
-    @Override
-    public NitriteId getNitriteId() {
-        return nitriteId;
-    }
+    
 
     @Override
     public int compareTo(@NotNull RunningPlanEntry other) {

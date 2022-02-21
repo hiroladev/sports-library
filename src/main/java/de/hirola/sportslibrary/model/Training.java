@@ -29,13 +29,10 @@ import java.util.Objects;
  * @since 0.0.1
  *
  */
-@Indices({
-        @Index(value = "uuid", type = IndexType.Unique)
-})
+
 public class Training extends PersistentObject {
 
     @Id
-    private NitriteId nitriteId;
     private String uuid = UUIDFactory.generateUUID();
     private String name;
     private String remarks;
@@ -286,7 +283,6 @@ public class Training extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = document.getId();
             uuid = (String) document.get("uuid");
             name = (String) document.get("name");
             duration = (long) document.get("duration");
@@ -317,8 +313,8 @@ public class Training extends PersistentObject {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
-        Training training = (Training) o;
-        return name.equals(training.name);
+        Training that = (Training) o;
+        return uuid.equals(that.uuid);
     }
 
     @Override
@@ -331,8 +327,5 @@ public class Training extends PersistentObject {
         return uuid;
     }
 
-    @Override
-    public NitriteId getNitriteId() {
-        return nitriteId;
-    }
+    
 }

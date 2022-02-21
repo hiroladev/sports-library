@@ -22,13 +22,9 @@ import java.util.Objects;
  * @author Michael Schmidt (Hirola)
  * @since 0.0.1
  */
-@Indices({
-        @Index(value = "uuid", type = IndexType.Unique)
-})
 public class LocationData extends PersistentObject {
 
     @Id
-    private NitriteId nitriteId;
     private String uuid = UUIDFactory.generateUUID();
     private long timeStamp; // UTC time of this location, in milliseconds since epoch (January 1, 1970).
     private String provider;
@@ -101,7 +97,6 @@ public class LocationData extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = document.getId();
             uuid = (String) document.get("uuid");
             timeStamp = (long) document.get("timeStamp");
             provider = (String) document.get("provider");
@@ -119,12 +114,7 @@ public class LocationData extends PersistentObject {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         LocationData that = (LocationData) o;
-        return that.timeStamp == timeStamp
-                && that.provider.equals(provider)
-                && Double.compare(that.latitude, latitude) == 0
-                && Double.compare(that.longitude, longitude) == 0
-                && Double.compare(that.altitude, altitude) == 0
-                && Double.compare(that.speed, speed) == 0;
+        return uuid.equals(that.uuid);
     }
 
     @Override
@@ -137,9 +127,6 @@ public class LocationData extends PersistentObject {
         return uuid;
     }
 
-    @Override
-    public NitriteId getNitriteId() {
-        return nitriteId;
-    }
+    
 
 }

@@ -26,13 +26,10 @@ import java.util.Objects;
  * @see  RunningPlanEntry
  *
  */
-@Indices({
-        @Index(value = "uuid", type = IndexType.Unique)
-})
+
 public class RunningUnit extends PersistentObject {
 
     @Id
-    private NitriteId nitriteId;
     private String uuid = UUIDFactory.generateUUID();
     private boolean isCompleted;
     private long duration; // duration in minutes
@@ -123,7 +120,6 @@ public class RunningUnit extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = document.getId();
             uuid = (String) document.get("uuid");
             isCompleted = (boolean) document.get("isCompleted");
             duration = (long) document.get("duration");
@@ -155,8 +151,5 @@ public class RunningUnit extends PersistentObject {
         return uuid;
     }
 
-    @Override
-    public NitriteId getNitriteId() {
-        return nitriteId;
-    }
+    
 }

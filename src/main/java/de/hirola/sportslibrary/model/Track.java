@@ -30,13 +30,10 @@ import java.util.Objects;
  * @author Michael Schmidt (Hirola)
  * @since 0.0.1
  */
-@Indices({
-        @Index(value = "uuid", type = IndexType.Unique)
-})
+
 public class Track extends PersistentObject {
 
     @org.dizitart.no2.objects.Id
-    private NitriteId nitriteId;
     private String uuid = UUIDFactory.generateUUID();
     private String name = ""; // name of track
     private String description = ""; // short description
@@ -343,7 +340,6 @@ public class Track extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = document.getId();
             uuid = (String) document.get("uuid");
             name = (String) document.get("name");
             importDate = (Date) document.get("importDate");
@@ -370,10 +366,7 @@ public class Track extends PersistentObject {
         return uuid;
     }
 
-    @Override
-    public NitriteId getNitriteId() {
-        return nitriteId;
-    }
+    
 
     @Override
     public boolean equals(Object o) {
@@ -381,12 +374,8 @@ public class Track extends PersistentObject {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
-        Track track = (Track) o;
-        return uuid.equals(track.uuid)
-                && name.equals(track.name)
-                && description.equals(track.description)
-                && startTimeInMilli == track.startTimeInMilli
-                && stopTimeInMilli == track.stopTimeInMilli;
+        Track that = (Track) o;
+        return uuid.equals(that.uuid);
     }
 
     @Override

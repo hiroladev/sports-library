@@ -30,7 +30,7 @@ import java.util.Objects;
 public class TrainingType extends PersistentObject {
 
     @Id
-    private NitriteId nitriteId;
+    private String uuid = UUIDFactory.generateUUID();
     private String name;
     private String imageName; // image for the kind of training
     private String remarks;
@@ -138,6 +138,7 @@ public class TrainingType extends PersistentObject {
     @Override
     public Document write(NitriteMapper mapper) {
         Document document = new Document();
+        document.put("uuid", uuid);
         document.put("name", name);
         document.put("imageName", imageName);
         document.put("remarks", remarks);
@@ -149,7 +150,7 @@ public class TrainingType extends PersistentObject {
     @Override
     public void read(NitriteMapper mapper, Document document) {
         if (document != null) {
-            nitriteId = document.getId();
+            uuid = (String) document.get("uuid");
             name = (String) document.get("name");
             imageName = (String) document.get("imageName");
             remarks = (String) document.get("remarks");
@@ -164,7 +165,7 @@ public class TrainingType extends PersistentObject {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         TrainingType that = (TrainingType) o;
-        return name.equals(that.name);
+        return uuid.equals(that.uuid) && name.equals(that.name);
     }
 
     @Override
@@ -177,9 +178,6 @@ public class TrainingType extends PersistentObject {
         return name;
     }
 
-    @Override
-    public NitriteId getNitriteId() {
-        return nitriteId;
-    }
+    
 }
 
