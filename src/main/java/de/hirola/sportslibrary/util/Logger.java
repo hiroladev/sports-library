@@ -1,7 +1,6 @@
 package de.hirola.sportslibrary.util;
 
 import de.hirola.sportslibrary.Global;
-import de.hirola.sportslibrary.SportsLibraryException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,7 +13,6 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Objects;
 
 /**
  * Copyright 2021 by Michael Schmidt, Hirola Consulting
@@ -240,11 +238,8 @@ public final class Logger {
                                         // if the new file exists, we write in old log file and try to rename later
                                         if (!Files.exists(archivePath)) {
                                             Files.move(logFilePath,archivePath);
-                                            createLogFile = true;
                                         }
                                     }
-                                    // we can create a new log file
-                                    createLogFile = true;
                                 } catch (IOException exception) {
                                     // if an operation failed, we write in old log file and try to rename later
                                     if (Global.APP_DEBUG_MODE) {
@@ -282,6 +277,7 @@ public final class Logger {
             // create dir(s)
             File logFileFolderStructure = new File(logFilePath.getParent().toString());
             try {
+                //noinspection ResultOfMethodCallIgnored
                 logFileFolderStructure.mkdirs();
             } catch (SecurityException exception) {
                 if (Global.APP_DEBUG_MODE) {

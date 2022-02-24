@@ -1,6 +1,5 @@
 package de.hirola.sportslibrary.database;
 
-import de.hirola.sportslibrary.Global;
 import de.hirola.sportslibrary.SportsLibraryException;
 import de.hirola.sportslibrary.util.Logger;
 import org.dizitart.no2.Nitrite;
@@ -9,7 +8,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.List;
 
 /**
  * Copyright 2021 by Michael Schmidt, Hirola Consulting

@@ -229,6 +229,16 @@ class SportsLibraryTest {
     }
 
     @Test
+    void testTrackAndLocation() {
+        // test track
+        // start time: 1645726800000 (18:20)
+        // stop time: 1645726860000 (18:21)
+        Track track = new Track("Test", null, 1645726800000L, 1645726860000L, 140.0, null);
+        assertEquals(1, track.getDuration(), "Duration should be 1 min.");
+        assertEquals(8.4, track.getAverageSpeed(),  "AVG should be 8.4 min.");
+    }
+
+    @Test
     void testTrackAndLocationsCRUD() {
         try {
             sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);

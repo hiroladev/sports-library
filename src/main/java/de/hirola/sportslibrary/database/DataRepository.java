@@ -6,7 +6,6 @@ import de.hirola.sportslibrary.model.*;
 
 import de.hirola.sportslibrary.util.Logger;
 import org.dizitart.no2.Nitrite;
-import org.dizitart.no2.NitriteId;
 import org.dizitart.no2.objects.Cursor;
 import org.dizitart.no2.objects.ObjectRepository;
 import org.dizitart.no2.objects.filters.ObjectFilters;
@@ -289,7 +288,7 @@ public final class DataRepository {
     }
 
     // handle a track with embedded locations
-    private void doActionWithTrack(int action, @NotNull Track track) throws SportsLibraryException {
+    private void doActionWithTrack(int action, @NotNull Track track) {
         // create or get the repositories
         ObjectRepository<Track> trackRepository = database.getRepository(Track.class);
         ObjectRepository<LocationData> locationsRepository = database.getRepository(LocationData.class);
@@ -389,7 +388,7 @@ public final class DataRepository {
 
     // handle a running plan with embedded entries and units
     // movement type must exist in database
-    private void doActionWithRunningPlan(int action, @NotNull RunningPlan runningPlan) throws SportsLibraryException {
+    private void doActionWithRunningPlan(int action, @NotNull RunningPlan runningPlan) {
         // create or get the repositories
         ObjectRepository<RunningPlan> runningPlanRepository = database.getRepository(RunningPlan.class);
         ObjectRepository<RunningPlanEntry> runningPlanEntryRepository = database.getRepository(RunningPlanEntry.class);

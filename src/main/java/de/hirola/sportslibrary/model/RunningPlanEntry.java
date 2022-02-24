@@ -5,12 +5,8 @@ import de.hirola.sportslibrary.database.ListMapper;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.UUIDFactory;
 import org.dizitart.no2.Document;
-import org.dizitart.no2.IndexType;
-import org.dizitart.no2.NitriteId;
 import org.dizitart.no2.mapper.NitriteMapper;
 import org.dizitart.no2.objects.Id;
-import org.dizitart.no2.objects.Index;
-import org.dizitart.no2.objects.Indices;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;

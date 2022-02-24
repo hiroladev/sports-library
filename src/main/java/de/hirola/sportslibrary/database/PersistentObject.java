@@ -1,6 +1,5 @@
 package de.hirola.sportslibrary.database;
 
-import org.dizitart.no2.NitriteId;
 import org.dizitart.no2.mapper.Mappable;
 
 /**

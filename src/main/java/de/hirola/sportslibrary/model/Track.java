@@ -6,14 +6,11 @@ import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.DateUtil;
 import de.hirola.sportslibrary.util.UUIDFactory;
 import org.dizitart.no2.Document;
-import org.dizitart.no2.IndexType;
-import org.dizitart.no2.NitriteId;
 import org.dizitart.no2.mapper.NitriteMapper;
-import org.dizitart.no2.objects.Index;
-import org.dizitart.no2.objects.Indices;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -38,11 +35,12 @@ public class Track extends PersistentObject {
     private String name = ""; // name of track
     private String description = ""; // short description
     private Date importDate = Date.from(Instant.now());
-    private long startTimeInMilli = -1;
-    private long stopTimeInMilli = -1;
+    private long startTimeInMilli = -1; // in utc epoch millis
+    private long stopTimeInMilli = -1; // in utc epoch millis
+    private long duration = -1; // in utc epoch millis
     private double distance = -1.0;
     private double averageSpeed = -1.0;
-    private double altitudeDifference = -1;
+    private double altitudeDifference = -1.0;
     private List<LocationData> locations; // list of tracking data
 
     /**
@@ -88,13 +86,18 @@ public class Track extends PersistentObject {
      * @param stopTimeInMilli of track
      * @param locations of track, can be null
      */
-    public Track(String name, String description, long startTimeInMilli, long stopTimeInMilli, @Nullable List<LocationData> locations) {
+    public Track(String name, String description,
+                 long startTimeInMilli, long stopTimeInMilli, double distance,
+                 @Nullable List<LocationData> locations) {
         this.name = name;
         this.description = Objects.requireNonNullElse(description, "No description available.");
         this.startTimeInMilli = startTimeInMilli;
         this.stopTimeInMilli = stopTimeInMilli;
+        this.distance = distance;
         this.locations = Objects.requireNonNullElseGet(locations, ArrayList::new);
-        //TODO: start, stop, avg, duration if locations not null
+        // calculate values
+        calculateDuration();
+        calculateAvg();
     }
 
     /**
@@ -191,17 +194,7 @@ public class Track extends PersistentObject {
      * @return The start time of the track in milliseconds to UTC Time
      */
     public long getStartTimeInMilli() {
-        //TODO: if start time equal -1, get the time form last location
         return startTimeInMilli;
-    }
-
-    /**
-     * Set the start time of the track in milliseconds to UTC Time.
-     *
-     * @param startTimeInMilli of the track
-     */
-    public void setStartTimeInMilli(long startTimeInMilli) {
-        this.startTimeInMilli = startTimeInMilli;
     }
 
     /**
@@ -216,12 +209,13 @@ public class Track extends PersistentObject {
     }
 
     /**
-     * Set the stop time of the track in milliseconds to UTC Time.
+     * Get the duration of a track in minutes.
      *
-     * @param stopTimeInMilli of the track.
+     * @return The calculated duration of the track in minutes
+     *          or - 1 if the duration could not calculate.
      */
-    public void setStopTimeInMilli(long stopTimeInMilli) {
-        this.stopTimeInMilli = stopTimeInMilli;
+    public long getDuration() {
+        return duration;
     }
 
     /**
@@ -231,7 +225,6 @@ public class Track extends PersistentObject {
      * @return The distance of the track in meters
      */
     public double getDistance() {
-        //TODO: if -1, calculate from locations
         return distance;
     }
 
@@ -252,7 +245,6 @@ public class Track extends PersistentObject {
      * @return The average speed of the track in km/h
      */
     public double getAverageSpeed() {
-        //TODO: if 0, calculate from locations
         return averageSpeed;
     }
 
@@ -353,9 +345,7 @@ public class Track extends PersistentObject {
                 @SuppressWarnings("unchecked")
                 List<Document> objectsDocument = (List<Document>) document.get("locations");
                 locations = ListMapper.toElementsList(mapper, objectsDocument, LocationData.class);
-            } catch (ClassCastException | SportsLibraryException exception) {
-                //TODO: logging?
-                exception.printStackTrace();
+            } catch (Exception ignore) {
                 locations = new ArrayList<>();
             }
         }
@@ -365,8 +355,6 @@ public class Track extends PersistentObject {
     public String getUUID() {
         return uuid;
     }
-
-    
 
     @Override
     public boolean equals(Object o) {
@@ -381,6 +369,28 @@ public class Track extends PersistentObject {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), uuid, name, description, startTimeInMilli, stopTimeInMilli);
+    }
+
+    private void calculateDuration() {
+        if (startTimeInMilli > 0 && stopTimeInMilli > 0) {
+            try {
+                // calculate to minutes
+                Instant startTime = Instant.ofEpochMilli(startTimeInMilli);
+                Instant stopTime = Instant.ofEpochMilli(stopTimeInMilli);
+                Duration duration = Duration.between(startTime, stopTime);
+                long durationInSeconds = Math.abs(duration.getSeconds());
+                this.duration =  durationInSeconds / 60;
+            } catch (Exception exception) {
+                // we could not calculate
+            }
+        }
+    }
+
+    private void calculateAvg() {
+        if (distance > 0 && duration > 0) {
+            // distance in m, duration in sec
+            this.averageSpeed = (distance / duration / 60) * 3.6;
+        }
     }
 
     /**
