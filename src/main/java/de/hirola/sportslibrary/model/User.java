@@ -22,13 +22,12 @@ import java.util.Objects;
  * Copyright 2021 by Michael Schmidt, Hirola Consulting
  * This software us licensed under the AGPL-3.0 or later.
  *
- * Der Nutzer der App, also der Läufer.
+ * The user of the app, here the runner.
  *
  * @author Michael Schmidt (Hirola)
  * @since 0.0.1
  */
 @Indices({
-        @Index(value = "uuid", type = IndexType.Unique),
         @Index(value = "emailAddress", type = IndexType.Unique)
 })
 public class User extends PersistentObject {

@@ -76,6 +76,15 @@ public class LocationData extends PersistentObject {
         this.speed = speed;
     }
 
+    /**
+     * Get the time stamp of the location.
+     *
+     * @return The time stamp of the location in milliseconds since epoch.
+     */
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
     @Override
     public Document write(NitriteMapper mapper) {
         Document document = new Document();

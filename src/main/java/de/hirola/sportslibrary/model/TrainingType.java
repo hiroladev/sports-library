@@ -169,7 +169,7 @@ public class TrainingType extends PersistentObject {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), name);
+        return Objects.hash(super.hashCode(), uuid, name);
     }
 
     @Override
