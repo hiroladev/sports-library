@@ -159,14 +159,14 @@ public class TemplateLoader {
     /**
      * Exports (saves?) a running plan as a template to a JSON file.
      *
-     * @param runningPlan to export or save
+     * @param runningPlan to export or add
      * @param exportDirPath to the JSON file to export the run plan to
      * @throws SportsLibraryException if the file could not be saved or an error occurred during export
      */
     public void exportRunningPlanToJSON(RunningPlan runningPlan, Path exportDirPath) throws SportsLibraryException {
         try {
             if (runningPlan == null) {
-                throw new SportsLibraryException("Can't save a null object.");
+                throw new SportsLibraryException("Can't add a null object.");
             }
 
             if (exportDirPath == null) {
@@ -232,7 +232,7 @@ public class TemplateLoader {
             // Trainingsarten speichern
             try {
                 for (TrainingType trainingType : trainingTypes) {
-                    dataRepository.save(trainingType);
+                    dataRepository.add(trainingType);
                 }
             } catch (SportsLibraryException exception) {
                 // TODO: Logging
@@ -276,7 +276,7 @@ public class TemplateLoader {
             // Bewegungsarten speichern
             try {
                 for (MovementType movementType : movementTypes) {
-                    dataRepository.save(movementType);
+                    dataRepository.add(movementType);
                 }
             } catch (SportsLibraryException exception) {
                 // TODO: Logging
@@ -373,8 +373,8 @@ public class TemplateLoader {
                         runningPlanEntries,
                         runningPlanTemplate.isTemplate);
                 try {
-                    // save the running plan and all related objects
-                    dataRepository.save(runningPlan);
+                    // add the running plan and all related objects
+                    dataRepository.add(runningPlan);
                     // add to the imported list
                     importedRunningPlans.add(runningPlan);
                 } catch (SportsLibraryException exception) {

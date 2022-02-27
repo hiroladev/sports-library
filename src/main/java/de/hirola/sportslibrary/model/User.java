@@ -28,7 +28,6 @@ import java.util.Objects;
  * @since 0.0.1
  */
 @Indices({
-        @Index(value = "uuid", type = IndexType.Unique),
         @Index(value = "emailAddress", type = IndexType.Unique)
 })
 public class User extends PersistentObject {

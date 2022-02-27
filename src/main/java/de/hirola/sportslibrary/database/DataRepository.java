@@ -6,6 +6,7 @@ import de.hirola.sportslibrary.model.*;
 
 import de.hirola.sportslibrary.util.Logger;
 import org.dizitart.no2.Nitrite;
+import org.dizitart.no2.event.ChangeListener;
 import org.dizitart.no2.objects.Cursor;
 import org.dizitart.no2.objects.ObjectRepository;
 import org.dizitart.no2.objects.filters.ObjectFilters;
@@ -14,7 +15,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-
 
 /**
  * Copyright 2021 by Michael Schmidt, Hirola Consulting
@@ -34,14 +34,18 @@ public final class DataRepository {
 
     private final Logger logger;
     private final Nitrite database; // we use Nitrite database
+    private final DatastoreDelegate delegate;
 
     /**
      * Create the local datastore access layer.
      *
      * @param databaseManager of this library
+     * @param delegate to notify on events
+     * @param logger for data event logging
      */
-    public DataRepository(@NotNull DatabaseManager databaseManager, Logger logger) {
+    public DataRepository(@NotNull DatabaseManager databaseManager, @NotNull DatastoreDelegate delegate, Logger logger) {
         this.logger = logger;
+        this.delegate = delegate;
         database = databaseManager.getDatabase(); // can be null
     }
 
@@ -93,19 +97,38 @@ public final class DataRepository {
     }
 
     /**
-     * Add a new or save an existing object.
+     * Add a new object.
      *
-     * @param object to be saved
+     * @param object to be added
      * @throws SportsLibraryException if an error occurred while adding
      */
-    public void save(@NotNull PersistentObject object) throws SportsLibraryException {
+    public void add(@NotNull PersistentObject object) throws SportsLibraryException {
         // the concrete type must be specified for each access to a repo
         if (isOpen()) {
             if (findByUUID(object.getClass(), object.getUUID()) == null) {
                 // insert
                 doActionWithObject(INSERT_ACTION, object);
-            } else {
+                delegate.didObjectAdded(object);
+            }
+        } else {
+            throw new SportsLibraryException("Database not available.");
+        }
+    }
+
+    /**
+     * Save an existing object.
+     *
+     * @param object to be saved
+     * @throws SportsLibraryException if the object not exist or an error occurred while adding
+     */
+    public void update(@NotNull PersistentObject object) throws SportsLibraryException {
+        // the concrete type must be specified for each access to a repo
+        if (isOpen()) {
+            if (findByUUID(object.getClass(), object.getUUID()) != null) {
                 doActionWithObject(UPDATE_ACTION, object);
+                delegate.didObjectUpdated(object);
+            } else {
+                throw new SportsLibraryException("The object must exist before the update.");
             }
         } else {
             throw new SportsLibraryException("Database not available.");
@@ -124,6 +147,7 @@ public final class DataRepository {
             if (findByUUID(object.getClass(), object.getUUID()) != null) {
                 // remove
                 doActionWithObject(REMOVE_ACTION, object);
+                delegate.didObjectRemoved(object);
             } else {
                 throw new SportsLibraryException("The object was not found in database. Can not delete it.");
             }
@@ -295,7 +319,7 @@ public final class DataRepository {
         List<LocationData> locations = track.getLocations();
         switch (action) {
             case INSERT_ACTION:
-                // save locations
+                // add locations
                 for(LocationData locationData: locations) {
                     if (findByUUID(Track.class, locationData.getUUID()) == null) {
                         // insert
@@ -305,7 +329,7 @@ public final class DataRepository {
                         locationsRepository.update(locationData);
                     }
                 }
-                // save the track
+                // add the track
                 trackRepository.insert(track);
                 return;
 
@@ -358,7 +382,7 @@ public final class DataRepository {
                         doActionWithTrack(INSERT_ACTION, track);
                     }
                 }
-                // save the training
+                // add the training
                 trainingRepository.insert(training);
                 return;
 
@@ -374,7 +398,7 @@ public final class DataRepository {
                         doActionWithTrack(INSERT_ACTION, track);
                     }
                 }
-                // save the training
+                // add the training
                 trainingRepository.update(training);
                 return;
 
@@ -397,7 +421,7 @@ public final class DataRepository {
         List<RunningPlanEntry> entries = runningPlan.getEntries();
         switch (action) {
             case INSERT_ACTION:
-                // save running plan entries
+                // add running plan entries
                 for(RunningPlanEntry entry: entries) {
                     if (findByUUID(RunningPlanEntry.class, entry.getUUID()) == null) {
                         // insert the units
@@ -423,12 +447,12 @@ public final class DataRepository {
                         runningPlanEntryRepository.update(entry);
                     }
                 }
-                // save the running plan
+                // add the running plan
                 runningPlanRepository.insert(runningPlan);
                 return;
 
             case UPDATE_ACTION:
-                // save or update running plan entries
+                // add or update running plan entries
                 for(RunningPlanEntry entry: entries) {
                     if (findByUUID(RunningPlanEntry.class, entry.getUUID()) == null) {
                         // insert the units
@@ -459,7 +483,7 @@ public final class DataRepository {
                 return;
 
             case REMOVE_ACTION:
-                // save or update running plan entries
+                // add or update running plan entries
                 for(RunningPlanEntry entry: entries) {
                     if (findByUUID(RunningPlanEntry.class, entry.getUUID()) != null) {
                         // insert the units

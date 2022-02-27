@@ -50,7 +50,7 @@ public class RunningUnit extends PersistentObject {
     public RunningUnit(int duration, @NotNull MovementType movementType) {
         this.duration = duration;
         this.movementType = movementType;
-        this.isCompleted = false;
+        isCompleted = false;
     }
 
     /**

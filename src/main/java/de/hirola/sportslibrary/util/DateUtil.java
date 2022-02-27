@@ -10,7 +10,7 @@ import java.util.Date;
  * This software us licensed under the AGPL-3.0 or later.
  *
  * Util class to convert dates.
- * The actual database do not support save as LocalDate.
+ * The actual database do not support add as LocalDate.
  *
  * @author Michael Schmidt (Hirola)
  * @since 0.0.3

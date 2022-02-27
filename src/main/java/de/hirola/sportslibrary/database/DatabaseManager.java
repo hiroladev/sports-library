@@ -43,7 +43,7 @@ public class DatabaseManager {
     }
 
     /**
-     * Get the manager to handle with data, e.g. save, update or delete.
+     * Get the manager to handle with data, e.g. add, update or delete.
      * Can be null if while initialize an error occurred. The errors
      * are logged.
      *

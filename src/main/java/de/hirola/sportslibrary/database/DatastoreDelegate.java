@@ -1,4 +1,4 @@
-package de.hirola.sportslibrary;
+package de.hirola.sportslibrary.database;
 
 import de.hirola.sportslibrary.database.PersistentObject;
 
