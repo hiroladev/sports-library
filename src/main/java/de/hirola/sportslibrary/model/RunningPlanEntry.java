@@ -162,7 +162,7 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         RunningPlanEntry that = (RunningPlanEntry) o;
-        return uuid.equals(that.uuid);
+        return uuid.equals(that.uuid) && week == that.week && day == that.day;
     }
 
     @Override

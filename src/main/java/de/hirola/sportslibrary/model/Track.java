@@ -1,6 +1,5 @@
 package de.hirola.sportslibrary.model;
 
-import de.hirola.sportslibrary.SportsLibraryException;
 import de.hirola.sportslibrary.database.ListMapper;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.util.DateUtil;
@@ -96,8 +95,7 @@ public class Track extends PersistentObject {
         this.distance = distance;
         this.locations = Objects.requireNonNullElseGet(locations, ArrayList::new);
         // calculate values
-        calculateDuration();
-        calculateAvg();
+        calculateValues();
     }
 
     /**
@@ -371,25 +369,27 @@ public class Track extends PersistentObject {
         return Objects.hash(super.hashCode(), uuid, name, description, startTimeInMilli, stopTimeInMilli);
     }
 
-    private void calculateDuration() {
-        if (startTimeInMilli > 0 && stopTimeInMilli > 0) {
-            try {
-                // calculate to minutes
-                Instant startTime = Instant.ofEpochMilli(startTimeInMilli);
-                Instant stopTime = Instant.ofEpochMilli(stopTimeInMilli);
-                Duration duration = Duration.between(startTime, stopTime);
-                long durationInSeconds = Math.abs(duration.getSeconds());
-                this.duration =  durationInSeconds / 60;
-            } catch (Exception exception) {
-                // we could not calculate
+    private void calculateValues() {
+        if (duration == -1) {
+            if (startTimeInMilli > 0 && stopTimeInMilli > 0) {
+                try {
+                    // calculate to minutes
+                    Instant startTime = Instant.ofEpochMilli(startTimeInMilli);
+                    Instant stopTime = Instant.ofEpochMilli(stopTimeInMilli);
+                    Duration durationTime = Duration.between(startTime, stopTime);
+                    long durationInSeconds = Math.abs(durationTime.getSeconds());
+                    duration = durationInSeconds / 60;
+                } catch (Exception exception) {
+                    // we could not calculate
+                    duration = -1;
+                }
             }
         }
-    }
-
-    private void calculateAvg() {
-        if (distance > 0 && duration > 0) {
-            // distance in m, duration in sec
-            this.averageSpeed = (distance / duration / 60) * 3.6;
+        if (averageSpeed == -1.0) {
+            if (distance > 0 && duration > 0) {
+                // distance in m, duration in sec
+                averageSpeed = (distance / duration / 60) * 3.6;
+            }
         }
     }
 
