@@ -76,9 +76,7 @@ public final class DataRepository {
             }
             ObjectRepository<RunningPlan> runningPlanRepository = database.getRepository(RunningPlan.class);
             Cursor<RunningPlan> runningPlanCursor = runningPlanRepository.find(ObjectFilters.ALL);
-            if (runningPlanCursor.size() == 0) {
-                return true;
-            }
+            return runningPlanCursor.size() == 0;
         }
         return false;
     }
@@ -240,14 +238,6 @@ public final class DataRepository {
                 }
 
             }
-            if (object instanceof LocationData) {
-                ObjectRepository<LocationData> objectRepository = database.getRepository(LocationData.class);
-                switch (action) {
-                    case INSERT_ACTION: objectRepository.insert((LocationData) object); return;
-                    case UPDATE_ACTION: objectRepository.update((LocationData) object); return;
-                    case REMOVE_ACTION: objectRepository.remove((LocationData) object); return;
-                }
-            }
             if (object instanceof Track) {
                 switch (action) {
                     case INSERT_ACTION: doActionWithTrack(INSERT_ACTION, (Track) object); return;
@@ -275,23 +265,7 @@ public final class DataRepository {
                 switch (action) {
                     case INSERT_ACTION: objectRepository.insert((MovementType) object); return;
                     case UPDATE_ACTION: objectRepository.update((MovementType) object); return;
-                    case REMOVE_ACTION: objectRepository.remove((MovementType) object); return;
-                }
-            }
-            if (object instanceof RunningUnit) {
-                ObjectRepository<RunningUnit> objectRepository = database.getRepository(RunningUnit.class);
-                switch (action) {
-                    case INSERT_ACTION: objectRepository.insert((RunningUnit) object); return;
-                    case UPDATE_ACTION: objectRepository.update((RunningUnit) object); return;
-                    case REMOVE_ACTION: objectRepository.remove((RunningUnit) object); return;
-                }
-            }
-            if (object instanceof RunningPlanEntry) {
-                ObjectRepository<RunningPlanEntry> objectRepository = database.getRepository(RunningPlanEntry.class);
-                switch (action) {
-                    case INSERT_ACTION: objectRepository.insert((RunningPlanEntry) object); return;
-                    case UPDATE_ACTION: objectRepository.update((RunningPlanEntry) object); return;
-                    case REMOVE_ACTION: objectRepository.remove((RunningPlanEntry) object); return;
+                    default: break;  // movement types must be not delete
                 }
             }
             if (object instanceof RunningPlan) {
@@ -301,9 +275,9 @@ public final class DataRepository {
                     case REMOVE_ACTION: doActionWithRunningPlan(REMOVE_ACTION, (RunningPlan) object); return;
                 }
             }
-            throw new SportsLibraryException("Unsupported type of object.");
+            throw new SportsLibraryException("Unsupported direct datastore operations.");
         } catch (Exception exception) {
-            String errorMessage = "Saving the object from type "
+            String errorMessage = "Operation with the object from type "
                     + object.getClass().getSimpleName()
                     +" and with id " + object.getUUID() + " failed.";
             logger.log(Logger.DEBUG, TAG, errorMessage, exception);
@@ -312,52 +286,56 @@ public final class DataRepository {
     }
 
     // handle a track with embedded locations
-    private void doActionWithTrack(int action, @NotNull Track track) {
+    private void doActionWithTrack(int action, @NotNull Track track) throws SportsLibraryException {
         // create or get the repositories
         ObjectRepository<Track> trackRepository = database.getRepository(Track.class);
         ObjectRepository<LocationData> locationsRepository = database.getRepository(LocationData.class);
         List<LocationData> locations = track.getLocations();
-        switch (action) {
-            case INSERT_ACTION:
-                // add locations
-                for(LocationData locationData: locations) {
-                    if (findByUUID(Track.class, locationData.getUUID()) == null) {
-                        // insert
-                        locationsRepository.insert(locationData);
-                    } else {
-                        // update
-                        locationsRepository.update(locationData);
+        try {
+            switch (action) {
+                case INSERT_ACTION:
+                    // add locations
+                    for (LocationData locationData : locations) {
+                        if (findByUUID(Track.class, locationData.getUUID()) == null) {
+                            // insert
+                            locationsRepository.insert(locationData);
+                        } else {
+                            // update
+                            locationsRepository.update(locationData);
+                        }
                     }
-                }
-                // add the track
-                trackRepository.insert(track);
-                return;
+                    // add the track
+                    trackRepository.insert(track);
+                    return;
 
-            case UPDATE_ACTION:
-                // update locations
-                for(LocationData locationData: locations) {
-                    if (findByUUID(Track.class, locationData.getUUID()) == null) {
-                        // insert a new location in the list
-                        locationsRepository.insert(locationData);
-                    } else {
-                        // update
-                        locationsRepository.update(locationData);
+                case UPDATE_ACTION:
+                    // update locations
+                    for (LocationData locationData : locations) {
+                        if (findByUUID(Track.class, locationData.getUUID()) == null) {
+                            // insert a new location in the list
+                            locationsRepository.insert(locationData);
+                        } else {
+                            // update
+                            locationsRepository.update(locationData);
+                        }
                     }
-                }
-                // update the track
-                trackRepository.update(track);
-                return;
+                    // update the track
+                    trackRepository.update(track);
+                    return;
 
-            case REMOVE_ACTION:
-                // remove locations
-                for(LocationData locationData: locations) {
-                    if (findByUUID(LocationData.class, locationData.getUUID()) != null) {
-                        // remove the location
-                        locationsRepository.remove(locationData);
+                case REMOVE_ACTION:
+                    // remove locations
+                    for (LocationData locationData : locations) {
+                        if (findByUUID(LocationData.class, locationData.getUUID()) != null) {
+                            // remove the location
+                            locationsRepository.remove(locationData);
+                        }
                     }
-                }
-                // remove the track
-                trackRepository.remove(track);
+                    // remove the track
+                    trackRepository.remove(track);
+            }
+        } catch (Exception exception) {
+            throw new SportsLibraryException(exception);
         }
     }
 
@@ -369,138 +347,146 @@ public final class DataRepository {
         ObjectRepository<TrainingType> trainingTypeRepository = database.getRepository(TrainingType.class);
         TrainingType trainingType = training.getTrainingType();
         Track track = training.getTrack();
-        switch (action) {
-            case INSERT_ACTION:
-                // add a new training type
-                if (findByUUID(TrainingType.class, trainingType.getUUID()) == null) {
-                    trainingTypeRepository.insert(trainingType);
-                }
-                // add a new track
-                if (track != null) {
-                    if (findByUUID(Track.class, track.getUUID()) == null) {
-                        // add the track with locations
-                        doActionWithTrack(INSERT_ACTION, track);
+        try {
+            switch (action) {
+                case INSERT_ACTION:
+                    // add a new training type
+                    if (findByUUID(TrainingType.class, trainingType.getUUID()) == null) {
+                        trainingTypeRepository.insert(trainingType);
                     }
-                }
-                // add the training
-                trainingRepository.insert(training);
-                return;
-
-            case UPDATE_ACTION:
-                // add a new training type
-                if (findByUUID(TrainingType.class, trainingType.getUUID()) == null) {
-                    trainingTypeRepository.insert(trainingType);
-                }
-                // add a new track
-                if (track != null) {
-                    if (findByUUID(Track.class, track.getUUID()) == null) {
-                        // add the track with locations
-                        doActionWithTrack(INSERT_ACTION, track);
+                    // add a new track
+                    if (track != null) {
+                        if (findByUUID(Track.class, track.getUUID()) == null) {
+                            // add the track with locations
+                            doActionWithTrack(INSERT_ACTION, track);
+                        }
                     }
-                }
-                // add the training
-                trainingRepository.update(training);
-                return;
+                    // add the training
+                    trainingRepository.insert(training);
+                    return;
 
-            case REMOVE_ACTION:
-                // training type and track will be not remove
-                // they may have references to other objects
-                // remove the training
-                trainingRepository.remove(training);
+                case UPDATE_ACTION:
+                    // add a new training type
+                    if (findByUUID(TrainingType.class, trainingType.getUUID()) == null) {
+                        trainingTypeRepository.insert(trainingType);
+                    }
+                    // add a new track
+                    if (track != null) {
+                        if (findByUUID(Track.class, track.getUUID()) == null) {
+                            // add the track with locations
+                            doActionWithTrack(INSERT_ACTION, track);
+                        }
+                    }
+                    // add the training
+                    trainingRepository.update(training);
+                    return;
+
+                case REMOVE_ACTION:
+                    // training type and track will be not remove
+                    // they may have references to other objects
+                    // remove the training
+                    trainingRepository.remove(training);
+            }
+        } catch (Exception exception) {
+            throw new SportsLibraryException(exception);
         }
     }
 
     // handle a running plan with embedded entries and units
     // movement type must exist in database
-    private void doActionWithRunningPlan(int action, @NotNull RunningPlan runningPlan) {
+    private void doActionWithRunningPlan(int action, @NotNull RunningPlan runningPlan) throws SportsLibraryException {
         // create or get the repositories
         ObjectRepository<RunningPlan> runningPlanRepository = database.getRepository(RunningPlan.class);
         ObjectRepository<RunningPlanEntry> runningPlanEntryRepository = database.getRepository(RunningPlanEntry.class);
         ObjectRepository<RunningUnit> runningUnitRepository = database.getRepository(RunningUnit.class);
         ObjectRepository<MovementType> movementTypeRepository = database.getRepository(MovementType.class);
         List<RunningPlanEntry> entries = runningPlan.getEntries();
-        switch (action) {
-            case INSERT_ACTION:
-                // add running plan entries
-                for(RunningPlanEntry entry: entries) {
-                    if (findByUUID(RunningPlanEntry.class, entry.getUUID()) == null) {
-                        // insert the units
-                        List<RunningUnit> units = entry.getRunningUnits();
-                        for(RunningUnit unit: units) {
-                            if (findByUUID(RunningUnit.class, unit.getUUID()) == null) {
-                                // insert the unit
-                                runningUnitRepository.insert(unit);
-                            } else {
-                                // update the unit
-                                runningUnitRepository.update(unit);
+        try {
+            switch (action) {
+                case INSERT_ACTION:
+                    // add running plan entries
+                    for (RunningPlanEntry entry : entries) {
+                        if (findByUUID(RunningPlanEntry.class, entry.getUUID()) == null) {
+                            // insert the units
+                            List<RunningUnit> units = entry.getRunningUnits();
+                            for (RunningUnit unit : units) {
+                                if (findByUUID(RunningUnit.class, unit.getUUID()) == null) {
+                                    // insert the unit
+                                    runningUnitRepository.insert(unit);
+                                } else {
+                                    // update the unit
+                                    runningUnitRepository.update(unit);
+                                }
+                                // insert a new movement type
+                                MovementType movementType = unit.getMovementType();
+                                if (findByUUID(MovementType.class, movementType.getUUID()) == null) {
+                                    movementTypeRepository.insert(movementType);
+                                }
                             }
-                            // insert a new movement type
-                            MovementType movementType = unit.getMovementType();
-                            if (findByUUID(MovementType.class, movementType.getUUID()) == null) {
-                                movementTypeRepository.insert(movementType);
-                            }
+                            // insert the entry
+                            runningPlanEntryRepository.insert(entry);
+                        } else {
+                            // update the entry
+                            runningPlanEntryRepository.update(entry);
                         }
-                        // insert the entry
-                        runningPlanEntryRepository.insert(entry);
-                    } else {
-                        // update the entry
-                        runningPlanEntryRepository.update(entry);
                     }
-                }
-                // add the running plan
-                runningPlanRepository.insert(runningPlan);
-                return;
+                    // add the running plan
+                    runningPlanRepository.insert(runningPlan);
+                    return;
 
-            case UPDATE_ACTION:
-                // add or update running plan entries
-                for(RunningPlanEntry entry: entries) {
-                    if (findByUUID(RunningPlanEntry.class, entry.getUUID()) == null) {
-                        // insert the units
-                        List<RunningUnit> units = entry.getRunningUnits();
-                        for(RunningUnit unit: units) {
-                            if (findByUUID(RunningUnit.class, unit.getUUID()) == null) {
-                                // insert the unit
-                                runningUnitRepository.insert(unit);
-                            } else {
-                                // update the unit
-                                runningUnitRepository.update(unit);
+                case UPDATE_ACTION:
+                    // add or update running plan entries
+                    for (RunningPlanEntry entry : entries) {
+                        if (findByUUID(RunningPlanEntry.class, entry.getUUID()) == null) {
+                            // insert the units
+                            List<RunningUnit> units = entry.getRunningUnits();
+                            for (RunningUnit unit : units) {
+                                if (findByUUID(RunningUnit.class, unit.getUUID()) == null) {
+                                    // insert the unit
+                                    runningUnitRepository.insert(unit);
+                                } else {
+                                    // update the unit
+                                    runningUnitRepository.update(unit);
+                                }
+                                // insert a new movement type
+                                MovementType movementType = unit.getMovementType();
+                                if (findByUUID(MovementType.class, movementType.getUUID()) == null) {
+                                    movementTypeRepository.insert(movementType);
+                                }
                             }
-                            // insert a new movement type
-                            MovementType movementType = unit.getMovementType();
-                            if (findByUUID(MovementType.class, movementType.getUUID()) == null) {
-                                movementTypeRepository.insert(movementType);
-                            }
+                            // insert the entry
+                            runningPlanEntryRepository.insert(entry);
+                        } else {
+                            // update the entry
+                            runningPlanEntryRepository.update(entry);
                         }
-                        // insert the entry
-                        runningPlanEntryRepository.insert(entry);
-                    } else {
-                        // update the entry
-                        runningPlanEntryRepository.update(entry);
                     }
-                }
-                // update the running plan
-                runningPlanRepository.update(runningPlan);
-                return;
+                    // update the running plan
+                    runningPlanRepository.update(runningPlan);
+                    return;
 
-            case REMOVE_ACTION:
-                // add or update running plan entries
-                for(RunningPlanEntry entry: entries) {
-                    if (findByUUID(RunningPlanEntry.class, entry.getUUID()) != null) {
-                        // insert the units
-                        List<RunningUnit> units = entry.getRunningUnits();
-                        for(RunningUnit unit: units) {
-                            if (findByUUID(RunningUnit.class, unit.getUUID()) != null) {
-                                // remove the unit
-                                // movement type are not deleted
-                                runningUnitRepository.remove(unit);
+                case REMOVE_ACTION:
+                    // add or update running plan entries
+                    for (RunningPlanEntry entry : entries) {
+                        if (findByUUID(RunningPlanEntry.class, entry.getUUID()) != null) {
+                            // insert the units
+                            List<RunningUnit> units = entry.getRunningUnits();
+                            for (RunningUnit unit : units) {
+                                if (findByUUID(RunningUnit.class, unit.getUUID()) != null) {
+                                    // remove the unit
+                                    // movement type are not deleted
+                                    runningUnitRepository.remove(unit);
+                                }
                             }
+                            // remove the entry
+                            runningPlanEntryRepository.remove(entry);
                         }
-                        // remove the entry
-                        runningPlanEntryRepository.remove(entry);
                     }
-                }
-                // remove the running plan
-                runningPlanRepository.remove(runningPlan);
+                    // remove the running plan
+                    runningPlanRepository.remove(runningPlan);
+            }
+        } catch (Exception exception) {
+            throw new SportsLibraryException(exception);
         }
     }
 }

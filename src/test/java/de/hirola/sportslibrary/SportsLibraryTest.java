@@ -399,20 +399,8 @@ class SportsLibraryTest {
             assertNotNull(savedMovementType2, "Movement type 2 was not saved.");
 
             // add running unit state
-            ((RunningUnit) savedRunningUnit1).setCompleted(true);
-            dataRepository.update(savedRunningUnit1);
-            RunningUnit savedRunningUnit3 = (RunningUnit) dataRepository.findByUUID(RunningUnit.class, runningUnit1UUID);
-            assertNotNull(savedRunningUnit3);
-            assertTrue(savedRunningUnit3.isCompleted());
-            ((RunningUnit) savedRunningUnit1).setCompleted(false);
-            dataRepository.update(savedRunningUnit1);
-            RunningUnit savedRunningUnit4 = (RunningUnit) dataRepository.findByUUID(RunningUnit.class, runningUnit1UUID);
-            assertNotNull(savedRunningUnit4);
-            assertFalse(savedRunningUnit4.isCompleted());
-            ((RunningUnit) savedRunningUnit1).setCompleted(true);
-            dataRepository.update(savedRunningUnit1);
+            runningPlan.completeUnit(runningUnit1, true);
             dataRepository.update(runningPlan);
-
             RunningPlan runningPlan1 = (RunningPlan) dataRepository.findByUUID(RunningPlan.class, runningPlanUUID);
             assertNotNull(runningPlan1);
             RunningPlanEntry runningPlanEntry1 = runningPlan1.getEntries().get(0);

@@ -134,7 +134,7 @@ public class RunningUnit extends PersistentObject {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RunningUnit that = (RunningUnit) o;
-        return duration == that.duration && uuid.equals(that.uuid) && movementType.equals(that.movementType);
+        return uuid.equals(that.uuid);
     }
 
     @Override

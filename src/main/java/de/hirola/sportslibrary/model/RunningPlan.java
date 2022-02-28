@@ -13,10 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Copyright 2021 by Michael Schmidt, Hirola Consulting
@@ -179,6 +176,23 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
         }
         if (!entries.contains(runningPlanEntry)) {
             entries.add(runningPlanEntry);
+        }
+    }
+
+    /**
+     * Set a running unit as completed or not.
+     *
+     * @param completedUnit to set the state of complete
+     * @param state of complete
+     */
+    public void completeUnit(@NotNull RunningUnit completedUnit, boolean state) {
+        for (RunningPlanEntry entry: entries) {
+            Optional<RunningUnit> optionalRunningUnit = entry.getRunningUnits()
+                    .stream()
+                    .filter(runningUnit -> runningUnit.equals(completedUnit))
+                    .findFirst();
+            // set completed
+            optionalRunningUnit.ifPresent(runningUnit -> runningUnit.setCompleted(state));
         }
     }
 
