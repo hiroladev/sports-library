@@ -250,7 +250,7 @@ public final class DataRepository {
                 switch (action) {
                     case INSERT_ACTION: objectRepository.insert((TrainingType) object); return;
                     case UPDATE_ACTION: objectRepository.update((TrainingType) object); return;
-                    case REMOVE_ACTION: objectRepository.remove((TrainingType) object); return;
+                    default: break;  // training types must be not delete
                 }
             }
             if (object instanceof Training) {

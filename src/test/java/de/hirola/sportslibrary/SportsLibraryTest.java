@@ -124,7 +124,7 @@ class SportsLibraryTest {
             User appUser1 = sportsLibrary.getAppUser();
             String appUser1UUID = appUser1.getUUID();
             appUser1.setMaxPulse(160);
-            dataRepository.add(appUser1);
+            dataRepository.update(appUser1);
             User appUser2 = (User) dataRepository.findByUUID(User.class, appUser1UUID);
             assertNotNull(appUser2, "User not found in database.");
             assertEquals(appUser2.getUUID(), appUser1UUID, "Not the same object.");
@@ -132,11 +132,13 @@ class SportsLibraryTest {
 
             RunningPlan runningPlan1 = (RunningPlan) runningPlans.get(0);
             appUser2.setActiveRunningPlan(runningPlan1);
-            dataRepository.add(appUser2);
+            dataRepository.update(appUser2);
             User appUser3 = (User) dataRepository.findByUUID(User.class, appUser1UUID);
             assertNotNull(appUser3, "User not found in database.");
             assertEquals(appUser3.getUUID(), appUser1UUID, "Not the same object.");
-            assertEquals(runningPlan1.getUUID(), appUser3.getActiveRunningPlan().getUUID(), "User's running plan not saved.");
+            RunningPlan activeRunningPlan = appUser3.getActiveRunningPlan();
+            assertNotNull(activeRunningPlan);
+            assertEquals(runningPlan1.getUUID(), activeRunningPlan.getUUID(), "User's running plan not saved.");
 
             // test the compare from running plan entry
             RunningPlanEntry runningPlanEntry1 = new RunningPlanEntry(1,1, new ArrayList<>());
