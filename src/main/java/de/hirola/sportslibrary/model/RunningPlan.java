@@ -180,19 +180,18 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
     }
 
     /**
-     * Set a running unit as completed or not.
+     * Set a running unit as completed.
      *
-     * @param completedUnit to set the state of complete
-     * @param state of complete
+     * @param completedUnit to set the state of completed
      */
-    public void completeUnit(@NotNull RunningUnit completedUnit, boolean state) {
+    public void completeUnit(@NotNull RunningUnit completedUnit) {
         for (RunningPlanEntry entry: entries) {
             Optional<RunningUnit> optionalRunningUnit = entry.getRunningUnits()
                     .stream()
                     .filter(runningUnit -> runningUnit.equals(completedUnit))
                     .findFirst();
             // set completed
-            optionalRunningUnit.ifPresent(runningUnit -> runningUnit.setCompleted(state));
+            optionalRunningUnit.ifPresent(runningUnit -> runningUnit.setCompleted(true));
         }
     }
 

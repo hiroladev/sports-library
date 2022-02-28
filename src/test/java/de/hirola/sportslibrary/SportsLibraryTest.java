@@ -401,7 +401,7 @@ class SportsLibraryTest {
             assertNotNull(savedMovementType2, "Movement type 2 was not saved.");
 
             // add running unit state
-            runningPlan.completeUnit(runningUnit1, true);
+            runningPlan.completeUnit(runningUnit1);
             dataRepository.update(runningPlan);
             RunningPlan runningPlan1 = (RunningPlan) dataRepository.findByUUID(RunningPlan.class, runningPlanUUID);
             assertNotNull(runningPlan1);
