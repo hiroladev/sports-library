@@ -462,6 +462,8 @@ public final class DataRepository {
                     return;
 
                 case UPDATE_ACTION:
+                    // update the running plan
+                    runningPlanRepository.update(runningPlan);
                     // add or update running plan entries
                     for (RunningPlanEntry entry : entries) {
                         if (findByUUID(RunningPlanEntry.class, entry.getUUID()) == null) {
@@ -480,6 +482,7 @@ public final class DataRepository {
                             runningPlanEntryRepository.insert(entry);
                         } else {
                             // update the entry and insert or update the units
+                            runningPlanEntryRepository.update(entry);
                             List<RunningUnit> units = entry.getRunningUnits();
                             for (RunningUnit unit : units) {
                                 // insert a new movement type
@@ -495,11 +498,8 @@ public final class DataRepository {
                                     runningUnitRepository.update(unit);
                                 }
                             }
-                            runningPlanEntryRepository.update(entry);
                         }
                     }
-                    // update the running plan
-                    runningPlanRepository.update(runningPlan);
                     return;
 
                 case REMOVE_ACTION:

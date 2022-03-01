@@ -228,9 +228,9 @@ public class User extends PersistentObject {
 
             Document activeRunningPlanDocument = (Document) document.get("activeRunningPlan");
             if (activeRunningPlanDocument != null) {
-                RunningPlan activeRunningPlan = new RunningPlan();
-                activeRunningPlan.read(mapper, activeRunningPlanDocument);
-                this.activeRunningPlan = activeRunningPlan;
+                RunningPlan runningPlan = new RunningPlan();
+                runningPlan.read(mapper, activeRunningPlanDocument);
+                this.activeRunningPlan = runningPlan;
             }
         }
     }
