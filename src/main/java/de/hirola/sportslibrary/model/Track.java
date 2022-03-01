@@ -243,6 +243,9 @@ public class Track extends PersistentObject {
      * @return The average speed of the track in km/h
      */
     public double getAverageSpeed() {
+        if (averageSpeed == -1) {
+            return 0.0;
+        }
         return averageSpeed;
     }
 
@@ -378,7 +381,12 @@ public class Track extends PersistentObject {
                     Instant stopTime = Instant.ofEpochMilli(stopTimeInMilli);
                     Duration durationTime = Duration.between(startTime, stopTime);
                     long durationInSeconds = Math.abs(durationTime.getSeconds());
-                    duration = durationInSeconds / 60;
+                    // minimale value is 1 minute
+                    if (durationInSeconds < 60) {
+                        duration = 1;
+                    } else {
+                        duration = durationInSeconds / 60;
+                    }
                 } catch (Exception exception) {
                     // we could not calculate
                     duration = -1;

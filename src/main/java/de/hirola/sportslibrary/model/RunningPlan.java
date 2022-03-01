@@ -180,6 +180,18 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
     }
 
     /**
+     * Set all running units as uncompleted.
+     */
+    public void setUncompleted() {
+        for (RunningPlanEntry entry : entries) {
+            List<RunningUnit> units = entry.getRunningUnits();
+            for (RunningUnit unit : units) {
+                unit.setCompleted(false);
+            }
+        }
+    }
+
+    /**
      * Set a running unit as completed.
      *
      * @param completedUnit to set the state of completed

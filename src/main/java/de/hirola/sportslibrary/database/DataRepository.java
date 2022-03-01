@@ -7,6 +7,7 @@ import de.hirola.sportslibrary.model.*;
 import de.hirola.sportslibrary.util.Logger;
 import org.dizitart.no2.Nitrite;
 import org.dizitart.no2.event.ChangeListener;
+import org.dizitart.no2.exceptions.NotIdentifiableException;
 import org.dizitart.no2.objects.Cursor;
 import org.dizitart.no2.objects.ObjectRepository;
 import org.dizitart.no2.objects.filters.ObjectFilters;
@@ -404,30 +405,56 @@ public final class DataRepository {
         try {
             switch (action) {
                 case INSERT_ACTION:
+                    // rollback on error
+                    List<String> runningEntryUUIDs = new ArrayList<>();
+                    List<String> runningUnitUUIDs = new ArrayList<>();
+                    List<String> movementTypeUUIDs = new ArrayList<>();
                     // add running plan entries
                     for (RunningPlanEntry entry : entries) {
-                        if (findByUUID(RunningPlanEntry.class, entry.getUUID()) == null) {
+                        String entryUUID = entry.getUUID();
+                        if (findByUUID(RunningPlanEntry.class, entryUUID) == null) {
                             // insert the units
                             List<RunningUnit> units = entry.getRunningUnits();
                             for (RunningUnit unit : units) {
-                                if (findByUUID(RunningUnit.class, unit.getUUID()) == null) {
+                                String unitUUID = unit.getUUID();
+                                if (findByUUID(RunningUnit.class, unitUUID) == null) {
                                     // insert the unit
                                     runningUnitRepository.insert(unit);
+                                    // save for rollback
+                                    runningUnitUUIDs.add(unitUUID);
                                 } else {
-                                    // update the unit
-                                    runningUnitRepository.update(unit);
+                                    // error - running plan contains an existing unit
+                                    // rollback
+                                    rollback(RunningPlanEntry.class, runningEntryUUIDs);
+                                    rollback(RunningUnit.class, runningUnitUUIDs);
+                                    rollback(MovementType.class, movementTypeUUIDs);
+                                    String errorMessage = "The new running plan contains existing units.";
+                                    logger.log(Logger.DEBUG, TAG, errorMessage, null);
+                                    throw new SportsLibraryException(errorMessage);
                                 }
+
                                 // insert a new movement type
                                 MovementType movementType = unit.getMovementType();
-                                if (findByUUID(MovementType.class, movementType.getUUID()) == null) {
+                                String uuid = movementType.getUUID();
+                                if (findByUUID(MovementType.class, uuid) == null) {
                                     movementTypeRepository.insert(movementType);
+                                    // save for rollback
+                                    movementTypeUUIDs.add(uuid);
                                 }
                             }
                             // insert the entry
                             runningPlanEntryRepository.insert(entry);
+                            // save for rollback
+                            runningEntryUUIDs.add(entryUUID);
                         } else {
-                            // update the entry
-                            runningPlanEntryRepository.update(entry);
+                            // error - running plan contains an existing entry
+                            // rollback
+                            rollback(RunningPlanEntry.class, runningEntryUUIDs);
+                            rollback(RunningUnit.class, runningUnitUUIDs);
+                            rollback(MovementType.class, movementTypeUUIDs);
+                            String errorMessage = "The new running plan contains existing entries.";
+                            logger.log(Logger.DEBUG, TAG, errorMessage, null);
+                            throw new SportsLibraryException(errorMessage);
                         }
                     }
                     // add the running plan
@@ -438,9 +465,28 @@ public final class DataRepository {
                     // add or update running plan entries
                     for (RunningPlanEntry entry : entries) {
                         if (findByUUID(RunningPlanEntry.class, entry.getUUID()) == null) {
-                            // insert the units
+                            // insert the new entry and the units
                             List<RunningUnit> units = entry.getRunningUnits();
                             for (RunningUnit unit : units) {
+                                // insert a new movement type
+                                MovementType movementType = unit.getMovementType();
+                                if (findByUUID(MovementType.class, movementType.getUUID()) == null) {
+                                    movementTypeRepository.insert(movementType);
+                                }
+                                // insert the new unit
+                                runningUnitRepository.insert(unit);
+                            }
+                            // insert the entry
+                            runningPlanEntryRepository.insert(entry);
+                        } else {
+                            // update the entry and insert or update the units
+                            List<RunningUnit> units = entry.getRunningUnits();
+                            for (RunningUnit unit : units) {
+                                // insert a new movement type
+                                MovementType movementType = unit.getMovementType();
+                                if (findByUUID(MovementType.class, movementType.getUUID()) == null) {
+                                    movementTypeRepository.insert(movementType);
+                                }
                                 if (findByUUID(RunningUnit.class, unit.getUUID()) == null) {
                                     // insert the unit
                                     runningUnitRepository.insert(unit);
@@ -448,16 +494,7 @@ public final class DataRepository {
                                     // update the unit
                                     runningUnitRepository.update(unit);
                                 }
-                                // insert a new movement type
-                                MovementType movementType = unit.getMovementType();
-                                if (findByUUID(MovementType.class, movementType.getUUID()) == null) {
-                                    movementTypeRepository.insert(movementType);
-                                }
                             }
-                            // insert the entry
-                            runningPlanEntryRepository.insert(entry);
-                        } else {
-                            // update the entry
                             runningPlanEntryRepository.update(entry);
                         }
                     }
@@ -487,6 +524,27 @@ public final class DataRepository {
             }
         } catch (Exception exception) {
             throw new SportsLibraryException(exception);
+        }
+    }
+
+    // rollback
+    private void rollback(@NotNull Class<? extends PersistentObject> type, @NotNull List<String> objectUUIDs) {
+        ObjectRepository<? extends PersistentObject> repository = database.getRepository(type);
+        try {
+            for (String uuid : objectUUIDs) {
+                // delete all objects with given uuid
+                if (type.getSimpleName().equals("MovementType")) {
+                    // movement type has a unique key
+                    repository.remove(ObjectFilters.eq("key", uuid));
+                } else if (type.getSimpleName().equals("TrainingType")) {
+                    // training type has a unique name
+                    repository.remove(ObjectFilters.eq("name", uuid));
+                } else {
+                    repository.remove(ObjectFilters.eq("uuid", uuid));
+                }
+            }
+        } catch (NotIdentifiableException exception) {
+            logger.log(Logger.DEBUG, TAG, "Error while rollback.", exception);
         }
     }
 }
