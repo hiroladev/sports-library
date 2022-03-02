@@ -6,7 +6,6 @@ import de.hirola.sportslibrary.model.*;
 
 import de.hirola.sportslibrary.util.Logger;
 import org.dizitart.no2.Nitrite;
-import org.dizitart.no2.event.ChangeListener;
 import org.dizitart.no2.exceptions.NotIdentifiableException;
 import org.dizitart.no2.objects.Cursor;
 import org.dizitart.no2.objects.ObjectRepository;

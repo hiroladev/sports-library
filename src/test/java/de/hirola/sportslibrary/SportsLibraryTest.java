@@ -46,7 +46,7 @@ class SportsLibraryTest {
             // user has an active running plan
             RunningPlan runningPlan = new RunningPlan();
             User user = new User();
-            user.setActiveRunningPlan(runningPlan);
+            user.setActiveRunningPlanUUID(runningPlan.getUUID());
 
             // create 2 location data with associated track
             LocationData locationData1 = new LocationData();
@@ -75,9 +75,9 @@ class SportsLibraryTest {
             assertNotNull(object1, "Find no object with given UUID.");
             List<? extends PersistentObject> result = dataRepository.findAll(User.class);
             assertFalse(result.isEmpty(), "No results from datastore");
-            RunningPlan activePlan = user.getActiveRunningPlan();
-            assertNotNull(activePlan, "Active running plan from user must not be null.");
-            assertEquals(runningPlanUUID, activePlan.getUUID(), "Active running plan uuid is wrong");
+            String activeRunningPlanUUID = user.getActiveRunningPlanUUID();
+            assertNotEquals("", activeRunningPlanUUID, "Active running plan from user must not be null.");
+            assertEquals(runningPlanUUID, activeRunningPlanUUID, "Active running plan uuid is wrong");
 
             // track and locations test
             PersistentObject object2 = dataRepository.findByUUID(Track.class, track.getUUID());
@@ -131,14 +131,14 @@ class SportsLibraryTest {
             assertEquals(160, appUser2.getMaxPulse(), "Pulse not saved");
 
             RunningPlan runningPlan1 = (RunningPlan) runningPlans.get(0);
-            appUser2.setActiveRunningPlan(runningPlan1);
+            appUser2.setActiveRunningPlanUUID(runningPlan1.getUUID());
             dataRepository.update(appUser2);
             User appUser3 = (User) dataRepository.findByUUID(User.class, appUser1UUID);
             assertNotNull(appUser3, "User not found in database.");
             assertEquals(appUser3.getUUID(), appUser1UUID, "Not the same object.");
-            RunningPlan activeRunningPlan = appUser3.getActiveRunningPlan();
-            assertNotNull(activeRunningPlan);
-            assertEquals(runningPlan1.getUUID(), activeRunningPlan.getUUID(), "User's running plan not saved.");
+            String activeRunningPlanUUID = appUser3.getActiveRunningPlanUUID();
+            assertNotEquals("", activeRunningPlanUUID, "Active running plan uuid must be not empty.");
+            assertEquals(runningPlan1.getUUID(), activeRunningPlanUUID, "User's running plan not saved.");
 
             // test the compare from running plan entry
             RunningPlanEntry runningPlanEntry1 = new RunningPlanEntry(1,1, new ArrayList<>());
@@ -434,6 +434,85 @@ class SportsLibraryTest {
 
         // delete all objects
         dataRepository.clearAll();
+    }
+
+    @Test
+    void testUser() {
+        try {
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
+            dataRepository = sportsLibrary.getDataRepository();
+
+            RunningPlan runningPlan1 = (RunningPlan) dataRepository.findAll(RunningPlan.class).get(0);
+            String runningPlan1UUID = runningPlan1.getUUID();
+            assertNotNull(runningPlan1);
+            User user1 = sportsLibrary.getAppUser();
+            assertNotNull(user1);
+            assertNull(user1.getActiveRunningPlanUUID()); // with empty database
+            user1.setActiveRunningPlanUUID(runningPlan1UUID);
+            dataRepository.update(user1);
+
+            User user2 = sportsLibrary.getAppUser();
+            assertNotNull(user2);
+            String runningPlan2UUID = user2.getActiveRunningPlanUUID();
+            assertNotEquals("", runningPlan2UUID, "Active running plan uuid must be not empty.");
+            assertEquals(runningPlan1UUID, runningPlan2UUID);
+
+            RunningPlan runningPlan2 = (RunningPlan) dataRepository.findByUUID(RunningPlan.class, runningPlan2UUID);
+            assertNotNull(runningPlan2);
+            RunningUnit unit1 = runningPlan2.getEntries().get(0).getRunningUnits().get(0);
+            assertNotNull(unit1);
+            String unit1UUID = unit1.getUUID();
+
+            runningPlan2.completeUnit(unit1);
+            dataRepository.update(runningPlan2);
+
+            RunningPlan runningPlan3 = (RunningPlan) dataRepository.findAll(RunningPlan.class).get(0);
+            assertNotNull(runningPlan3);
+            assertEquals(runningPlan1UUID, runningPlan3.getUUID());
+            RunningUnit unit2 = runningPlan3.getEntries().get(0).getRunningUnits().get(0);
+            assertNotNull(unit2);
+            assertEquals(unit1UUID, unit2.getUUID());
+            assertTrue(unit2.isCompleted());
+
+            User user3 = sportsLibrary.getAppUser();
+            assertNotNull(user3);
+            String runningPlan4UUID = user3.getActiveRunningPlanUUID();
+            assertNotEquals("", runningPlan4UUID, "Active running plan uuid must be not empty.");
+            RunningUnit unit4 = runningPlan3.getEntries().get(0).getRunningUnits().get(0);
+            assertNotNull(unit4);
+            assertEquals(unit1UUID, unit4.getUUID());
+            assertTrue(unit4.isCompleted());
+
+        } catch (SportsLibraryException exception) {
+            fail(exception.getMessage());
+        }
+
+        // delete all objects
+        // dataRepository.clearAll();
+    }
+
+    @Test
+    void testUserWithData() {
+        try {
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
+            dataRepository = sportsLibrary.getDataRepository();
+
+            RunningPlan runningPlan1 = (RunningPlan) dataRepository.findAll(RunningPlan.class).get(0);
+            assertNotNull(runningPlan1);
+            User user1 = sportsLibrary.getAppUser();
+            assertNotNull(user1);
+            assertNotNull(user1.getActiveRunningPlanUUID());
+
+            RunningUnit unit1 = runningPlan1.getEntries().get(0).getRunningUnits().get(0);
+            assertNotNull(unit1);
+            assertTrue(unit1.isCompleted());
+
+        } catch (SportsLibraryException exception) {
+            fail(exception.getMessage());
+        }
+
+        // delete all objects
+        // dataRepository.clearAll();
     }
 
     @Test

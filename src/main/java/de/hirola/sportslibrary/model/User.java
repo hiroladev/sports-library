@@ -10,7 +10,6 @@ import org.dizitart.no2.objects.Id;
 import org.dizitart.no2.objects.Index;
 import org.dizitart.no2.objects.Indices;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -41,7 +40,7 @@ public class User extends PersistentObject {
     private int gender; // required to calculate the heart rate
     private int trainingLevel; // from Global
     private int maxPulse; // calculate with birthday and gender
-    private RunningPlan activeRunningPlan; // current training
+    private String activeRunningPlanUUID; // current training
 
     /**
      * Default constructor for reflection and database management.
@@ -53,7 +52,7 @@ public class User extends PersistentObject {
         gender = 0;
         trainingLevel = 0;
         maxPulse = 0;
-        activeRunningPlan = null;
+        activeRunningPlanUUID = "";
     }
 
     /**
@@ -194,6 +193,25 @@ public class User extends PersistentObject {
         this.maxPulse = maxPulse;
     }
 
+    /**
+     * Get the uuid of active running plan or
+     * an empty string if not plan assigned.
+     *
+     * @return The uuid if the active running plan or an empty string.
+     */
+    public String getActiveRunningPlanUUID() {
+        return activeRunningPlanUUID;
+    }
+
+    /**
+     * Set the uuid of active training plan.
+     *
+     * @param uuid of the active running plan
+     */
+    public void setActiveRunningPlanUUID(String uuid) {
+        activeRunningPlanUUID = uuid;
+    }
+
     @Override
     public Document write(NitriteMapper mapper) {
         Document document = new Document();
@@ -205,11 +223,7 @@ public class User extends PersistentObject {
         document.put("gender", gender);
         document.put("trainingLevel", trainingLevel);
         document.put("maxPulse", maxPulse);
-
-        if (activeRunningPlan != null) {
-            Document activeRunningPlanDocument = activeRunningPlan.write(mapper);
-            document.put("activeRunningPlan", activeRunningPlanDocument);
-        }
+        document.put("activeRunningPlanUUID", activeRunningPlanUUID);
 
         return document;
     }
@@ -225,33 +239,8 @@ public class User extends PersistentObject {
             gender = (int) document.get("gender");
             trainingLevel = (int) document.get("trainingLevel");
             maxPulse = (int) document.get("maxPulse");
-
-            Document activeRunningPlanDocument = (Document) document.get("activeRunningPlan");
-            if (activeRunningPlanDocument != null) {
-                RunningPlan runningPlan = new RunningPlan();
-                runningPlan.read(mapper, activeRunningPlanDocument);
-                this.activeRunningPlan = runningPlan;
-            }
+            activeRunningPlanUUID = (String) document.get("activeRunningPlanUUID");
         }
-    }
-    
-    /**
-     * Get the first name of user.
-     *
-     * @return The first name of the user
-     */
-    @Nullable
-    public RunningPlan getActiveRunningPlan() {
-        return activeRunningPlan;
-    }
-
-    /**
-     * Set the active training plan.
-     *
-     * @param activeRunningPlan wich the user want to train now
-     */
-    public void setActiveRunningPlan(RunningPlan activeRunningPlan) {
-        this.activeRunningPlan = activeRunningPlan;
     }
 
     @Override
