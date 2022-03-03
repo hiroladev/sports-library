@@ -19,6 +19,8 @@ import java.util.*;
  * An example:
  * Week: 3, Day: 1 (Monday), 7 min total, 2 min run, 3 min slow walk, 2 min run
  *
+ * A running plan entry cannot exist without a running plan.
+ *
  * @author Michael Schmidt (Hirola)
  * @since 0.0.1
  */

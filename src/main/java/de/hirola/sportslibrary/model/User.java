@@ -10,6 +10,7 @@ import org.dizitart.no2.objects.Id;
 import org.dizitart.no2.objects.Index;
 import org.dizitart.no2.objects.Indices;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -194,11 +195,11 @@ public class User extends PersistentObject {
     }
 
     /**
-     * Get the uuid of active running plan or
-     * an empty string if not plan assigned.
+     * Get the uuid of active running plan or null if not plan assigned.
      *
      * @return The uuid if the active running plan or an empty string.
      */
+    @Nullable
     public UUID getActiveRunningPlanUUID() {
         return activeRunningPlanUUID;
     }

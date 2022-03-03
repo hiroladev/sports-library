@@ -17,6 +17,8 @@ import java.util.Objects;
  * The movement types can be adjusted and saved.
  * Example: 20 min run
  *
+ * A running unit cannot exist without a running plan.
+ *
  * @author Michael Schmidt (Hirola)
  * @since 0.0.1
  * @see  RunningPlanEntry

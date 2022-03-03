@@ -58,7 +58,7 @@ public class Training extends PersistentObject {
         // if null set default
         this.remarks = Objects.requireNonNullElse(remarks, "");
         this.trainingTypeUUID = trainingTypeUUID; // can be null
-        this.trackUUID = trackUUID;
+        this.trackUUID = trackUUID; // can be null
         if (trainingDate == null) {
             this.trainingDate = DateUtil.getDateFromNow();
         } else {
@@ -126,6 +126,7 @@ public class Training extends PersistentObject {
      *
      * @return The type of training
      */
+    @Nullable
     public UUID getTrainingTypeUUID() {
         return trainingTypeUUID;
     }

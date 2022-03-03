@@ -277,7 +277,7 @@ public final class DataRepository {
             }
             throw new SportsLibraryException("Unsupported direct datastore operations.");
         } catch (Exception exception) {
-            String errorMessage = "Operation with the object from type "
+            String errorMessage = "Operation "+ action +" with the object from type "
                     + object.getClass().getSimpleName()
                     +" and with id " + object.getUUID() + " failed.";
             logger.log(Logger.DEBUG, TAG, errorMessage, exception);
@@ -294,14 +294,24 @@ public final class DataRepository {
         try {
             switch (action) {
                 case INSERT_ACTION:
+                    // rollback on error
+                    List<UUID> locationUUIDs = new ArrayList<>();
                     // add locations
                     for (LocationData locationData : locations) {
-                        if (findByUUID(Track.class, locationData.getUUID()) == null) {
+                        UUID locationUUID = locationData.getUUID();
+                        if (findByUUID(Track.class, locationUUID) == null) {
                             // insert
                             locationsRepository.insert(locationData);
+                            // save for rollback
+                            locationUUIDs.add(locationUUID);
                         } else {
-                            // update
-                            locationsRepository.update(locationData);
+                            // existing location cannot be added to a new track
+                            // rollback
+                            rollback(LocationData.class, locationUUIDs);
+                            locationUUIDs.clear();
+                            String errorMessage = "Location data of new track already exist in the database.";
+                            logger.log(Logger.DEBUG, TAG, errorMessage, null);
+                            throw new SportsLibraryException(errorMessage);
                         }
                     }
                     // add the track
@@ -344,15 +354,16 @@ public final class DataRepository {
     private void doActionWithTraining(int action, @NotNull Training training) throws SportsLibraryException {
         // create or get the repositories
         ObjectRepository<Training> trainingRepository = database.getRepository(Training.class);
-        ObjectRepository<TrainingType> trainingTypeRepository = database.getRepository(TrainingType.class);
         UUID trainingTypeUUID = training.getTrainingTypeUUID();
         UUID trackUUID = training.getTrackUUID();
         try {
             switch (action) {
                 case INSERT_ACTION:
                     // type must be existed before saving
-                    if (findByUUID(TrainingType.class, trainingTypeUUID) == null) {
-                        throw new SportsLibraryException("The type of the training must be existed before inserting.");
+                    if (trainingTypeUUID != null) {
+                        if (findByUUID(TrainingType.class, trainingTypeUUID) == null) {
+                            throw new SportsLibraryException("The type of the training must be existed before inserting.");
+                        }
                     }
                     // track must be existed before saving
                     if (trackUUID != null) {
@@ -366,9 +377,11 @@ public final class DataRepository {
                     return;
 
                 case UPDATE_ACTION:
-                    // type must be existed before saving
-                    if (findByUUID(TrainingType.class, trainingTypeUUID) == null) {
-                        throw new SportsLibraryException("The type of the training must be existed before inserting.");
+                    // training type must be existed before saving
+                    if (trainingTypeUUID != null) {
+                        if (findByUUID(TrainingType.class, trainingTypeUUID) == null) {
+                            throw new SportsLibraryException("The type of the training must be existed before inserting.");
+                        }
                     }
                     // track must be existed before saving
                     if (trackUUID != null) {
@@ -427,6 +440,9 @@ public final class DataRepository {
                                     rollback(RunningPlanEntry.class, runningEntryUUIDs);
                                     rollback(RunningUnit.class, runningUnitUUIDs);
                                     rollback(MovementType.class, movementTypeUUIDs);
+                                    runningEntryUUIDs.clear();
+                                    runningUnitUUIDs.clear();
+                                    movementTypeUUIDs.clear();
                                     String errorMessage = "The new running plan contains existing units.";
                                     logger.log(Logger.DEBUG, TAG, errorMessage, null);
                                     throw new SportsLibraryException(errorMessage);
@@ -461,8 +477,6 @@ public final class DataRepository {
                     return;
 
                 case UPDATE_ACTION:
-                    // update the running plan
-                    runningPlanRepository.update(runningPlan);
                     // add or update running plan entries
                     for (RunningPlanEntry entry : entries) {
                         if (findByUUID(RunningPlanEntry.class, entry.getUUID()) == null) {
@@ -499,6 +513,8 @@ public final class DataRepository {
                             }
                         }
                     }
+                    // update the running plan
+                    runningPlanRepository.update(runningPlan);
                     return;
 
                 case REMOVE_ACTION:

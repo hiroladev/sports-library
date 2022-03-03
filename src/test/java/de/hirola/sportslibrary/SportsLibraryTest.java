@@ -45,6 +45,7 @@ class SportsLibraryTest {
 
             // user has an active running plan
             RunningPlan runningPlan = new RunningPlan();
+            UUID runningPlanUUID = runningPlan.getUUID();
             User user = new User();
             user.setActiveRunningPlanUUID(runningPlan.getUUID());
 
@@ -69,7 +70,6 @@ class SportsLibraryTest {
             dataRepository.add(user);
             dataRepository.add(track);
             dataRepository.add(training);
-            UUID runningPlanUUID = runningPlan.getUUID();
 
             // running plan and user test
             PersistentObject object1 = dataRepository.findByUUID(User.class, user.getUUID());
@@ -113,7 +113,7 @@ class SportsLibraryTest {
     @Test
     void testObjects() {
         try {
-            sportsLibrary = new SportsLibrary("de.hirola.sportslibrary", null);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             dataRepository = sportsLibrary.getDataRepository();
 
             // test the import from the templates
@@ -265,12 +265,12 @@ class SportsLibraryTest {
 
             // checks
             PersistentObject savedTrack = dataRepository.findByUUID(Track.class, trackUUID);
-            assertNotNull(savedTrack, "Track was not saved");
+            assertNotNull(savedTrack, "Track was not saved.");
             List<? extends PersistentObject> savedLocations = dataRepository.findAll(LocationData.class);
             assertEquals(2, savedLocations.size(), "LocationData not saved");
             for (PersistentObject p : savedLocations) {
                 if (!p.getUUID().equals(location1UUID) && !p.getUUID().equals(location2UUID)) {
-                    fail("Different UUID from locations");
+                    fail("Different UUID from location.");
                 }
 
             }
@@ -310,6 +310,7 @@ class SportsLibraryTest {
             locations.add(locationData2);
             Track track = new Track("Test-Track",null, locations);
             UUID trackUUID = track.getUUID();
+            dataRepository.add(track);
 
             // create a training with track
             Training training = new Training("Test-Training", null, null, trackUUID, null);
@@ -320,25 +321,23 @@ class SportsLibraryTest {
 
             // checks
             PersistentObject savedTraining = dataRepository.findByUUID(Training.class, trainingUUID);
-            assertNotNull(savedTraining, "Training was not saved");
+            assertNotNull(savedTraining, "Training was not saved.");
             PersistentObject savedTrack = dataRepository.findByUUID(Track.class, trackUUID);
-            assertNotNull(savedTrack, "Track was not saved");
+            assertNotNull(savedTrack, "Track was not saved.");
             List<? extends PersistentObject> savedLocations = dataRepository.findAll(LocationData.class);
-            assertEquals(2, savedLocations.size(), "LocationData not saved");
+            assertEquals(2, savedLocations.size(), "LocationData not saved.");
             for (PersistentObject p : savedLocations) {
                 if (!p.getUUID().equals(location1UUID) && !p.getUUID().equals(location2UUID)) {
-                    fail("Different UUID from locations");
+                    fail("Different UUID from locations.");
                 }
             }
 
             // remove the training, type of training, track and locations should be NOT deleted
             dataRepository.delete(training);
             PersistentObject notDeletedTrack = dataRepository.findByUUID(Track.class, trackUUID);
-            assertNotNull(notDeletedTrack, "Track was deleted");
+            assertNotNull(notDeletedTrack, "Track was deleted.");
             List<? extends PersistentObject> notDeletedLocations = dataRepository.findAll(LocationData.class);
             assertEquals(2, notDeletedLocations.size(), "LocationData was deleted.");
-            PersistentObject notDeletedTrainingType = dataRepository.findByUUID(TrainingType.class, trainingTypeUUID);
-            assertNotNull(notDeletedTrainingType, "TrainingType was deleted");
 
         } catch (SportsLibraryException exception) {
             fail(exception.getMessage());
@@ -455,7 +454,7 @@ class SportsLibraryTest {
             User user2 = sportsLibrary.getAppUser();
             assertNotNull(user2);
             UUID runningPlan2UUID = user2.getActiveRunningPlanUUID();
-            assertNotEquals("", runningPlan2UUID, "Active running plan uuid must be not empty.");
+            assertNotNull(runningPlan2UUID, "Active running plan uuid must be not null.");
             assertEquals(runningPlan1UUID, runningPlan2UUID);
 
             RunningPlan runningPlan2 = (RunningPlan) dataRepository.findByUUID(RunningPlan.class, runningPlan2UUID);
@@ -478,55 +477,33 @@ class SportsLibraryTest {
             User user3 = sportsLibrary.getAppUser();
             assertNotNull(user3);
             UUID runningPlan4UUID = user3.getActiveRunningPlanUUID();
-            assertNotEquals("", runningPlan4UUID, "Active running plan uuid must be not empty.");
+            assertNotNull(runningPlan4UUID, "Active running plan uuid must be not null.");
             RunningUnit unit4 = runningPlan3.getEntries().get(0).getRunningUnits().get(0);
             assertNotNull(unit4);
             assertEquals(unit1UUID, unit4.getUUID());
             assertTrue(unit4.isCompleted());
 
-        } catch (SportsLibraryException exception) {
-            fail(exception.getMessage());
-        }
+            // with existing data
+            SportsLibrary sportsLibrary5 = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
+            DataRepository dataRepository5 = sportsLibrary5.getDataRepository();
 
-        // delete all objects
-        // dataRepository.clearAll();
-    }
+            User user5 = sportsLibrary.getAppUser();
+            assertNotNull(user5);
+            UUID runningPlanUUID = user5.getActiveRunningPlanUUID();
+            assertNotNull(runningPlanUUID);
 
-    @Test
-    void testUserWithData() {
-        try {
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
-            dataRepository = sportsLibrary.getDataRepository();
-
-            RunningPlan runningPlan1 = (RunningPlan) dataRepository.findAll(RunningPlan.class).get(0);
-            assertNotNull(runningPlan1);
-            User user1 = sportsLibrary.getAppUser();
-            assertNotNull(user1);
-            assertNotNull(user1.getActiveRunningPlanUUID());
-
-            RunningUnit unit1 = runningPlan1.getEntries().get(0).getRunningUnits().get(0);
-            assertNotNull(unit1);
-            assertTrue(unit1.isCompleted());
+            RunningPlan runningPlan5 = (RunningPlan) dataRepository5.findByUUID(RunningPlan.class, runningPlanUUID);
+            assertNotNull(runningPlan5);
+            RunningUnit unit5 = runningPlan5.getEntries().get(0).getRunningUnits().get(0);
+            assertNotNull(unit5);
+            assertTrue(unit5.isCompleted());
 
         } catch (SportsLibraryException exception) {
             fail(exception.getMessage());
         }
 
         // delete all objects
-        // dataRepository.clearAll();
+        dataRepository.clearAll();
     }
 
-    @Test
-    void testLogger() {
-        try {
-            // empty app name
-            sportsLibrary = new SportsLibrary("de.hirola.sportslibrary", null);
-            assertNotNull(sportsLibrary, "Library not initialize.");
-            dataRepository = sportsLibrary.getDataRepository();
-            assertNotNull(dataRepository, "DataRepository not initialize.");
-
-        } catch (SportsLibraryException exception) {
-            fail(exception.getMessage());
-        }
-    }
 }
