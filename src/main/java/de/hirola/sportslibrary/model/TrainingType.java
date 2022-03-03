@@ -173,8 +173,8 @@ public class TrainingType extends PersistentObject {
     }
 
     @Override
-    public String getUUID() {
-        return name;
+    public UUID getUUID() {
+        return new UUID(uuid);
     }
 
     

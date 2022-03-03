@@ -25,7 +25,6 @@ import java.util.Objects;
  * @since 0.0.1
  *
  */
-
 public class Training extends PersistentObject {
 
     @Id
@@ -37,8 +36,8 @@ public class Training extends PersistentObject {
     private double altitudeDifference; // if -1 then calculate from track
     private double averageSpeed; // if -1 then calculate from track
     private Date trainingDate;
-    private TrainingType trainingType; // biking, running, ...
-    private Track track; // track of the training
+    private UUID trainingTypeUUID; // biking, running, ...
+    private UUID trackUUID; // track of the training, can be null
 
     /**
      * Default constructor for reflection, JSON import
@@ -50,35 +49,32 @@ public class Training extends PersistentObject {
         distance = -1.0;
         altitudeDifference = -1.0;
         averageSpeed = -1.0;
+        trackUUID = null;
     }
 
-    public Training(@NotNull String name, @Nullable String remarks, @Nullable TrainingType trainingType,
-                    @NotNull Track track, @Nullable LocalDate trainingDate) {
+    public Training(@NotNull String name, @Nullable String remarks, @Nullable UUID trainingTypeUUID,
+                    @Nullable UUID trackUUID, @Nullable LocalDate trainingDate) {
         this.name = name;
         // if null set default
         this.remarks = Objects.requireNonNullElse(remarks, "");
-        this.trainingType = Objects.requireNonNullElseGet(trainingType, TrainingType::new);
-        this.track = track;
+        this.trainingTypeUUID = trainingTypeUUID; // can be null
+        this.trackUUID = trackUUID;
         if (trainingDate == null) {
             this.trainingDate = DateUtil.getDateFromNow();
         } else {
             this.trainingDate = DateUtil.getDateFromLocalDate(trainingDate);
         }
-        // get the values from track
-        distance = track.getDistance();
-        altitudeDifference = track.getAverageSpeed();
-        averageSpeed = track.getAverageSpeed();
     }
 
-    public Training(@NotNull String name, @Nullable String remarks, @Nullable TrainingType trainingType,
-                    @Nullable LocalDate trainingDate, @Nullable Track track,
+    public Training(@NotNull String name, @Nullable String remarks, @Nullable UUID trainingTypeUUID,
+                    @Nullable LocalDate trainingDate, @Nullable UUID trackUUID,
                     double distance, double averageSpeed, double altitudeDifference) {
         this.name = name;
         // if null set default
         this.remarks = Objects.requireNonNullElse(remarks, "");
         // if null set default
-        this.trainingType = Objects.requireNonNullElseGet(trainingType, TrainingType::new);
-        this.track = track; // can be null
+        this.trainingTypeUUID = trainingTypeUUID; // can be null
+        this.trackUUID = trackUUID; // can be null
         if (trainingDate == null) {
             this.trainingDate = DateUtil.getDateFromNow();
         } else {
@@ -130,17 +126,17 @@ public class Training extends PersistentObject {
      *
      * @return The type of training
      */
-    public TrainingType getTrainingType() {
-        return trainingType;
+    public UUID getTrainingTypeUUID() {
+        return trainingTypeUUID;
     }
 
     /**
      * Set the type of the training.
      *
-     * @param trainingType of the training
+     * @param trainingTypeUUID of the training
      */
-    public void setTrainingType(TrainingType trainingType) {
-        this.trainingType = trainingType;
+    public void setTrainingTypeUUID(UUID trainingTypeUUID) {
+        this.trainingTypeUUID = trainingTypeUUID;
     }
 
     /**
@@ -167,17 +163,17 @@ public class Training extends PersistentObject {
      * @return The track of training, can be null
      */
     @Nullable
-    public Track getTrack() {
-        return track;
+    public UUID getTrackUUID() {
+        return trackUUID;
     }
 
     /**
      * Set the track of the training.
      *
-     * @param track of the training
+     * @param trackUUID of the training
      */
-    public void setTrack(Track track) {
-        this.track = track;
+    public void setTrackUUID(UUID trackUUID) {
+        this.trackUUID = trackUUID;
     }
 
     /**
@@ -262,16 +258,8 @@ public class Training extends PersistentObject {
         document.put("altitudeDifference", altitudeDifference);
         document.put("averageSpeed", averageSpeed);
         document.put("trainingDate", trainingDate);
-
-        if (trainingType != null) {
-            Document trainingTypeDocument = trainingType.write(mapper);
-            document.put("trainingType", trainingTypeDocument);
-        }
-
-        if (track != null) {
-            Document trackDocument = track.write(mapper);
-            document.put("track", trackDocument);
-        }
+        document.put("trainingTypeUUID", trainingTypeUUID);
+        document.put("trackUUID", trackUUID);
 
         return document;
     }
@@ -286,20 +274,8 @@ public class Training extends PersistentObject {
             altitudeDifference = (double) document.get("altitudeDifference");
             averageSpeed = (double) document.get("averageSpeed");
             trainingDate = (Date) document.get("trainingDate");
-
-            Document trainingTypeDocument = (Document) document.get("trainingType");
-            if (trainingTypeDocument != null) {
-                TrainingType trainingType = new TrainingType();
-                trainingType.read(mapper, trainingTypeDocument);
-                this.trainingType = trainingType;
-            }
-
-            Document trackDocument = (Document) document.get("track");
-            if (trackDocument != null) {
-                Track track = new Track();
-                track.read(mapper, trackDocument);
-                this.track = track;
-            }
+            trainingTypeUUID = (UUID) document.get("trainingTypeUUID");
+            trackUUID = (UUID) document.get("trackUUID");
         }
     }
     
@@ -319,9 +295,8 @@ public class Training extends PersistentObject {
     }
 
     @Override
-    public String getUUID() {
-        return uuid;
+    public UUID getUUID() {
+        return new UUID(uuid);
     }
 
-    
 }

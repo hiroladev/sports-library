@@ -353,8 +353,8 @@ public class Track extends PersistentObject {
     }
     
     @Override
-    public String getUUID() {
-        return uuid;
+    public UUID getUUID() {
+        return new UUID(uuid);
     }
 
     @Override

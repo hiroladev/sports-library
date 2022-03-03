@@ -59,23 +59,24 @@ class SportsLibraryTest {
 
             // create a track with locations
             Track track = new Track("Test-Track",null, locations);
+            UUID trackUUID = track.getUUID();
 
             // create a training with track
-            Training training = new Training("Training", null, null, track, null);
+            Training training = new Training("Training", null, null, trackUUID, null);
 
             // add all objects
             dataRepository.add(runningPlan);
             dataRepository.add(user);
             dataRepository.add(track);
             dataRepository.add(training);
-            String runningPlanUUID = runningPlan.getUUID();
+            UUID runningPlanUUID = runningPlan.getUUID();
 
             // running plan and user test
             PersistentObject object1 = dataRepository.findByUUID(User.class, user.getUUID());
             assertNotNull(object1, "Find no object with given UUID.");
             List<? extends PersistentObject> result = dataRepository.findAll(User.class);
             assertFalse(result.isEmpty(), "No results from datastore");
-            String activeRunningPlanUUID = user.getActiveRunningPlanUUID();
+            UUID activeRunningPlanUUID = user.getActiveRunningPlanUUID();
             assertNotEquals("", activeRunningPlanUUID, "Active running plan from user must not be null.");
             assertEquals(runningPlanUUID, activeRunningPlanUUID, "Active running plan uuid is wrong");
 
@@ -95,8 +96,8 @@ class SportsLibraryTest {
             if (object3 instanceof Training) {
                 Training trainingFromDB = (Training) object3;
                 assertNotNull(object3, "Training must not be null");
-                assertNotNull(((Training) object3).getTrack(), "Track must not be null");
-                assertEquals(trainingFromDB.getTrack().getUUID(), track.getUUID(), "Not the same track.");
+                assertNotNull(((Training) object3).getTrackUUID(), "Track must not be null");
+                assertEquals(trainingFromDB.getTrackUUID(), track.getUUID(), "Not the same track.");
             } else {
                 fail("Wrong type of object.");
             }
@@ -122,7 +123,7 @@ class SportsLibraryTest {
 
             // test user
             User appUser1 = sportsLibrary.getAppUser();
-            String appUser1UUID = appUser1.getUUID();
+            UUID appUser1UUID = appUser1.getUUID();
             appUser1.setMaxPulse(160);
             dataRepository.update(appUser1);
             User appUser2 = (User) dataRepository.findByUUID(User.class, appUser1UUID);
@@ -136,7 +137,7 @@ class SportsLibraryTest {
             User appUser3 = (User) dataRepository.findByUUID(User.class, appUser1UUID);
             assertNotNull(appUser3, "User not found in database.");
             assertEquals(appUser3.getUUID(), appUser1UUID, "Not the same object.");
-            String activeRunningPlanUUID = appUser3.getActiveRunningPlanUUID();
+            UUID activeRunningPlanUUID = appUser3.getActiveRunningPlanUUID();
             assertNotEquals("", activeRunningPlanUUID, "Active running plan uuid must be not empty.");
             assertEquals(runningPlan1.getUUID(), activeRunningPlanUUID, "User's running plan not saved.");
 
@@ -249,15 +250,15 @@ class SportsLibraryTest {
             // create a track with locations
             LocationData locationData1 = new LocationData();
             LocationData locationData2 = new LocationData();
-            String location1UUID = locationData1.getUUID();
-            String location2UUID = locationData2.getUUID();
+            UUID location1UUID = locationData1.getUUID();
+            UUID location2UUID = locationData2.getUUID();
 
             // add to a list
             List<LocationData> locations = new ArrayList<>(2);
             locations.add(locationData1);
             locations.add(locationData2);
             Track track = new Track("Test-Track",null, locations);
-            String trackUUID = track.getUUID();
+            UUID trackUUID = track.getUUID();
 
             // add only the track
             dataRepository.add(track);
@@ -300,20 +301,20 @@ class SportsLibraryTest {
             // create a track with locations
             LocationData locationData1 = new LocationData();
             LocationData locationData2 = new LocationData();
-            String location1UUID = locationData1.getUUID();
-            String location2UUID = locationData2.getUUID();
+            UUID location1UUID = locationData1.getUUID();
+            UUID location2UUID = locationData2.getUUID();
 
             // add to a list
             List<LocationData> locations = new ArrayList<>(2);
             locations.add(locationData1);
             locations.add(locationData2);
             Track track = new Track("Test-Track",null, locations);
-            String trackUUID = track.getUUID();
+            UUID trackUUID = track.getUUID();
 
             // create a training with track
-            Training training = new Training("Test-Training", null, null, track, null);
-            String trainingUUID = training.getUUID();
-            String trainingTypeUUID = training.getTrainingType().getUUID();
+            Training training = new Training("Test-Training", null, null, trackUUID, null);
+            UUID trainingUUID = training.getUUID();
+            UUID trainingTypeUUID = training.getTrainingTypeUUID();
             // add only the training
             dataRepository.add(training);
 
@@ -362,22 +363,22 @@ class SportsLibraryTest {
 
             RunningUnit runningUnit1 = new RunningUnit(30, movementType1);
             RunningUnit runningUnit2 = new RunningUnit(5, movementType2);
-            String runningUnit1UUID = runningUnit1.getUUID();
-            String runningUnit2UUID = runningUnit2.getUUID();
+            UUID runningUnit1UUID = runningUnit1.getUUID();
+            UUID runningUnit2UUID = runningUnit2.getUUID();
             List<RunningUnit> runningUnits = new ArrayList<>(2);
             runningUnits.add(runningUnit1);
             runningUnits.add(runningUnit2);
 
             RunningPlanEntry runningPlanEntry = new RunningPlanEntry(1,1, runningUnits);
-            String runningPlanEntryUUID = runningPlanEntry.getUUID();
+            UUID runningPlanEntryUUID = runningPlanEntry.getUUID();
 
             List<RunningPlanEntry> runningPlanEntries = new ArrayList<>(1);
             runningPlanEntries.add(runningPlanEntry);
             RunningPlan runningPlan = new RunningPlan("Test-Plan", null,1,runningPlanEntries, false);
-            String runningPlanUUID = runningPlan.getUUID();
+            UUID runningPlanUUID = runningPlan.getUUID();
 
             // color is green by default
-            MovementType movementType1beforeUpdated = (MovementType) dataRepository.findByUUID(MovementType.class, "L");
+            MovementType movementType1beforeUpdated = (MovementType) dataRepository.findByUUID(MovementType.class, new UUID("L"));
             assertNotNull(movementType1beforeUpdated, "No movement type with key / uuid 'L'.");
             assertEquals(Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR, movementType1beforeUpdated.getColorKeyString(),
                     "Default color not " + Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR + ".");
@@ -397,7 +398,7 @@ class SportsLibraryTest {
             // movement type with key 'L' has now a new color
             assertEquals(Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR, movementType1beforeUpdated.getColorKeyString(),
                     "Default color not " + Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR + ".");
-            PersistentObject savedMovementType2 = dataRepository.findByUUID(MovementType.class, "Y");
+            PersistentObject savedMovementType2 = dataRepository.findByUUID(MovementType.class, new UUID("Y"));
             assertNotNull(savedMovementType2, "Movement type 2 was not saved.");
 
             // add running unit state
@@ -423,9 +424,9 @@ class SportsLibraryTest {
             assertNull(deletedRunningPlanUnit1, "Unit 1 was not deleted.");
             PersistentObject deletedRunningPlanUnit2 = dataRepository.findByUUID(RunningUnit.class, runningPlanUUID);
             assertNull(deletedRunningPlanUnit2, "Unit 2 was not deleted.");
-            PersistentObject movementType1PastDeleted = dataRepository.findByUUID(MovementType.class, "L");
+            PersistentObject movementType1PastDeleted = dataRepository.findByUUID(MovementType.class, new UUID("L"));
             assertNotNull(movementType1PastDeleted, "Movement type with key 'L' was deleted.");
-            PersistentObject movementType2PastDeleted = dataRepository.findByUUID(MovementType.class, "Y");
+            PersistentObject movementType2PastDeleted = dataRepository.findByUUID(MovementType.class, new UUID("Y"));
             assertNotNull(movementType2PastDeleted, "Movement type with key 'Y' was deleted.");
 
         } catch (SportsLibraryException exception) {
@@ -443,7 +444,7 @@ class SportsLibraryTest {
             dataRepository = sportsLibrary.getDataRepository();
 
             RunningPlan runningPlan1 = (RunningPlan) dataRepository.findAll(RunningPlan.class).get(0);
-            String runningPlan1UUID = runningPlan1.getUUID();
+            UUID runningPlan1UUID = runningPlan1.getUUID();
             assertNotNull(runningPlan1);
             User user1 = sportsLibrary.getAppUser();
             assertNotNull(user1);
@@ -453,7 +454,7 @@ class SportsLibraryTest {
 
             User user2 = sportsLibrary.getAppUser();
             assertNotNull(user2);
-            String runningPlan2UUID = user2.getActiveRunningPlanUUID();
+            UUID runningPlan2UUID = user2.getActiveRunningPlanUUID();
             assertNotEquals("", runningPlan2UUID, "Active running plan uuid must be not empty.");
             assertEquals(runningPlan1UUID, runningPlan2UUID);
 
@@ -461,7 +462,7 @@ class SportsLibraryTest {
             assertNotNull(runningPlan2);
             RunningUnit unit1 = runningPlan2.getEntries().get(0).getRunningUnits().get(0);
             assertNotNull(unit1);
-            String unit1UUID = unit1.getUUID();
+            UUID unit1UUID = unit1.getUUID();
 
             runningPlan2.completeUnit(unit1);
             dataRepository.update(runningPlan2);
@@ -476,7 +477,7 @@ class SportsLibraryTest {
 
             User user3 = sportsLibrary.getAppUser();
             assertNotNull(user3);
-            String runningPlan4UUID = user3.getActiveRunningPlanUUID();
+            UUID runningPlan4UUID = user3.getActiveRunningPlanUUID();
             assertNotEquals("", runningPlan4UUID, "Active running plan uuid must be not empty.");
             RunningUnit unit4 = runningPlan3.getEntries().get(0).getRunningUnits().get(0);
             assertNotNull(unit4);

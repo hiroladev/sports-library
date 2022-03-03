@@ -40,7 +40,7 @@ public class User extends PersistentObject {
     private int gender; // required to calculate the heart rate
     private int trainingLevel; // from Global
     private int maxPulse; // calculate with birthday and gender
-    private String activeRunningPlanUUID; // current training
+    private UUID activeRunningPlanUUID; // current training
 
     /**
      * Default constructor for reflection and database management.
@@ -52,7 +52,7 @@ public class User extends PersistentObject {
         gender = 0;
         trainingLevel = 0;
         maxPulse = 0;
-        activeRunningPlanUUID = "";
+        activeRunningPlanUUID = null;
     }
 
     /**
@@ -199,7 +199,7 @@ public class User extends PersistentObject {
      *
      * @return The uuid if the active running plan or an empty string.
      */
-    public String getActiveRunningPlanUUID() {
+    public UUID getActiveRunningPlanUUID() {
         return activeRunningPlanUUID;
     }
 
@@ -208,7 +208,7 @@ public class User extends PersistentObject {
      *
      * @param uuid of the active running plan
      */
-    public void setActiveRunningPlanUUID(String uuid) {
+    public void setActiveRunningPlanUUID(UUID uuid) {
         activeRunningPlanUUID = uuid;
     }
 
@@ -239,7 +239,7 @@ public class User extends PersistentObject {
             gender = (int) document.get("gender");
             trainingLevel = (int) document.get("trainingLevel");
             maxPulse = (int) document.get("maxPulse");
-            activeRunningPlanUUID = (String) document.get("activeRunningPlanUUID");
+            activeRunningPlanUUID = (UUID) document.get("activeRunningPlanUUID");
         }
     }
 
@@ -259,8 +259,8 @@ public class User extends PersistentObject {
     }
 
     @Override
-    public String getUUID() {
-        return uuid;
+    public UUID getUUID() {
+        return new UUID(uuid);
     }
 
 }

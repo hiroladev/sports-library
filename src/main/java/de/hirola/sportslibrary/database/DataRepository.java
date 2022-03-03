@@ -163,18 +163,18 @@ public final class DataRepository {
      *         or an error occurred while searching
      */
     @Nullable
-    public PersistentObject findByUUID(@NotNull Class<? extends PersistentObject> withType, @NotNull String uuid) {
+    public PersistentObject findByUUID(@NotNull Class<? extends PersistentObject> withType, @NotNull UUID uuid) {
         if (isOpen()) {
             ObjectRepository<? extends PersistentObject> repository = database.getRepository(withType);
             Cursor<? extends PersistentObject> cursor;
             if (withType.getSimpleName().equals("MovementType")) {
                 // movement type has a unique key
-                cursor = repository.find(ObjectFilters.eq("key", uuid));
+                cursor = repository.find(ObjectFilters.eq("key", uuid.getString()));
             } else if (withType.getSimpleName().equals("TrainingType")) {
                 // training type has a unique name
-                cursor = repository.find(ObjectFilters.eq("name", uuid));
+                cursor = repository.find(ObjectFilters.eq("name", uuid.getString()));
             } else {
-                cursor = repository.find(ObjectFilters.eq("uuid", uuid));
+                cursor = repository.find(ObjectFilters.eq("uuid", uuid.getString()));
             }
             if (cursor.size() == 1 ) {
                 return cursor.firstOrDefault();
@@ -345,20 +345,20 @@ public final class DataRepository {
         // create or get the repositories
         ObjectRepository<Training> trainingRepository = database.getRepository(Training.class);
         ObjectRepository<TrainingType> trainingTypeRepository = database.getRepository(TrainingType.class);
-        TrainingType trainingType = training.getTrainingType();
-        Track track = training.getTrack();
+        UUID trainingTypeUUID = training.getTrainingTypeUUID();
+        UUID trackUUID = training.getTrackUUID();
         try {
             switch (action) {
                 case INSERT_ACTION:
-                    // add a new training type
-                    if (findByUUID(TrainingType.class, trainingType.getUUID()) == null) {
-                        trainingTypeRepository.insert(trainingType);
+                    // type must be existed before saving
+                    if (findByUUID(TrainingType.class, trainingTypeUUID) == null) {
+                        throw new SportsLibraryException("The type of the training must be existed before inserting.");
                     }
-                    // add a new track
-                    if (track != null) {
-                        if (findByUUID(Track.class, track.getUUID()) == null) {
-                            // add the track with locations
-                            doActionWithTrack(INSERT_ACTION, track);
+                    // track must be existed before saving
+                    if (trackUUID != null) {
+                        if (findByUUID(Track.class, trackUUID) == null) {
+                            // track must be existed before saving
+                            throw new SportsLibraryException("The track of the training must be existed before inserting.");
                         }
                     }
                     // add the training
@@ -366,18 +366,18 @@ public final class DataRepository {
                     return;
 
                 case UPDATE_ACTION:
-                    // add a new training type
-                    if (findByUUID(TrainingType.class, trainingType.getUUID()) == null) {
-                        trainingTypeRepository.insert(trainingType);
+                    // type must be existed before saving
+                    if (findByUUID(TrainingType.class, trainingTypeUUID) == null) {
+                        throw new SportsLibraryException("The type of the training must be existed before inserting.");
                     }
-                    // add a new track
-                    if (track != null) {
-                        if (findByUUID(Track.class, track.getUUID()) == null) {
-                            // add the track with locations
-                            doActionWithTrack(INSERT_ACTION, track);
+                    // track must be existed before saving
+                    if (trackUUID != null) {
+                        if (findByUUID(Track.class, trackUUID) == null) {
+                            // track must be existed before saving
+                            throw new SportsLibraryException("The track of the training must be existed before inserting.");
                         }
                     }
-                    // add the training
+                    // update the training
                     trainingRepository.update(training);
                     return;
 
@@ -405,17 +405,17 @@ public final class DataRepository {
             switch (action) {
                 case INSERT_ACTION:
                     // rollback on error
-                    List<String> runningEntryUUIDs = new ArrayList<>();
-                    List<String> runningUnitUUIDs = new ArrayList<>();
-                    List<String> movementTypeUUIDs = new ArrayList<>();
+                    List<UUID> runningEntryUUIDs = new ArrayList<>();
+                    List<UUID> runningUnitUUIDs = new ArrayList<>();
+                    List<UUID> movementTypeUUIDs = new ArrayList<>();
                     // add running plan entries
                     for (RunningPlanEntry entry : entries) {
-                        String entryUUID = entry.getUUID();
+                        UUID entryUUID = entry.getUUID();
                         if (findByUUID(RunningPlanEntry.class, entryUUID) == null) {
                             // insert the units
                             List<RunningUnit> units = entry.getRunningUnits();
                             for (RunningUnit unit : units) {
-                                String unitUUID = unit.getUUID();
+                                UUID unitUUID = unit.getUUID();
                                 if (findByUUID(RunningUnit.class, unitUUID) == null) {
                                     // insert the unit
                                     runningUnitRepository.insert(unit);
@@ -434,7 +434,7 @@ public final class DataRepository {
 
                                 // insert a new movement type
                                 MovementType movementType = unit.getMovementType();
-                                String uuid = movementType.getUUID();
+                                UUID uuid = movementType.getUUID();
                                 if (findByUUID(MovementType.class, uuid) == null) {
                                     movementTypeRepository.insert(movementType);
                                     // save for rollback
@@ -527,19 +527,19 @@ public final class DataRepository {
     }
 
     // rollback
-    private void rollback(@NotNull Class<? extends PersistentObject> type, @NotNull List<String> objectUUIDs) {
+    private void rollback(@NotNull Class<? extends PersistentObject> type, @NotNull List<UUID> objectUUIDs) {
         ObjectRepository<? extends PersistentObject> repository = database.getRepository(type);
         try {
-            for (String uuid : objectUUIDs) {
+            for (UUID uuid : objectUUIDs) {
                 // delete all objects with given uuid
                 if (type.getSimpleName().equals("MovementType")) {
                     // movement type has a unique key
-                    repository.remove(ObjectFilters.eq("key", uuid));
+                    repository.remove(ObjectFilters.eq("key", uuid.getString()));
                 } else if (type.getSimpleName().equals("TrainingType")) {
                     // training type has a unique name
-                    repository.remove(ObjectFilters.eq("name", uuid));
+                    repository.remove(ObjectFilters.eq("name", uuid.getString()));
                 } else {
-                    repository.remove(ObjectFilters.eq("uuid", uuid));
+                    repository.remove(ObjectFilters.eq("uuid", uuid.getString()));
                 }
             }
         } catch (NotIdentifiableException exception) {

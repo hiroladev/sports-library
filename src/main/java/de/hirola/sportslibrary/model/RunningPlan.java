@@ -350,8 +350,8 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
     }
 
     @Override
-    public String getUUID() {
-        return uuid;
+    public UUID getUUID() {
+        return new UUID(uuid);
     }
 
     // start day is monday

@@ -1,5 +1,6 @@
 package de.hirola.sportslibrary.database;
 
+import de.hirola.sportslibrary.model.UUID;
 import org.dizitart.no2.mapper.Mappable;
 
 /**
@@ -13,5 +14,5 @@ import org.dizitart.no2.mapper.Mappable;
  * @since 0.0.1
  */
 public abstract class PersistentObject implements Mappable {
-    public abstract String getUUID();
+    public abstract UUID getUUID();
 }

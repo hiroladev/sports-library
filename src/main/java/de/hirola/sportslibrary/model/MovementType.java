@@ -183,8 +183,8 @@ public class MovementType extends PersistentObject {
     }
 
     @Override
-    public String getUUID() {
-        return key;
+    public UUID getUUID() {
+        return new UUID(key);
     }
 
     
