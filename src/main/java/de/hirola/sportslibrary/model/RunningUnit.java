@@ -20,7 +20,7 @@ import java.util.Objects;
  * A running unit cannot exist without a running plan.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.0.1
+ * @since 0.1
  * @see  RunningPlanEntry
  *
  */

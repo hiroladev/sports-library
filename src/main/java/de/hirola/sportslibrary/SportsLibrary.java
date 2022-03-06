@@ -22,7 +22,7 @@ import java.util.List;
  * Sets up local data storage and loads program defaults.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.0.1
+ * @since 0.1
  */
 public final class SportsLibrary implements DatastoreDelegate {
 

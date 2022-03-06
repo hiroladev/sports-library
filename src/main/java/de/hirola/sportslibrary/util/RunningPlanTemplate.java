@@ -10,19 +10,14 @@ import java.util.List;
  * Mapping object for RunningPlan to import from JSON.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.0.1
+ * @since 0.1
  */
 public class RunningPlanTemplate {
-    // Name des Templates
-    public final String name;
-    // Eine paar kurze Anmerkungen der Vorlage.
-    public final String remarks;
-    // Nummer für Reihenfolge der Laufpläne
-    public final int orderNumber;
-    public final boolean isTemplate;
-    // Array von einzelnen Trainingsabschnitten in der Form **{"Dauer:Stil"},{Dauer:Stil"}**, ...
-    // Die Zuordnung Stil zu Geschwindigkeit kann jeder User selbst treffen, auch eigene Stile sind möglich.
-    public final List<RunningPlanTemplateUnit> trainingUnits;
+    public final String name; // name of the template
+    public final String remarks; // remarks of the template
+    public final int orderNumber; // number for the order of training
+    public boolean isTemplate; // setting true while initial app import
+    public final List<RunningPlanTemplateUnit> trainingUnits; // training units
 
     /**
      * Default constructor for import from json.
@@ -49,21 +44,5 @@ public class RunningPlanTemplate {
         this.orderNumber = orderNumber;
         this.isTemplate = isTemplate;
         this.trainingUnits = trainingUnits;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getRemarks() {
-        return remarks;
-    }
-
-    public int getOrderNumber() {
-        return orderNumber;
-    }
-
-    public List<RunningPlanTemplateUnit> getTrainingUnits() {
-        return trainingUnits;
     }
 }

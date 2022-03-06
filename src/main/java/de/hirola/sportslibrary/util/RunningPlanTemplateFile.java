@@ -7,7 +7,7 @@ package de.hirola.sportslibrary.util;
  * Index of available running plans.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.0.1
+ * @since 0.1
  */
 public class RunningPlanTemplateFile {
 
@@ -20,34 +20,5 @@ public class RunningPlanTemplateFile {
     public RunningPlanTemplateFile() {
         this.name = "";
         this.fileName = "";
-    }
-
-    /**
-     * Create an object which represents a json file with a template for import.
-     *
-     * @param name of running plan
-     * @param fileName of template (json) file which contains the content of running plan
-     */
-    public RunningPlanTemplateFile(String name, String fileName) {
-        this.name = name;
-        this.fileName = fileName;
-    }
-
-    /**
-     * Get the name of running plan.
-     *
-     * @return The name of the running plan
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Get the file name of template (json) file.
-     *
-     * @return The file name of template (json) file
-     */
-    public String getFileName() {
-        return fileName;
     }
 }

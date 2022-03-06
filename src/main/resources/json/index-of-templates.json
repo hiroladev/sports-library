@@ -8,6 +8,10 @@
         "fileName": "start60"
     },
     {
+        "name": "Start90",
+        "fileName": "start90"
+    },
+    {
         "name": "Test",
         "fileName": "start-test"
     }

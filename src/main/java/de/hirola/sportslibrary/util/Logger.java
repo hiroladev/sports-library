@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter;
  * Layer for logging of library. Encapsulated the use of logging tools.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.0.1
+ * @since 0.1
  */
 public final class Logger {
 

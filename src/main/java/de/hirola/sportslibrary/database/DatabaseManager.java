@@ -17,9 +17,8 @@ import java.io.File;
  * We use the <a href="https://onyx.dev/products#embedded">Onyx</a> embedded database.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.0.1
+ * @since 0.1
  */
-
 public class DatabaseManager {
 
     private final String TAG = DatabaseManager.class.getSimpleName();

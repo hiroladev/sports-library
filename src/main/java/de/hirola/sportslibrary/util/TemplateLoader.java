@@ -26,7 +26,7 @@ import java.util.*;
  * Create objects from template files (JSON).
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.0.1
+ * @since 0.1
  */
 public class TemplateLoader {
 
@@ -42,7 +42,7 @@ public class TemplateLoader {
 
     public TemplateLoader(@NotNull DataRepository dataRepository, @NotNull Logger logger) throws SportsLibraryException {
         if (!dataRepository.isOpen()) {
-            throw new SportsLibraryException("The local datastore isn't open. Can't import templates.");
+            throw new SportsLibraryException("The local datastore is not open. Cannot import templates.");
         }
         this.dataRepository = dataRepository;
         this.logger = logger;
@@ -58,7 +58,7 @@ public class TemplateLoader {
 
     public TemplateLoader(@NotNull DataRepository dataRepository, @Nullable SportsLibraryApplication application, @NotNull Logger logger) throws SportsLibraryException {
         if (!dataRepository.isOpen()) {
-            throw new SportsLibraryException("The local datastore isn't open. Can't import templates.");
+            throw new SportsLibraryException("The local datastore is not open. Cannot import templates.");
         }
         this.dataRepository = dataRepository;
         this.application = application;
@@ -320,7 +320,7 @@ public class TemplateLoader {
                 //  jeder Laufplan enthält für die Wochen und Tage jeweils einen
                 //  Trainingsabschnitt "2:L;3:LG;2:L;3:LG;2:L;3:LG;2:L;3:LG;2:L;3:LG" (unit)
                 ArrayList<RunningPlanEntry> runningPlanEntries = new ArrayList<>();
-                for (RunningPlanTemplateUnit unit : runningPlanTemplate.getTrainingUnits()) {
+                for (RunningPlanTemplateUnit unit : runningPlanTemplate.trainingUnits) {
                     //  aus String-Array ["20", "ZG"] die einzelnen Elemente extrahieren
                     //  gerade = Zeit, ungerade = Art der Bewegung, 0,1,2,3
                     ArrayList<RunningUnit> runningUnits = new ArrayList<>();
@@ -328,7 +328,7 @@ public class TemplateLoader {
                     MovementType movementType = null;
                     int duration = 0;
                     int index = 0;
-                    Iterator<String> runningUnitStringsIterator = Arrays.stream(unit.getUnits()).iterator();
+                    Iterator<String> runningUnitStringsIterator = Arrays.stream(unit.units).iterator();
                     while (runningUnitStringsIterator.hasNext()) {
                         String runningUnitString = runningUnitStringsIterator.next();
                         if ((index % 2) == 0) {
@@ -361,15 +361,15 @@ public class TemplateLoader {
                         index += 1;
                     }
                     // ein Eintrag im Trainingsplan, also das Training eines Tages
-                    RunningPlanEntry runningPlanEntry = new RunningPlanEntry(unit.getDay(), unit.getWeek(), runningUnits);
+                    RunningPlanEntry runningPlanEntry = new RunningPlanEntry(unit.day, unit.week, runningUnits);
                     //  den Trainingsplan-Eintrag zur Liste hinzufügen
                     runningPlanEntries.add(runningPlanEntry);
                 }
                 //  Laufplan anlegen
                 RunningPlan runningPlan = new RunningPlan(
-                        runningPlanTemplate.getName(),
-                        runningPlanTemplate.getRemarks(),
-                        runningPlanTemplate.getOrderNumber(),
+                        runningPlanTemplate.name,
+                        runningPlanTemplate.remarks,
+                        runningPlanTemplate.orderNumber,
                         runningPlanEntries,
                         runningPlanTemplate.isTemplate);
                 try {
@@ -390,7 +390,8 @@ public class TemplateLoader {
         }
     }
 
-    //  Laden von Laufplan-Vorlagen zur Erstellung von (komplexen) Laufplan-Objekten
+    // loading plan templates to create (complex) plan objects
+    // while first start of an app
     private void loadRunningPlanTemplates() throws SportsLibraryException {
         // aus JSON Objekte erstellen
         try {
@@ -402,9 +403,12 @@ public class TemplateLoader {
                 // convert JSON array to list of running plans templates
                 Iterator<InputStream> inputStreamIterator = Arrays.stream(inputStreams).iterator();
                 while (inputStreamIterator.hasNext()) {
+                    RunningPlanTemplate runningPlanTemplate =
+                            objectMapper.readValue(inputStreamIterator.next(), RunningPlanTemplate.class);
+                    // set as template
+                    runningPlanTemplate.isTemplate = true;
                     // add a template to the local list of running plans
-                    runningPlanTemplatesImportList.add(objectMapper.readValue(inputStreamIterator.next(),
-                            RunningPlanTemplate.class));
+                    runningPlanTemplatesImportList.add(runningPlanTemplate);
                 }
             } else {
                 // on JVM read JSON from jar resources
@@ -426,16 +430,18 @@ public class TemplateLoader {
                 //  die über den Index ermittelten Vorlagen einlesen
                 for (RunningPlanTemplateFile runningPlanTemplateFile : runningPlanTemplateFiles) {
                     //  jeweilige JSON-Datei der Vorlage laden
-                    jsonResourceFileName = "/json/" + runningPlanTemplateFile.getFileName() + ".json";
+                    jsonResourceFileName = "/json/" + runningPlanTemplateFile.fileName + ".json";
                     url = this.getClass().getResource(jsonResourceFileName);
                     if (url == null) {
                         throw new SportsLibraryException("Can't finde the resource file "
                                 + jsonResourceFileName);
                     }
                     path = Paths.get(url.toURI());
-                    // Laufplan-Vorlage einlesen
-                    // convert JSON file to an template object
+                    // read a running plan template
+                    // convert JSON file to a template object
                     RunningPlanTemplate runningPlanTemplate = objectMapper.readValue(path.toFile(), RunningPlanTemplate.class);
+                    // set as template
+                    runningPlanTemplate.isTemplate = true;
                     // add to list
                     runningPlanTemplatesImportList.add(runningPlanTemplate);
                 }
