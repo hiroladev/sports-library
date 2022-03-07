@@ -13,7 +13,6 @@ public class RunningPlanTemplateUnit {
 
     public final int week; // week of the training segment in the week
     public final int day; // day of the training segment in the week
-    public final int duration; // total duration of the respective training section in min
     public final String[] units; // array of individual training sections in the form {"duration:style"},{duration:style"}, ..
 
     /**
@@ -22,7 +21,6 @@ public class RunningPlanTemplateUnit {
     public RunningPlanTemplateUnit() {
         this.week = 1;
         this.day = 1;
-        this.duration = 1;
         this.units = new String[2];
     }
 }
