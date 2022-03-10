@@ -16,10 +16,10 @@ public class RunningPlanTemplate {
     // Name des Templates
     public final String name;
     // Eine paar kurze Anmerkungen der Vorlage.
-    public final String remarks;
+    public String remarks;
     // Nummer für Reihenfolge der Laufpläne
-    public final int orderNumber;
-    public final boolean isTemplate;
+    public int orderNumber;
+    public boolean isTemplate;
     // Array von einzelnen Trainingsabschnitten in der Form **{"Dauer:Stil"},{Dauer:Stil"}**, ...
     // Die Zuordnung Stil zu Geschwindigkeit kann jeder User selbst treffen, auch eigene Stile sind möglich.
     public final List<RunningPlanTemplateUnit> trainingUnits;

@@ -146,6 +146,9 @@ public class TemplateLoader {
      * @see RunningPlan
      */
     public RunningPlan importRunningPlanFromTemplate(@NotNull RunningPlanTemplate template) throws SportsLibraryException {
+        // set running plan at the end of existing plans
+        List<? extends PersistentObject> runningPlans = dataRepository.findAll(RunningPlan.class);
+        template.orderNumber = runningPlans.size() + 1;
         // add template to the import list
         runningPlanTemplatesImportList.add(template);
         // add template to local datastore
