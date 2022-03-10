@@ -28,6 +28,14 @@ class SportsLibraryTest {
             assertNotNull(sportsLibrary, "Library not initialize.");
             dataRepository = sportsLibrary.getDataRepository();
             assertNotNull(dataRepository, "DataRepository not initialize.");
+            // test the import from the templates
+            // exists 4 running plans in local datastore?
+            List<? extends PersistentObject> runningPlans = dataRepository.findAll(RunningPlan.class);
+            assertEquals(4, runningPlans.size());
+            RunningPlan runningPlan = (RunningPlan) runningPlans.get(0);
+            assertNotNull(runningPlan);
+            assertTrue(runningPlan.isTemplate());
+            // only 1 user must be exist
             List<? extends PersistentObject> users = dataRepository.findAll(User.class);
             assertEquals(users.size(), 1, "More than a user.");
 
@@ -116,11 +124,6 @@ class SportsLibraryTest {
             sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             dataRepository = sportsLibrary.getDataRepository();
 
-            // test the import from the templates
-            // exists 3 running plans in local datastore?
-            List<? extends PersistentObject> runningPlans = dataRepository.findAll(RunningPlan.class);
-            assertEquals(3,runningPlans.size());
-
             // test user
             User appUser1 = sportsLibrary.getAppUser();
             UUID appUser1UUID = appUser1.getUUID();
@@ -131,6 +134,7 @@ class SportsLibraryTest {
             assertEquals(appUser2.getUUID(), appUser1UUID, "Not the same object.");
             assertEquals(160, appUser2.getMaxPulse(), "Pulse not saved");
 
+            List<? extends PersistentObject> runningPlans = dataRepository.findAll(RunningPlan.class);
             RunningPlan runningPlan1 = (RunningPlan) runningPlans.get(0);
             appUser2.setActiveRunningPlanUUID(runningPlan1.getUUID());
             dataRepository.update(appUser2);

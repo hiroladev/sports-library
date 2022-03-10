@@ -23,7 +23,7 @@ import java.util.List;
  * Adds a persistence layer, encapsulating the actual data storage technology used.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.0.1
+ * @since 0.1
  */
 public final class DataRepository {
 

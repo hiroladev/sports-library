@@ -8,7 +8,7 @@ package de.hirola.sportslibrary.tables;
  * the table of tracks.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.0.1
+ * @since 0.1
  */
 public interface TrackLocationColumns {
 

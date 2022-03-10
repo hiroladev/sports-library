@@ -25,7 +25,7 @@ import java.util.Objects;
  * The user of the app, here the runner.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.0.1
+ * @since 0.1
  */
 @Indices({
         @Index(value = "emailAddress", type = IndexType.Unique)

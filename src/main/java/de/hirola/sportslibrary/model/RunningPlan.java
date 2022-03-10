@@ -25,7 +25,7 @@ import java.util.*;
  * Users can create their own plans.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.0.1
+ * @since 0.1
  *
  */
 
