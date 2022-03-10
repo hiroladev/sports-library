@@ -21,6 +21,7 @@ public interface TrackColumns {
     String DISTANCE = "distance"; // distance
     String STARTTIME = "starttime"; // track start time
     String STOPTIME = "stoptime"; // track stop time
+    String ACTIVE = "active"; // is a track recording
 
     String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " ("
             + ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -29,7 +30,8 @@ public interface TrackColumns {
             + AVGSPEED + " FLOAT, "
             + DISTANCE + " FLOAT, "
             + STARTTIME + " INTEGER, "
-            + STOPTIME + " INTEGER)";
+            + STOPTIME + " INTEGER, "
+            + ACTIVE + " INTEGER)";
 
     String CREATE_TABLE_INDEX = "CREATE UNIQUE INDEX " + TABLE_NAME + "_" + ID + "_index ON " + TABLE_NAME + "(" + ID + ")";
 
