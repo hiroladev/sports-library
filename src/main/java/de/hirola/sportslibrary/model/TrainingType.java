@@ -28,6 +28,10 @@ import java.util.Objects;
 })
 public class TrainingType extends PersistentObject {
 
+    public static final String RUNNING = "running";
+    public static final String HIKING = "hiking";
+    public static final String BIKING = "biking";
+
     @Id
     private String uuid = UUIDFactory.generateUUID();
     private String name;
