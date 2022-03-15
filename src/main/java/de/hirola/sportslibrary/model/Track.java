@@ -36,7 +36,7 @@ public class Track extends PersistentObject {
     private Date importDate = Date.from(Instant.now());
     private long startTimeInMilli = -1; // in utc epoch millis
     private long stopTimeInMilli = -1; // in utc epoch millis
-    private long duration = -1; // in utc epoch millis
+    private long duration = -1; // in minutes
     private double distance = -1.0;
     private double averageSpeed = -1.0;
     private double altitudeDifference = -1.0;
@@ -94,7 +94,7 @@ public class Track extends PersistentObject {
         this.stopTimeInMilli = stopTimeInMilli;
         this.distance = distance;
         this.locations = Objects.requireNonNullElseGet(locations, ArrayList::new);
-        // calculate values
+        // calculate duration and speed
         calculateValues();
     }
 
@@ -214,6 +214,15 @@ public class Track extends PersistentObject {
      */
     public long getDuration() {
         return duration;
+    }
+
+    /**
+     * Set the duration of the track.
+     *
+     * @param duration of track in minutes
+     */
+    public void setDuration(long duration) {
+        this.duration = duration;
     }
 
     /**

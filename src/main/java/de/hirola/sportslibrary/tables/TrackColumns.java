@@ -17,8 +17,8 @@ public interface TrackColumns {
     // data columns
     String NAME = "name"; // track name
     String DESCRIPTION = "description"; // short track description
-    String AVGSPEED = "avgspeed"; // average speed
     String DISTANCE = "distance"; // distance
+    String AVGSPEED = "avgspeed"; // average speed
     String STARTTIME = "starttime"; // track start time
     String STOPTIME = "stoptime"; // track stop time
     String ACTIVE = "active"; // is a track recording
@@ -27,8 +27,8 @@ public interface TrackColumns {
             + ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + NAME + " TEXT, "
             + DESCRIPTION + " TEXT, "
-            + AVGSPEED + " FLOAT, "
             + DISTANCE + " FLOAT, "
+            + AVGSPEED + " FLOAT, "
             + STARTTIME + " INTEGER, "
             + STOPTIME + " INTEGER, "
             + ACTIVE + " INTEGER)";
