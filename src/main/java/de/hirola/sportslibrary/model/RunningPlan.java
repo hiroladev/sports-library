@@ -250,7 +250,6 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
     /**
      * Indicates whether the schedule is selected and used.
      * The value is true if at least one session has been completed.
-     * An active plan is assigned to the user.
      *
      * @return A flag to determine if plan is active in training.
      * @see User

@@ -528,7 +528,7 @@ class SportsLibraryTest {
             PersistentObject trainingType = dataRepository.findByUUID(TrainingType.class, trainingTypeUUID);
             assertNotNull(trainingType);
 
-            Training training = new Training("Test-Training", null, trainingTypeUUID, trackUUID,null);
+            Training training = new Training("Test-Training", null, null, trainingTypeUUID, trackUUID);
             dataRepository.add(training);
 
 
