@@ -71,6 +71,7 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
         this.entries = entries;
         this.isTemplate = isTemplate;
         startDate = DateUtil.getDateFromNow();
+        adjustStartDate();
     }
 
     /**

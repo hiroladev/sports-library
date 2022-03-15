@@ -4,6 +4,8 @@ import de.hirola.sportslibrary.database.DataRepository;
 import de.hirola.sportslibrary.database.DatabaseManager;
 import de.hirola.sportslibrary.database.DatastoreDelegate;
 import de.hirola.sportslibrary.database.PersistentObject;
+import de.hirola.sportslibrary.model.TrainingType;
+import de.hirola.sportslibrary.model.UUID;
 import de.hirola.sportslibrary.model.User;
 import de.hirola.sportslibrary.util.Logger;
 import de.hirola.sportslibrary.util.TemplateLoader;
@@ -28,7 +30,6 @@ public final class SportsLibrary implements DatastoreDelegate {
 
     private final String TAG = Logger.class.getSimpleName();
 
-    private final Logger logger;
     private final DataRepository dataRepository;
     private List<DatastoreDelegate> delegates;
     private final User appUser;
@@ -44,7 +45,7 @@ public final class SportsLibrary implements DatastoreDelegate {
     public SportsLibrary(@NotNull String packageName,
                          @Nullable SportsLibraryApplication application) throws SportsLibraryException {
         // logger
-        logger = Logger.getInstance(packageName);
+        Logger logger = Logger.getInstance(packageName);
         // lokalen Datenspeicher mit dem Namen der App anlegen / öffnen
         DatabaseManager databaseManager = DatabaseManager.getInstance(packageName);
         dataRepository = new DataRepository(databaseManager, this, logger);
@@ -123,6 +124,29 @@ public final class SportsLibrary implements DatastoreDelegate {
      */
     public @NotNull User getAppUser() {
         return appUser;
+    }
+
+    /**
+     * Get the uuid of a training type.
+     * If no type with given name or more than one type was found the return value is null.
+     *
+     * @param name of training type
+     * @return The uuid of training type with given name or null.
+     * @see TrainingType
+     */
+    @Nullable
+    public UUID getUuidForTrainingType(String name) {
+        List<? extends PersistentObject> results =
+                dataRepository.findByAttribute("name", name, TrainingType.class);
+        // no results found
+        if (results.isEmpty()) {
+            return null;
+        }
+        // more than a type was found
+        if (results.size() > 1) {
+            return null;
+        }
+        return results.get(0).getUUID();
     }
 
     @Override

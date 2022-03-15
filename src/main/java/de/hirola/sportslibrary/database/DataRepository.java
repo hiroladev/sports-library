@@ -5,6 +5,7 @@ import de.hirola.sportslibrary.SportsLibraryException;
 import de.hirola.sportslibrary.model.*;
 
 import de.hirola.sportslibrary.util.Logger;
+import org.dizitart.no2.FindOptions;
 import org.dizitart.no2.Nitrite;
 import org.dizitart.no2.exceptions.NotIdentifiableException;
 import org.dizitart.no2.objects.Cursor;
@@ -170,9 +171,6 @@ public final class DataRepository {
             if (withType.getSimpleName().equals("MovementType")) {
                 // movement type has a unique key
                 cursor = repository.find(ObjectFilters.eq("key", uuid.getString()));
-            } else if (withType.getSimpleName().equals("TrainingType")) {
-                // training type has a unique name
-                cursor = repository.find(ObjectFilters.eq("name", uuid.getString()));
             } else {
                 cursor = repository.find(ObjectFilters.eq("uuid", uuid.getString()));
             }
@@ -202,6 +200,26 @@ public final class DataRepository {
             ObjectRepository<? extends PersistentObject> repository = database.getRepository(fromType);
             Cursor<? extends PersistentObject> cursor = repository.find();
             return cursor.toList();
+        }
+        return results;
+    }
+
+    /**
+     * Find objects with given name of attribute and value. List can bei empty.
+     *
+     * @param attributeName of object
+     * @param value of attribute
+     * @param fromType ob object toe be find
+     * @return A list of object where the attribute contains the desired value. The list can be empty.
+     */
+    public List<? extends PersistentObject> findByAttribute(@NotNull String attributeName,
+                                                            @NotNull Object value,
+                                                            Class<? extends PersistentObject> fromType) {
+        List<? extends PersistentObject> results = new ArrayList<>();
+        if (isOpen()) {
+            ObjectRepository<? extends PersistentObject> repository = database.getRepository(fromType);
+            Cursor<? extends PersistentObject> cursor = repository.find(ObjectFilters.eq(attributeName, value));
+            return  cursor.toList();
         }
         return results;
     }

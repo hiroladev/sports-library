@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -510,4 +511,32 @@ class SportsLibraryTest {
         dataRepository.clearAll();
     }
 
+    @Test
+    void testTraining() {
+        try {
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
+            dataRepository = sportsLibrary.getDataRepository();
+
+            List<? extends PersistentObject> trainingTypes = dataRepository.findAll(TrainingType.class);
+            assertEquals(3, trainingTypes.size(), "The datastore contains no training types.");
+
+            Track track = new Track("Test-Track", "A track for testing.", Instant.now().toEpochMilli());
+            dataRepository.add(track);
+            UUID trackUUID = track.getUUID();
+            UUID trainingTypeUUID = sportsLibrary.getUuidForTrainingType(TrainingType.RUNNING);
+            assertNotNull(trainingTypeUUID);
+            PersistentObject trainingType = dataRepository.findByUUID(TrainingType.class, trainingTypeUUID);
+            assertNotNull(trainingType);
+
+            Training training = new Training("Test-Training", null, trainingTypeUUID, trackUUID,null);
+            dataRepository.add(training);
+
+
+        } catch (SportsLibraryException exception) {
+            fail(exception.getMessage());
+        }
+
+        // delete all objects
+        dataRepository.clearAll();
+    }
 }
