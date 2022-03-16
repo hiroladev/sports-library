@@ -417,14 +417,17 @@ public class Track extends PersistentObject {
      */
     public static final class Id {
         private final long id;
+        private boolean isRecording;
+
         /**
          * Create an instance of the id, which represents the (temporary) id
-         * of a track.
+         * of a track. The recording flag is set to <b>true</b>.
          *
          * @param id of track while recording
          */
         public Id(long id) {
             this.id = id;
+            isRecording = true;
         }
 
         /**
@@ -434,6 +437,24 @@ public class Track extends PersistentObject {
          */
         public long getId() {
             return id;
+        }
+
+        /**
+         * Get a flag to determine if a track is being recorded.
+         *
+         * @return A flag to determine the recording state.
+         */
+         public boolean isRecording() {
+            return isRecording;
+        }
+
+        /**
+         * Sets a flag to determine if a track is being recorded.
+         *
+         * @param recording a flag to determine the recording state
+         */
+        public void setRecording(boolean recording) {
+            isRecording = recording;
         }
 
         @Override

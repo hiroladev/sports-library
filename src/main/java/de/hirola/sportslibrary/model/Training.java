@@ -25,7 +25,7 @@ import java.util.Objects;
  * @since 0.1
  *
  */
-public class Training extends PersistentObject {
+public class Training extends PersistentObject implements Comparable<Training> {
 
     @Id
     private String uuid = UUIDFactory.generateUUID();
@@ -46,40 +46,41 @@ public class Training extends PersistentObject {
     public Training() {
         name = "Training";
         remarks = "";
+        duration = -1L;
         distance = -1.0;
         altitudeDifference = -1.0;
         averageSpeed = -1.0;
         trackUUID = null;
+        trainingDate = DateUtil.getDateFromNow();
     }
 
-    public Training(@NotNull String name, @Nullable String remarks, @Nullable UUID trainingTypeUUID,
-                    @Nullable UUID trackUUID, @Nullable LocalDate trainingDate) {
+    public Training(@NotNull String name, @Nullable String remarks, @Nullable LocalDate trainingDate,
+                    @Nullable UUID trainingTypeUUID, @Nullable UUID trackUUID) {
+        this();
         this.name = name;
-        // if null set default
-        this.remarks = Objects.requireNonNullElse(remarks, "");
-        this.trainingTypeUUID = trainingTypeUUID; // can be null
-        this.trackUUID = trackUUID; // can be null
-        if (trainingDate == null) {
-            this.trainingDate = DateUtil.getDateFromNow();
-        } else {
+        if (remarks != null) {
+            this.remarks = remarks;
+        }
+        if (trainingDate != null) {
             this.trainingDate = DateUtil.getDateFromLocalDate(trainingDate);
         }
+        this.trainingTypeUUID = trainingTypeUUID; // can be null
+        this.trackUUID = trackUUID; // can be null
     }
 
-    public Training(@NotNull String name, @Nullable String remarks, @Nullable UUID trainingTypeUUID,
-                    @Nullable LocalDate trainingDate, @Nullable UUID trackUUID,
-                    double distance, double averageSpeed, double altitudeDifference) {
+    public Training(@NotNull String name, @Nullable String remarks, @Nullable LocalDate trainingDate,
+                    long duration, double distance, double averageSpeed, double altitudeDifference,
+                    @Nullable UUID trainingTypeUUID, @Nullable UUID trackUUID) {
         this.name = name;
-        // if null set default
-        this.remarks = Objects.requireNonNullElse(remarks, "");
-        // if null set default
-        this.trainingTypeUUID = trainingTypeUUID; // can be null
-        this.trackUUID = trackUUID; // can be null
-        if (trainingDate == null) {
-            this.trainingDate = DateUtil.getDateFromNow();
-        } else {
+        if (remarks != null) {
+            this.remarks = remarks;
+        }
+        if (trainingDate != null) {
             this.trainingDate = DateUtil.getDateFromLocalDate(trainingDate);
         }
+        this.trainingTypeUUID = trainingTypeUUID; // can be null
+        this.trackUUID = trackUUID; // can be null
+        this.duration = duration;
         this.distance = distance;
         this.averageSpeed= averageSpeed;
         this.altitudeDifference = altitudeDifference;
@@ -298,6 +299,20 @@ public class Training extends PersistentObject {
     @Override
     public UUID getUUID() {
         return new UUID(uuid);
+    }
+
+    @Override
+    public int compareTo(@NotNull Training other) {
+        // sort by date
+        LocalDate dateFromThis = DateUtil.getLocalDateFromDate(trainingDate);
+        LocalDate dateFromOther = other.getTrainingDate();
+        if (dateFromThis.isBefore(dateFromOther)) {
+            return -1;
+        }
+        if (dateFromThis.isAfter(dateFromOther)) {
+            return 1;
+        }
+        return 0;
     }
 
 }
