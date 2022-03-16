@@ -461,5 +461,18 @@ public class Track extends PersistentObject {
         public String toString() {
             return "Track.ID: " + id;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Id id1 = (Id) o;
+            return id == id1.id;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(id);
+        }
     }
 }
