@@ -1,6 +1,8 @@
 package de.hirola.sportslibrary.util;
 
 import de.hirola.sportslibrary.Global;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -65,6 +67,34 @@ public final class Logger {
             logToConsole(buildLogString(severity, tag, message, exception));
         }
         logToFile(buildLogString(severity, tag, message, exception));
+    }
+
+
+    /**
+     * Get the content of the log file as string.
+     * If logging to file disabled or an error occurred while getting the content from file,
+     * an empty string will be returned.
+     *
+     * @return The content of log file as string.
+     */
+    @NotNull
+    public String getLogContent() {
+        if (isLogToFileEnabled) {
+            try (LineIterator it = FileUtils.lineIterator(logFilePath.toFile(), "UTF-8")) {
+                StringBuilder stringBuilder = new StringBuilder();
+                while (it.hasNext()) {
+                    stringBuilder.append(it.nextLine());
+                }
+                return  stringBuilder.toString();
+            } catch (IOException exception) {
+                if (Global.APP_DEBUG_MODE) {
+                    String message = "Error occurred while getting content from log file.";
+                    logToConsole(buildLogString(Logger.DEBUG, TAG, message, exception));
+                }
+                return "";
+            }
+        }
+        return "";
     }
 
     /**
