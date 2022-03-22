@@ -84,6 +84,7 @@ public final class Logger {
                 StringBuilder stringBuilder = new StringBuilder();
                 while (it.hasNext()) {
                     stringBuilder.append(it.nextLine());
+                    stringBuilder.append("\n");
                 }
                 return  stringBuilder.toString();
             } catch (IOException exception) {
@@ -335,22 +336,25 @@ public final class Logger {
         Instant timeStamp = Instant.now().atZone(ZoneOffset.UTC).toInstant();
         // timestamp in ISO format
         DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT;
+        if (tag == null) {
+            tag = TAG;
+        }
         String entryString = formatter.format(timeStamp) + " - " + tag + " - ";
         switch (severity) {
             case INFO:
-                entryString += " - " + "Info: ";
+                entryString += "Info: ";
                 break;
             case WARNING:
-                entryString += " - " + "Warning: ";
+                entryString += "Warning: ";
                 break;
             case ERROR:
-                entryString += " - " + "Error: ";
+                entryString += "Error: ";
                 break;
             case DEBUG:
-                entryString += " - " + "Debug: ";
+                entryString += "Debug: ";
                 break;
             default :
-                entryString += " - " + "Unknown: ";
+                entryString += "Unknown: ";
         }
         entryString += message + "\n";
         if (exception != null) {
