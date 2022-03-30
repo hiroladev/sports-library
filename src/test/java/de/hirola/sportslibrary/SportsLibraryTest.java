@@ -5,6 +5,7 @@ import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.model.*;
 
 import de.hirola.sportslibrary.util.DateUtil;
+import de.hirola.sportslibrary.util.Logger;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -538,5 +539,14 @@ class SportsLibraryTest {
 
         // delete all objects
         dataRepository.clearAll();
+    }
+
+    @Test
+    void testLogging() {
+        Logger logger = Logger.getInstance(Global.LIBRARY_PACKAGE_NAME);
+        logger.log(Logger.DEBUG, null, "Log debug", null);
+        logger.log(Logger.ERROR, null, "Log error", null);
+        logger.log(Logger.INFO, null, "Log info", null);
+        System.out.println(logger.getLogContent());
     }
 }
