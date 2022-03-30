@@ -1,7 +1,7 @@
 package de.hirola.sportslibrary.database;
 
 import de.hirola.sportslibrary.SportsLibraryException;
-import de.hirola.sportslibrary.util.Logger;
+import de.hirola.sportslibrary.util.LogManager;
 import org.dizitart.no2.Nitrite;
 import org.dizitart.no2.exceptions.NitriteIOException;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +24,7 @@ public class DatabaseManager {
     private final String TAG = DatabaseManager.class.getSimpleName();
 
     private static DatabaseManager instance;
-    private static Logger logger;
+    private static LogManager logManager;
     private Nitrite database;
 
     /**
@@ -35,7 +35,7 @@ public class DatabaseManager {
      */
     public static DatabaseManager getInstance(@NotNull String packageName) {
         if (instance == null) {
-            logger = Logger.getInstance(packageName);
+            logManager = LogManager.getInstance(packageName);
             instance = new DatabaseManager(packageName);
         }
         return instance;
@@ -65,7 +65,7 @@ public class DatabaseManager {
                         .openOrCreate();
 
         } catch (SportsLibraryException | NitriteIOException exception){
-            logger.log(Logger.ERROR, TAG,"Could not determine the runtime environment. Database is null.", exception);
+            logManager.log(LogManager.ERROR, TAG,"Could not determine the runtime environment. Database is null.", exception);
         }
     }
 
@@ -104,12 +104,12 @@ public class DatabaseManager {
                 }
             } else {
                 String errorMessage = "Could not determine the runtime environment.";
-                logger.log(Logger.ERROR, TAG,errorMessage, null);
+                logManager.log(LogManager.ERROR, TAG,errorMessage, null);
                 throw new SportsLibraryException(errorMessage);
             }
         } catch (SecurityException exception){
             String errorMessage = "Could not determine the runtime environment.";
-            logger.log(Logger.ERROR, TAG,errorMessage, exception);
+            logManager.log(LogManager.ERROR, TAG,errorMessage, exception);
             throw new SportsLibraryException(errorMessage + ": " + exception.getCause().getMessage());
         }
         return databasePath;

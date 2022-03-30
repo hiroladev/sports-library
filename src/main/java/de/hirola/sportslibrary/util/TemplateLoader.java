@@ -30,9 +30,9 @@ import java.util.*;
  */
 public class TemplateLoader {
 
-    private final String TAG = Logger.class.getSimpleName();
+    private final String TAG = LogManager.class.getSimpleName();
 
-    private final Logger logger;
+    private final LogManager logManager;
     private final DataRepository dataRepository;
     private final SportsLibraryApplication application; // on Android load json from R.raw
     private final List<RunningPlanTemplate> runningPlanTemplatesImportList;
@@ -40,12 +40,12 @@ public class TemplateLoader {
     private boolean isRunningOnAndroid;
 
 
-    public TemplateLoader(@NotNull DataRepository dataRepository, @NotNull Logger logger) throws SportsLibraryException {
+    public TemplateLoader(@NotNull DataRepository dataRepository, @NotNull LogManager logManager) throws SportsLibraryException {
         if (!dataRepository.isOpen()) {
             throw new SportsLibraryException("The local datastore is not open. Cannot import templates.");
         }
         this.dataRepository = dataRepository;
-        this.logger = logger;
+        this.logManager = logManager;
         runningPlanTemplatesImportList = new ArrayList<>();
         importedRunningPlans = new ArrayList<>();
         application = null;
@@ -56,13 +56,13 @@ public class TemplateLoader {
         }
     }
 
-    public TemplateLoader(@NotNull DataRepository dataRepository, @Nullable SportsLibraryApplication application, @NotNull Logger logger) throws SportsLibraryException {
+    public TemplateLoader(@NotNull DataRepository dataRepository, @Nullable SportsLibraryApplication application, @NotNull LogManager logManager) throws SportsLibraryException {
         if (!dataRepository.isOpen()) {
             throw new SportsLibraryException("The local datastore is not open. Cannot import templates.");
         }
         this.dataRepository = dataRepository;
         this.application = application;
-        this.logger = logger;
+        this.logManager = logManager;
         runningPlanTemplatesImportList = new ArrayList<>();
         importedRunningPlans = new ArrayList<>();
         // determine if android or jvm
@@ -311,7 +311,7 @@ public class TemplateLoader {
             } catch (ClassCastException exception) {
                 String errorMessage = " The list of movement types contains an object from type "
                         + object.getClass().getSimpleName();
-                logger.log(Logger.DEBUG, TAG, errorMessage, exception);
+                logManager.log(LogManager.DEBUG, TAG, errorMessage, exception);
             }
         }
         // Laden der Laufpläne aus JSON
@@ -340,7 +340,7 @@ public class TemplateLoader {
                                 duration = Integer.parseInt(runningUnitString);
                             } catch (NumberFormatException exception) {
                                 duration = 0;
-                                logger.log(Logger.DEBUG, TAG, "Duration on running unit was not a number.", null);
+                                logManager.log(LogManager.DEBUG, TAG, "Duration on running unit was not a number.", null);
                             }
                         } else {
                             //  über das Kürzel nach der Bewegungsart suchen
@@ -382,7 +382,7 @@ public class TemplateLoader {
                     importedRunningPlans.add(runningPlan);
                 } catch (SportsLibraryException exception) {
                     String errorMessage = "Error occurred while saving a running plan.";
-                    logger.log(Logger.DEBUG, TAG, errorMessage, exception);
+                    logManager.log(LogManager.DEBUG, TAG, errorMessage, exception);
                     throw new SportsLibraryException(errorMessage + ": " + exception.getMessage());
                 }
             }

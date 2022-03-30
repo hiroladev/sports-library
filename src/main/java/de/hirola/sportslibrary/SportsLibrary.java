@@ -7,7 +7,7 @@ import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.model.TrainingType;
 import de.hirola.sportslibrary.model.UUID;
 import de.hirola.sportslibrary.model.User;
-import de.hirola.sportslibrary.util.Logger;
+import de.hirola.sportslibrary.util.LogManager;
 import de.hirola.sportslibrary.util.TemplateLoader;
 
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +28,7 @@ import java.util.List;
  */
 public final class SportsLibrary implements DatastoreDelegate {
 
-    private final String TAG = Logger.class.getSimpleName();
+    private final String TAG = LogManager.class.getSimpleName();
 
     private final DataRepository dataRepository;
     private List<DatastoreDelegate> delegates;
@@ -44,14 +44,14 @@ public final class SportsLibrary implements DatastoreDelegate {
      */
     public SportsLibrary(@NotNull String packageName,
                          @Nullable SportsLibraryApplication application) throws SportsLibraryException {
-        // logger
-        Logger logger = Logger.getInstance(packageName);
+        // logManager
+        LogManager logManager = LogManager.getInstance(packageName);
         // lokalen Datenspeicher mit dem Namen der App anlegen / öffnen
         DatabaseManager databaseManager = DatabaseManager.getInstance(packageName);
-        dataRepository = new DataRepository(databaseManager, this, logger);
+        dataRepository = new DataRepository(databaseManager, this, logManager);
         // bei neu angelegtem Datenspeicher diesen mit initialen Werten befüllen
         if (dataRepository.isEmpty()) {
-            TemplateLoader templateLoader = new TemplateLoader(dataRepository, application, logger);
+            TemplateLoader templateLoader = new TemplateLoader(dataRepository, application, logManager);
             // alle Templates in Datenspeicher laden
             templateLoader.loadAllFromJSON();
         }
@@ -60,7 +60,7 @@ public final class SportsLibrary implements DatastoreDelegate {
         if (users.size() > 1) {
             // not good
             if (Global.APP_DEBUG_MODE) {
-                logger.log(Logger.DEBUG, TAG, "More as one user in the app.", null);
+                logManager.log(LogManager.DEBUG, TAG, "More as one user in the app.", null);
             }
         }
         if (users.isEmpty()) {
@@ -75,7 +75,7 @@ public final class SportsLibrary implements DatastoreDelegate {
             } else {
                 if (Global.APP_DEBUG_MODE) {
                     appUser = new User();
-                    logger.log(Logger.DEBUG, TAG, "Couldn't get the user from datastore.", null);
+                    logManager.log(LogManager.DEBUG, TAG, "Couldn't get the user from datastore.", null);
                 }
             }
         }

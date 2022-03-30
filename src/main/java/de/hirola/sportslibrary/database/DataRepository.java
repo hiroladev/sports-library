@@ -4,8 +4,7 @@ import de.hirola.sportslibrary.Global;
 import de.hirola.sportslibrary.SportsLibraryException;
 import de.hirola.sportslibrary.model.*;
 
-import de.hirola.sportslibrary.util.Logger;
-import org.dizitart.no2.FindOptions;
+import de.hirola.sportslibrary.util.LogManager;
 import org.dizitart.no2.Nitrite;
 import org.dizitart.no2.exceptions.NotIdentifiableException;
 import org.dizitart.no2.objects.Cursor;
@@ -33,7 +32,7 @@ public final class DataRepository {
     private final int UPDATE_ACTION = 1;
     private final int REMOVE_ACTION = 2;
 
-    private final Logger logger;
+    private final LogManager logManager;
     private final Nitrite database; // we use Nitrite database
     private final DatastoreDelegate delegate;
 
@@ -42,10 +41,10 @@ public final class DataRepository {
      *
      * @param databaseManager of this library
      * @param delegate to notify on events
-     * @param logger for data event logging
+     * @param logManager for data event logging
      */
-    public DataRepository(@NotNull DatabaseManager databaseManager, @NotNull DatastoreDelegate delegate, Logger logger) {
-        this.logger = logger;
+    public DataRepository(@NotNull DatabaseManager databaseManager, @NotNull DatastoreDelegate delegate, LogManager logManager) {
+        this.logManager = logManager;
         this.delegate = delegate;
         database = databaseManager.getDatabase(); // can be null
     }
@@ -179,7 +178,7 @@ public final class DataRepository {
             }
             if (cursor.size() > 1) {
                 // very bad
-                logger.log(Logger.DEBUG, TAG, "findByUUID has more than one result", null);
+                logManager.log(LogManager.DEBUG, TAG, "findByUUID has more than one result", null);
             }
         }
         return null;
@@ -298,7 +297,7 @@ public final class DataRepository {
             String errorMessage = "Operation "+ action +" with the object from type "
                     + object.getClass().getSimpleName()
                     +" and with id " + object.getUUID() + " failed.";
-            logger.log(Logger.DEBUG, TAG, errorMessage, exception);
+            logManager.log(LogManager.DEBUG, TAG, errorMessage, exception);
             throw new SportsLibraryException(exception);
         }
     }
@@ -328,7 +327,7 @@ public final class DataRepository {
                             rollback(LocationData.class, locationUUIDs);
                             locationUUIDs.clear();
                             String errorMessage = "Location data of new track already exist in the database.";
-                            logger.log(Logger.DEBUG, TAG, errorMessage, null);
+                            logManager.log(LogManager.DEBUG, TAG, errorMessage, null);
                             throw new SportsLibraryException(errorMessage);
                         }
                     }
@@ -462,7 +461,7 @@ public final class DataRepository {
                                     runningUnitUUIDs.clear();
                                     movementTypeUUIDs.clear();
                                     String errorMessage = "The new running plan contains existing units.";
-                                    logger.log(Logger.DEBUG, TAG, errorMessage, null);
+                                    logManager.log(LogManager.DEBUG, TAG, errorMessage, null);
                                     throw new SportsLibraryException(errorMessage);
                                 }
 
@@ -486,7 +485,7 @@ public final class DataRepository {
                             rollback(RunningUnit.class, runningUnitUUIDs);
                             rollback(MovementType.class, movementTypeUUIDs);
                             String errorMessage = "The new running plan contains existing entries.";
-                            logger.log(Logger.DEBUG, TAG, errorMessage, null);
+                            logManager.log(LogManager.DEBUG, TAG, errorMessage, null);
                             throw new SportsLibraryException(errorMessage);
                         }
                     }
@@ -577,7 +576,7 @@ public final class DataRepository {
                 }
             }
         } catch (NotIdentifiableException exception) {
-            logger.log(Logger.DEBUG, TAG, "Error while rollback.", exception);
+            logManager.log(LogManager.DEBUG, TAG, "Error while rollback.", exception);
         }
     }
 }

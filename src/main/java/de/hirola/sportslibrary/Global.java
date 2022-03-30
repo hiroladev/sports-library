@@ -24,11 +24,6 @@ public final class Global {
     public static final String LIBRARY_PACKAGE_NAME = "de.hirola.sports-library";
 
     /**
-     * enable / disable debug mode
-     */
-    public static final boolean APP_DEBUG_MODE = true;
-
-    /**
      * A list of all types handled by the database.
      */
     public static final List<Class<? extends PersistentObject>> PERSISTENT_CLASSES_LIST;
