@@ -20,6 +20,7 @@ import java.io.IOException;
 public final class LogManager {
 
     private static LogManager instance;
+    private boolean isDebugMode;
     private String logDirString;
     private boolean isLoggingEnabled;
 
@@ -34,6 +35,25 @@ public final class LogManager {
             instance = new LogManager(packageName);
         }
         return instance;
+    }
+
+    /**
+     * Get a flag to determine, whether errors should be logged.
+     * Can only be true, if logging is enabled.
+     *
+     * @return The flag to determine, whether errors should be logged.
+     */
+    public boolean isDebugMode() {
+        return isDebugMode && isLoggingEnabled;
+    }
+
+    /**
+     * Set the debug mode on or off.
+     *
+     * @param debugMode a flag to set debug mode on or off
+     */
+    public void setDebugMode(boolean debugMode) {
+        isDebugMode = debugMode;
     }
 
     /**
@@ -63,32 +83,12 @@ public final class LogManager {
         return "";
     }
 
-    /**
-     The "struct" of  possible destinations for logging.
-     You can combine for multiple targets, e.g. 3 means
-     log to console and file.
-     For remote logging must be specified a valid log server.
-     */
-    public static class LOGGING_DESTINATION {
-        /**
-         *  A normal feedback.
-         */
-        public static final int CONSOLE = 1;
-        /**
-         * A Feedback for an app issue.
-         */
-        public static final int FILE = 3;
-        /**
-         A Feedback for a new feature.
-         */
-        public static final int REMOTE = 5;
-    }
-
     private LogManager(@NotNull String packageName) {
         // build the database name from package name
         if (!packageName.contains(".")) {
             // a primitive check for valid package name
             isLoggingEnabled = false;
+            isDebugMode = false;
             return;
         }
         // build the path, determine if android or jvm

@@ -12,6 +12,7 @@ import de.hirola.sportslibrary.util.TemplateLoader;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.tinylog.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,9 +29,7 @@ import java.util.List;
  */
 public final class SportsLibrary implements DatastoreDelegate {
 
-    private final String TAG = LogManager.class.getSimpleName();
-
-    private final DataRepository dataRepository;
+   private final DataRepository dataRepository;
     private List<DatastoreDelegate> delegates;
     private final User appUser;
 
@@ -59,8 +58,8 @@ public final class SportsLibrary implements DatastoreDelegate {
         List<? extends PersistentObject> users = dataRepository.findAll(User.class);
         if (users.size() > 1) {
             // not good
-            if (Global.APP_DEBUG_MODE) {
-                logManager.log(LogManager.DEBUG, TAG, "More as one user in the app.", null);
+            if (logManager.isDebugMode()) {
+                Logger.debug("More as one user in the app.");
             }
         }
         if (users.isEmpty()) {
@@ -73,9 +72,9 @@ public final class SportsLibrary implements DatastoreDelegate {
             if (persistentObject instanceof User) {
                 appUser = (User) persistentObject;
             } else {
-                if (Global.APP_DEBUG_MODE) {
-                    appUser = new User();
-                    logManager.log(LogManager.DEBUG, TAG, "Couldn't get the user from datastore.", null);
+                appUser = new User();
+                if (logManager.isDebugMode()) {
+                    Logger.debug("Couldn't get the user from datastore.");
                 }
             }
         }

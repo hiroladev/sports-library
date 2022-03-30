@@ -6,6 +6,7 @@ import org.dizitart.no2.Nitrite;
 import org.dizitart.no2.exceptions.NitriteIOException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.tinylog.Logger;
 
 import java.io.File;
 
@@ -64,8 +65,10 @@ public class DatabaseManager {
                         .disableAutoCompact()
                         .openOrCreate();
 
-        } catch (SportsLibraryException | NitriteIOException exception){
-            logManager.log(LogManager.ERROR, TAG,"Could not determine the runtime environment. Database is null.", exception);
+        } catch (SportsLibraryException | NitriteIOException exception) {
+            if (logManager.isDebugMode()) {
+                Logger.debug("Could not determine the runtime environment. Database is null.", exception);
+            }
         }
     }
 
@@ -104,12 +107,16 @@ public class DatabaseManager {
                 }
             } else {
                 String errorMessage = "Could not determine the runtime environment.";
-                logManager.log(LogManager.ERROR, TAG,errorMessage, null);
+                if (logManager.isDebugMode()) {
+                    Logger.debug(errorMessage);
+                }
                 throw new SportsLibraryException(errorMessage);
             }
         } catch (SecurityException exception){
             String errorMessage = "Could not determine the runtime environment.";
-            logManager.log(LogManager.ERROR, TAG,errorMessage, exception);
+            if (logManager.isDebugMode()) {
+                Logger.debug(errorMessage, exception);
+            }
             throw new SportsLibraryException(errorMessage + ": " + exception.getCause().getMessage());
         }
         return databasePath;

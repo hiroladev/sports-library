@@ -5,8 +5,10 @@ import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.model.*;
 
 import de.hirola.sportslibrary.util.DateUtil;
-import de.hirola.sportslibrary.util.Logger;
+import de.hirola.sportslibrary.util.LogManager;
 import org.junit.jupiter.api.Test;
+import org.tinylog.Logger;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.DayOfWeek;
@@ -543,10 +545,11 @@ class SportsLibraryTest {
 
     @Test
     void testLogging() {
-        Logger logger = Logger.getInstance(Global.LIBRARY_PACKAGE_NAME);
-        logger.log(Logger.DEBUG, null, "Log debug", null);
-        logger.log(Logger.ERROR, null, "Log error", null);
-        logger.log(Logger.INFO, null, "Log info", null);
-        System.out.println(logger.getLogContent());
+        LogManager logManager = LogManager.getInstance(Global.LIBRARY_PACKAGE_NAME);
+        logManager.setDebugMode(true);
+        if (logManager.isDebugMode()) {
+            Logger.debug("Test logging entry.");
+        }
+        System.out.println(logManager.getLogContent());
     }
 }

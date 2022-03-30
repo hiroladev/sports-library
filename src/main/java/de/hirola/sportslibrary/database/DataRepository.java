@@ -12,6 +12,7 @@ import org.dizitart.no2.objects.ObjectRepository;
 import org.dizitart.no2.objects.filters.ObjectFilters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.tinylog.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +28,6 @@ import java.util.List;
  */
 public final class DataRepository {
 
-    private final String TAG = DataRepository.class.getSimpleName();
     private final int INSERT_ACTION = 0;
     private final int UPDATE_ACTION = 1;
     private final int REMOVE_ACTION = 2;
@@ -178,7 +178,9 @@ public final class DataRepository {
             }
             if (cursor.size() > 1) {
                 // very bad
-                logManager.log(LogManager.DEBUG, TAG, "findByUUID has more than one result", null);
+                if (logManager.isDebugMode()) {
+                    Logger.debug("findByUUID has more than one result", cursor.size());
+                }
             }
         }
         return null;
@@ -297,7 +299,9 @@ public final class DataRepository {
             String errorMessage = "Operation "+ action +" with the object from type "
                     + object.getClass().getSimpleName()
                     +" and with id " + object.getUUID() + " failed.";
-            logManager.log(LogManager.DEBUG, TAG, errorMessage, exception);
+            if (logManager.isDebugMode()) {
+                Logger.debug(errorMessage, exception);
+            }
             throw new SportsLibraryException(exception);
         }
     }
@@ -327,7 +331,9 @@ public final class DataRepository {
                             rollback(LocationData.class, locationUUIDs);
                             locationUUIDs.clear();
                             String errorMessage = "Location data of new track already exist in the database.";
-                            logManager.log(LogManager.DEBUG, TAG, errorMessage, null);
+                            if (logManager.isDebugMode()) {
+                                Logger.debug(errorMessage);
+                            }
                             throw new SportsLibraryException(errorMessage);
                         }
                     }
@@ -461,7 +467,9 @@ public final class DataRepository {
                                     runningUnitUUIDs.clear();
                                     movementTypeUUIDs.clear();
                                     String errorMessage = "The new running plan contains existing units.";
-                                    logManager.log(LogManager.DEBUG, TAG, errorMessage, null);
+                                    if (logManager.isDebugMode()) {
+                                        Logger.debug(errorMessage);
+                                    }
                                     throw new SportsLibraryException(errorMessage);
                                 }
 
@@ -485,7 +493,9 @@ public final class DataRepository {
                             rollback(RunningUnit.class, runningUnitUUIDs);
                             rollback(MovementType.class, movementTypeUUIDs);
                             String errorMessage = "The new running plan contains existing entries.";
-                            logManager.log(LogManager.DEBUG, TAG, errorMessage, null);
+                            if (logManager.isDebugMode()) {
+                                Logger.debug(errorMessage);
+                            }
                             throw new SportsLibraryException(errorMessage);
                         }
                     }
@@ -576,7 +586,9 @@ public final class DataRepository {
                 }
             }
         } catch (NotIdentifiableException exception) {
-            logManager.log(LogManager.DEBUG, TAG, "Error while rollback.", exception);
+            if (logManager.isDebugMode()) {
+                Logger.debug("Error while rollback.", exception);
+            }
         }
     }
 }

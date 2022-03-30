@@ -9,6 +9,7 @@ import de.hirola.sportslibrary.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.tinylog.Logger;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -29,8 +30,6 @@ import java.util.*;
  * @since 0.1
  */
 public class TemplateLoader {
-
-    private final String TAG = LogManager.class.getSimpleName();
 
     private final LogManager logManager;
     private final DataRepository dataRepository;
@@ -311,7 +310,9 @@ public class TemplateLoader {
             } catch (ClassCastException exception) {
                 String errorMessage = " The list of movement types contains an object from type "
                         + object.getClass().getSimpleName();
-                logManager.log(LogManager.DEBUG, TAG, errorMessage, exception);
+                if (logManager.isDebugMode()) {
+                    Logger.debug(errorMessage, exception);
+                }
             }
         }
         // Laden der Laufpläne aus JSON
@@ -340,7 +341,9 @@ public class TemplateLoader {
                                 duration = Integer.parseInt(runningUnitString);
                             } catch (NumberFormatException exception) {
                                 duration = 0;
-                                logManager.log(LogManager.DEBUG, TAG, "Duration on running unit was not a number.", null);
+                                if (logManager.isDebugMode()) {
+                                    Logger.debug("Duration on running unit was not a number.");
+                                }
                             }
                         } else {
                             //  über das Kürzel nach der Bewegungsart suchen
@@ -382,7 +385,9 @@ public class TemplateLoader {
                     importedRunningPlans.add(runningPlan);
                 } catch (SportsLibraryException exception) {
                     String errorMessage = "Error occurred while saving a running plan.";
-                    logManager.log(LogManager.DEBUG, TAG, errorMessage, exception);
+                    if (logManager.isDebugMode()) {
+                        Logger.debug(errorMessage, exception);
+                    }
                     throw new SportsLibraryException(errorMessage + ": " + exception.getMessage());
                 }
             }
