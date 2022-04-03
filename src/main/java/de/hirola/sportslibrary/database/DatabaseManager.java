@@ -22,10 +22,8 @@ import java.io.File;
  */
 public class DatabaseManager {
 
-    private final String TAG = DatabaseManager.class.getSimpleName();
-
     private static DatabaseManager instance;
-    private static LogManager logManager;
+    private final LogManager logManager;
     private Nitrite database;
 
     /**
@@ -34,10 +32,9 @@ public class DatabaseManager {
      * @param packageName of the using app or library, used for the database name
      * @return An instance of the database manager.
      */
-    public static DatabaseManager getInstance(@NotNull String packageName) {
+    public static DatabaseManager getInstance(@NotNull String packageName, @NotNull LogManager logManager) {
         if (instance == null) {
-            logManager = LogManager.getInstance(packageName);
-            instance = new DatabaseManager(packageName);
+            instance = new DatabaseManager(packageName, logManager);
         }
         return instance;
     }
@@ -54,7 +51,8 @@ public class DatabaseManager {
         return database;
     }
 
-    private DatabaseManager(@NotNull String packageName) {
+    private DatabaseManager(@NotNull String packageName, @NotNull LogManager logManager) {
+        this.logManager = logManager;
         try {
             // Nitrite by default compacts the database file before close.
             // If compaction is enabled chunks will be moved next to each other.
@@ -93,15 +91,13 @@ public class DatabaseManager {
                             + File.separatorChar
                             + packageName
                             + File.separatorChar
-                            + databaseName
-                            + File.separatorChar
                             + databaseName + ".db";
                 } else {
                     //  path for local database on JVM
                     String userHomeDir = System.getProperty("user.home");
                     databasePath = userHomeDir
                             + File.separatorChar
-                            + databaseName
+                            + packageName
                             + File.separatorChar
                             + databaseName + ".db";
                 }

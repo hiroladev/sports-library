@@ -29,7 +29,8 @@ import java.util.List;
  */
 public final class SportsLibrary implements DatastoreDelegate {
 
-   private final DataRepository dataRepository;
+    private final LogManager logManager;
+    private final DataRepository dataRepository;
     private List<DatastoreDelegate> delegates;
     private final User appUser;
 
@@ -42,11 +43,12 @@ public final class SportsLibrary implements DatastoreDelegate {
      * @see SportsLibraryApplication
      */
     public SportsLibrary(@NotNull String packageName,
-                         @Nullable SportsLibraryApplication application) throws SportsLibraryException {
+                         @Nullable SportsLibraryApplication application,
+                         @NotNull LogManager logManager) throws SportsLibraryException {
         // logManager
-        LogManager logManager = LogManager.getInstance(packageName);
+        this.logManager = logManager;
         // lokalen Datenspeicher mit dem Namen der App anlegen / öffnen
-        DatabaseManager databaseManager = DatabaseManager.getInstance(packageName);
+        DatabaseManager databaseManager = DatabaseManager.getInstance(packageName, logManager);
         dataRepository = new DataRepository(databaseManager, this, logManager);
         // bei neu angelegtem Datenspeicher diesen mit initialen Werten befüllen
         if (dataRepository.isEmpty()) {

@@ -4,6 +4,7 @@ import de.hirola.sportslibrary.database.DataRepository;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.model.*;
 
+import de.hirola.sportslibrary.model.UUID;
 import de.hirola.sportslibrary.util.DateUtil;
 import de.hirola.sportslibrary.util.LogManager;
 import org.junit.jupiter.api.Test;
@@ -15,20 +16,20 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 class SportsLibraryTest {
 
     SportsLibrary sportsLibrary;
     DataRepository dataRepository;
+    LogManager logManager = LogManager.getInstance(Global.LIBRARY_PACKAGE_NAME, true);
 
     @Test
     void testLibrary() {
         try {
             // empty app name
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
             assertNotNull(sportsLibrary, "Library not initialize.");
             dataRepository = sportsLibrary.getDataRepository();
             assertNotNull(dataRepository, "DataRepository not initialize.");
@@ -52,7 +53,7 @@ class SportsLibraryTest {
     void testRelations() {
         try {
 
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
             dataRepository = sportsLibrary.getDataRepository();
 
             // user has an active running plan
@@ -125,7 +126,7 @@ class SportsLibraryTest {
     @Test
     void testObjects() {
         try {
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
             dataRepository = sportsLibrary.getDataRepository();
 
             // test user
@@ -252,7 +253,7 @@ class SportsLibraryTest {
     @Test
     void testTrackAndLocationsCRUD() {
         try {
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
             dataRepository = sportsLibrary.getDataRepository();
 
             // create a track with locations
@@ -303,7 +304,7 @@ class SportsLibraryTest {
     @Test
     void testTrackAndTrainingTypeAndTrainingCRUD() {
         try {
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
             dataRepository = sportsLibrary.getDataRepository();
 
             // create a track with locations
@@ -358,7 +359,7 @@ class SportsLibraryTest {
     @Test
     void testRunningPlanCRUD() {
         try {
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
             dataRepository = sportsLibrary.getDataRepository();
 
             // create a running plan
@@ -447,7 +448,7 @@ class SportsLibraryTest {
     @Test
     void testUser() {
         try {
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
             dataRepository = sportsLibrary.getDataRepository();
 
             RunningPlan runningPlan1 = (RunningPlan) dataRepository.findAll(RunningPlan.class).get(0);
@@ -492,7 +493,7 @@ class SportsLibraryTest {
             assertTrue(unit4.isCompleted());
 
             // with existing data
-            SportsLibrary sportsLibrary5 = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
+            SportsLibrary sportsLibrary5 = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
             DataRepository dataRepository5 = sportsLibrary5.getDataRepository();
 
             User user5 = sportsLibrary.getAppUser();
@@ -517,7 +518,7 @@ class SportsLibraryTest {
     @Test
     void testTraining() {
         try {
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
             dataRepository = sportsLibrary.getDataRepository();
 
             List<? extends PersistentObject> trainingTypes = dataRepository.findAll(TrainingType.class);
@@ -545,11 +546,14 @@ class SportsLibraryTest {
 
     @Test
     void testLogging() {
-        LogManager logManager = LogManager.getInstance(Global.LIBRARY_PACKAGE_NAME);
-        logManager.setDebugMode(true);
-        if (logManager.isDebugMode()) {
-            Logger.debug("Test logging entry.");
+        LogManager logManager = LogManager.getInstance(Global.LIBRARY_PACKAGE_NAME, true);
+        assertTrue(logManager.isDebugMode());
+        Logger.debug("Debug log entry.");
+        Map<LocalDate, String> logContentMap = logManager.getLogContent();
+        assertNotNull(logContentMap, "Exception while getting the content of logfile.");
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+        for (Map.Entry<LocalDate, String> entry : logContentMap.entrySet()) {
+            System.out.println(entry.getValue() + "\n" + entry.getValue());
         }
-        System.out.println(logManager.getLogContent());
     }
 }

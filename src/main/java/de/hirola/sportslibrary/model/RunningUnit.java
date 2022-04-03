@@ -85,16 +85,16 @@ public class RunningUnit extends PersistentObject {
     /**
      * Set a flag to determine if unit is completed.
      *
-     * @param completed A flag to determine if unit is completed
+     * @param completed A flag to determine if unit is completed.
      */
     public void setCompleted(boolean completed) {
         isCompleted = completed;
     }
 
     /**
-     * Get the duration of the unit.
+     * Get the duration of the unit in minutes.
      *
-     * @return The duration of the unit
+     * @return The duration of the unit in minutes.
      */
     public long getDuration() {
         return duration;
