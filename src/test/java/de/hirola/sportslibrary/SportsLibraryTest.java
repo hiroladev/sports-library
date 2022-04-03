@@ -549,11 +549,11 @@ class SportsLibraryTest {
         LogManager logManager = LogManager.getInstance(Global.LIBRARY_PACKAGE_NAME, true);
         assertTrue(logManager.isDebugMode());
         Logger.debug("Debug log entry.");
-        Map<LocalDate, String> logContentMap = logManager.getLogContent();
-        assertNotNull(logContentMap, "Exception while getting the content of logfile.");
+        List<LogManager.LogContent> logContentList = logManager.getLogContent();
+        assertNotNull(logContentList, "Exception while getting the content of logfile.");
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-        for (Map.Entry<LocalDate, String> entry : logContentMap.entrySet()) {
-            System.out.println(entry.getValue() + "\n" + entry.getValue());
+        for (LogManager.LogContent logContent : logContentList) {
+            System.out.println(logContent.creationDate + " - " + logContent.contentString);
         }
     }
 }

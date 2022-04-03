@@ -75,9 +75,9 @@ public final class LogManager {
      * @return A map containing the creation date and content of each log file.
      */
     @Nullable
-    public Map<LocalDate, String> getLogContent() {
+    public List<LogContent> getLogContent() {
         if (isLoggingEnabled) {
-            Map<LocalDate, String> logContent = new HashMap<>();
+            List<LogContent> logContentList = new ArrayList<>();
             Collection<File> logFiles = FileUtils.listFiles(
                     new File(logDirString),
                     new String[]{"log"},
@@ -96,7 +96,10 @@ public final class LogManager {
                             .toInstant()
                             .atZone(ZoneId.systemDefault())
                             .toLocalDate();
-                    logContent.putIfAbsent(creationDate, stringBuilder.toString());
+                    LogContent logContent = new LogContent();
+                    logContent.creationDate = creationDate;
+                    logContent.contentString = stringBuilder.toString();
+                    logContentList.add(logContent);
                 } catch (IOException exception) {
                     if (isLoggingEnabled) {
                         String message = "Error occurred while getting content from log file.";
@@ -105,7 +108,7 @@ public final class LogManager {
                     return null;
                 }
             }
-            return logContent;
+            return logContentList;
         }
         return null;
     }
@@ -165,5 +168,13 @@ public final class LogManager {
             this.isDebugMode = false;
             isLoggingEnabled = false;
         }
+    }
+
+    /**
+     * A helper class for the content of log files.
+     */
+    public static final class LogContent {
+        public LocalDate creationDate;
+        public String contentString;
     }
 }
