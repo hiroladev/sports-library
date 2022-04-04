@@ -91,6 +91,7 @@ public final class LogManager {
                     StringBuilder stringBuilder = new StringBuilder();
                     while (it.hasNext()) {
                         stringBuilder.append(it.nextLine());
+                        stringBuilder.append("\n");
                     }
                     LocalDate creationDate = logFileCreationTime
                             .toInstant()
