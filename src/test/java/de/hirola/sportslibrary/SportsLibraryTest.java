@@ -29,7 +29,7 @@ class SportsLibraryTest {
     void testLibrary() {
         try {
             // empty app name
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             assertNotNull(sportsLibrary, "Library not initialize.");
             dataRepository = sportsLibrary.getDataRepository();
             assertNotNull(dataRepository, "DataRepository not initialize.");
@@ -53,7 +53,7 @@ class SportsLibraryTest {
     void testRelations() {
         try {
 
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             dataRepository = sportsLibrary.getDataRepository();
 
             // user has an active running plan
@@ -127,7 +127,7 @@ class SportsLibraryTest {
     @Test
     void testObjects() {
         try {
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             dataRepository = sportsLibrary.getDataRepository();
 
             // test user
@@ -254,7 +254,7 @@ class SportsLibraryTest {
     @Test
     void testTrackAndLocationsCRUD() {
         try {
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             dataRepository = sportsLibrary.getDataRepository();
 
             // create a track with locations
@@ -305,7 +305,7 @@ class SportsLibraryTest {
     @Test
     void testTrackAndTrainingTypeAndTrainingCRUD() {
         try {
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             dataRepository = sportsLibrary.getDataRepository();
 
             // create a track with locations
@@ -360,7 +360,7 @@ class SportsLibraryTest {
     @Test
     void testRunningPlanCRUD() {
         try {
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             dataRepository = sportsLibrary.getDataRepository();
 
             // create a running plan
@@ -449,7 +449,7 @@ class SportsLibraryTest {
     @Test
     void testUser() {
         try {
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             dataRepository = sportsLibrary.getDataRepository();
 
             RunningPlan runningPlan1 = (RunningPlan) dataRepository.findAll(RunningPlan.class).get(0);
@@ -494,7 +494,7 @@ class SportsLibraryTest {
             assertTrue(unit4.isCompleted());
 
             // with existing data
-            SportsLibrary sportsLibrary5 = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
+            SportsLibrary sportsLibrary5 = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             DataRepository dataRepository5 = sportsLibrary5.getDataRepository();
 
             User user5 = sportsLibrary.getAppUser();
@@ -519,7 +519,7 @@ class SportsLibraryTest {
     @Test
     void testTraining() {
         try {
-            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null, logManager);
+            sportsLibrary = new SportsLibrary(Global.LIBRARY_PACKAGE_NAME, null);
             dataRepository = sportsLibrary.getDataRepository();
 
             List<? extends PersistentObject> trainingTypes = dataRepository.findAll(TrainingType.class);

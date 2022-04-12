@@ -42,9 +42,9 @@ public final class SportsLibrary implements DatastoreDelegate {
      * @see SportsLibraryApplication
      */
     public SportsLibrary(@NotNull String packageName,
-                         @Nullable SportsLibraryApplication application,
-                         @NotNull LogManager logManager) throws SportsLibraryException {
+                         @Nullable SportsLibraryApplication application) throws SportsLibraryException {
         // logManager
+        LogManager logManager = LogManager.getInstance(packageName, Global.DEBUG_MODE);
         // lokalen Datenspeicher mit dem Namen der App anlegen / öffnen
         DatabaseManager databaseManager = DatabaseManager.getInstance(packageName, logManager);
         dataRepository = new DataRepository(databaseManager, this, logManager);
