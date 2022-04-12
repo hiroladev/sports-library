@@ -37,4 +37,15 @@ public final class DateUtil {
     public static long getTimeStampFromNow() {
         return LocalDateTime.now().toInstant(ZoneOffset.UTC).toEpochMilli();
     }
+
+    public static LocalDate getMondayOfActualWeek() {
+        LocalDate today = DateUtil.getLocalDateFromNow();
+        DayOfWeek dayOfWeek = today.getDayOfWeek();
+        if (dayOfWeek != DayOfWeek.MONDAY) {
+            // from Tuesday the start date is next Monday
+            long daysToAdd = 8 - dayOfWeek.getValue();
+            return today.plusDays(daysToAdd);
+        }
+        return today;
+    }
 }

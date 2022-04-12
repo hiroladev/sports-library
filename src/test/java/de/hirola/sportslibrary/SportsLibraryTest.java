@@ -556,4 +556,10 @@ class SportsLibraryTest {
             System.out.println(logContent.creationDate + " - " + logContent.contentString);
         }
     }
+
+    @Test
+    void testDateUtils() {
+        LocalDate monday = DateUtil.getMondayOfActualWeek();
+        assertEquals("MONDAY", monday.getDayOfWeek().toString());
+    }
 }
