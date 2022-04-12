@@ -13,15 +13,11 @@ import java.util.List;
  * @since v.0.1
  */
 public class RunningPlanTemplate {
-    // Name des Templates
-    public final String name;
-    // Eine paar kurze Anmerkungen der Vorlage.
+
+    public String name; // name of the template, becomes the name of running plan
     public String remarks;
-    // Nummer für Reihenfolge der Laufpläne
-    public int orderNumber;
+    public int orderNumber; // number for the order of the plans
     public boolean isTemplate;
-    // Array von einzelnen Trainingsabschnitten in der Form **{"Dauer:Stil"},{Dauer:Stil"}**, ...
-    // Die Zuordnung Stil zu Geschwindigkeit kann jeder User selbst treffen, auch eigene Stile sind möglich.
     public final List<RunningPlanTemplateUnit> trainingUnits;
 
     /**
@@ -31,6 +27,14 @@ public class RunningPlanTemplate {
         this.name = "";
         this.remarks = "";
         this.orderNumber = 0;
+        this.isTemplate = false;
+        this.trainingUnits = new ArrayList<>();
+    }
+
+    public RunningPlanTemplate(String name, String remarks, int orderNumber) {
+        this.name = name;
+        this.remarks = remarks;
+        this.orderNumber = orderNumber;
         this.isTemplate = false;
         this.trainingUnits = new ArrayList<>();
     }
@@ -51,16 +55,32 @@ public class RunningPlanTemplate {
         this.trainingUnits = trainingUnits;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getName() {
         return name;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
     }
 
     public String getRemarks() {
         return remarks;
     }
 
+    public void setOrderNumber(int orderNumber) {
+        this.orderNumber = orderNumber;
+    }
+
     public int getOrderNumber() {
         return orderNumber;
+    }
+
+    public void setTemplate(boolean template) {
+        isTemplate = template;
     }
 
     public List<RunningPlanTemplateUnit> getTrainingUnits() {
