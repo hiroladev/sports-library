@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.hirola</groupId>
-    <artifactId>sports-library</artifactId>
+    <artifactId>sportslibrary</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Hirola sports-library</name>
-    <description>A java library for sport apps. Use the kinto-java library.</description>
+    <name>Hirola Sports Library</name>
+    <description>A java library for sport apps.</description>
     <url>https://github.com/sports-library</url>
 
     <scm>
@@ -152,7 +152,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.13.2.1</version>
+            <version>2.13.2.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
