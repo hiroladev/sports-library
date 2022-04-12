@@ -7,7 +7,7 @@ package de.hirola.sportslibrary.tables;
  * The schema for the track table.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.1
+ * @since v.0.1
  */
 public interface TrackColumns {
 

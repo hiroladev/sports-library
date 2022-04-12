@@ -90,7 +90,8 @@ class SportsLibraryTest {
             List<? extends PersistentObject> result = dataRepository.findAll(User.class);
             assertFalse(result.isEmpty(), "No results from datastore");
             UUID activeRunningPlanUUID = user.getActiveRunningPlanUUID();
-            assertNotEquals("", activeRunningPlanUUID, "Active running plan from user must not be null.");
+            assert activeRunningPlanUUID != null;
+            assertNotEquals("", activeRunningPlanUUID.toString(), "Active running plan from user must not be null.");
             assertEquals(runningPlanUUID, activeRunningPlanUUID, "Active running plan uuid is wrong");
 
             // track and locations test

@@ -9,7 +9,7 @@ import java.util.UUID;
  * Creates UUID for the objects, needed as key in datastore
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.1
+ * @since v.0.1
  *
  */
 public final class UUIDFactory {

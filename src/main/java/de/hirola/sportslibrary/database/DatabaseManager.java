@@ -15,10 +15,10 @@ import java.io.File;
  * This software us licensed under the AGPL-3.0 or later.
  *
  * A layer to abstract the used data management library.
- * We use the <a href="https://onyx.dev/products#embedded">Onyx</a> embedded database.
+ * This library use the <a href="https://github.com/nitrite/nitrite-java">Nitrite</a> embedded database.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.1
+ * @since v.0.1
  */
 public class DatabaseManager {
 

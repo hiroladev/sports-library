@@ -7,7 +7,7 @@ package de.hirola.sportslibrary.util;
  * Index of available running plans.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.1
+ * @since v.0.1
  */
 public class RunningPlanTemplateFile {
 

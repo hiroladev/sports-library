@@ -10,7 +10,7 @@ import java.util.List;
  * Mapping object for RunningPlan to import from JSON.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.0.1
+ * @since v.0.1
  */
 public class RunningPlanTemplate {
     // Name des Templates

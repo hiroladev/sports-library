@@ -9,10 +9,8 @@ import org.tinylog.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -24,7 +22,7 @@ import java.util.*;
  * Layer for logging of library. Encapsulated the use of logging tools.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.1
+ * @since v.0.1
  */
 public final class LogManager {
 

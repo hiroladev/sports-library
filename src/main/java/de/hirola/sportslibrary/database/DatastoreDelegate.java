@@ -9,7 +9,7 @@ import de.hirola.sportslibrary.database.PersistentObject;
  * Delegate for datastore events. Update the ui without view model.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.1
+ * @since v.0.1
  */
 public interface DatastoreDelegate {
     void didObjectAdded(PersistentObject persistentObject);

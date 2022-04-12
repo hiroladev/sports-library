@@ -16,7 +16,7 @@ import java.util.Objects;
  * An object to store location data.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.1
+ * @since v.0.1
  */
 public class LocationData extends PersistentObject {
 

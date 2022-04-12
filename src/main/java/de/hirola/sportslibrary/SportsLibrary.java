@@ -25,11 +25,10 @@ import java.util.List;
  * Sets up local data storage and loads program defaults.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.1
+ * @since v.0.1
  */
 public final class SportsLibrary implements DatastoreDelegate {
 
-    private final LogManager logManager;
     private final DataRepository dataRepository;
     private List<DatastoreDelegate> delegates;
     private final User appUser;
@@ -46,7 +45,6 @@ public final class SportsLibrary implements DatastoreDelegate {
                          @Nullable SportsLibraryApplication application,
                          @NotNull LogManager logManager) throws SportsLibraryException {
         // logManager
-        this.logManager = logManager;
         // lokalen Datenspeicher mit dem Namen der App anlegen / öffnen
         DatabaseManager databaseManager = DatabaseManager.getInstance(packageName, logManager);
         dataRepository = new DataRepository(databaseManager, this, logManager);

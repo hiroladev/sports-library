@@ -12,7 +12,7 @@ import java.util.Objects;
  * Each object has a unique UUID.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.1
+ * @since v.0.1
  *
  */
 public class UUID implements Serializable {

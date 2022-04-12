@@ -7,7 +7,7 @@ package de.hirola.sportslibrary;
  * Bundling of all exceptions included libraries.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.1
+ * @since v.0.1
  */
 public class SportsLibraryException extends Exception {
 

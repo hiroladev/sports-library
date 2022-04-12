@@ -15,7 +15,7 @@ import java.util.Map;
  * Global library settings.
  *
  * @author Michael Schmidt (Hirola)
- * @since 0.1
+ * @since v.0.1
  */
 public final class Global {
     /**
