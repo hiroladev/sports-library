@@ -18,6 +18,9 @@ import java.util.Map;
  * @since v.0.1
  */
 public final class Global {
+
+    public static final boolean DEBUG_MODE = true;
+
     /**
      * Name of library, used as name for database and logging files.
      */
