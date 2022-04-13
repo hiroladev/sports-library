@@ -207,20 +207,21 @@ public class TemplateLoader {
             TrainingType[] trainingTypes;
             if (isRunningOnAndroid) {
                 // on Android get the JSON from R.json ...
-                InputStream inputStream = application.getTrainingTypeTemplates();
+                InputStream jsonInputStream = application.getTrainingTypeTemplates();
                 // convert JSON array to list of movement types
-                trainingTypes = objectMapper.readValue(inputStream, TrainingType[].class);
+                trainingTypes = objectMapper.readValue(jsonInputStream, TrainingType[].class);
             } else {
                 // on JVM read JSON from jar resources
-                // searching in folder resources with '/' at the beginning
+                // searching in folder resources
                 // getting Resource as file object
-                File jsonResourceFile = new File(Objects.requireNonNull(getClass()
-                        .getResource(Global.TRAINING_TYPES_JSON_RESOURCES)).getFile());
-                if (!jsonResourceFile.exists()) {
+                InputStream jsonInputStream = getClass()
+                        .getClassLoader()
+                        .getResourceAsStream(Global.TRAINING_TYPES_JSON);
+                if (jsonInputStream == null) {
                     throw new SportsLibraryException("Could not load the resource file for training types.");
                 }
                 // convert JSON array to list of available template files
-                trainingTypes = objectMapper.readValue(jsonResourceFile, TrainingType[].class);
+                trainingTypes = objectMapper.readValue(jsonInputStream, TrainingType[].class);
             }
             if (trainingTypes.length == 0) {
                 // TODO: Logging
@@ -253,21 +254,21 @@ public class TemplateLoader {
             ObjectMapper objectMapper = new ObjectMapper();
             if (isRunningOnAndroid) {
                 // on Android get the JSON from R.json ...
-                InputStream inputStream = application.getMovementTypeTemplates();
+                InputStream jsonInputStream = application.getMovementTypeTemplates();
                 // convert JSON array to list of movement types
-                movementTypes = objectMapper.readValue(inputStream, MovementType[].class);
+                movementTypes = objectMapper.readValue(jsonInputStream, MovementType[].class);
             } else {
                 // on JVM read JSON from jar resources
                 // searching in folder resources
                 // getting Resource as file object
-                InputStream inputStream = this.getClass()
+                InputStream jsonInputStream = getClass()
                         .getClassLoader()
-                        .getResourceAsStream(Global.MOVEMENT_TYPES_JSON_RESOURCES);
-                if (inputStream == null) {
+                        .getResourceAsStream(Global.MOVEMENT_TYPES_JSON);
+                if (jsonInputStream == null) {
                     throw new SportsLibraryException("Could not load the resource file for movement types.");
                 }
                 // convert JSON array to list of movement types
-                movementTypes = objectMapper.readValue(inputStream, MovementType[].class);
+                movementTypes = objectMapper.readValue(jsonInputStream, MovementType[].class);
             }
             // Bewegungsarten speichern
             try {
@@ -401,9 +402,9 @@ public class TemplateLoader {
             ObjectMapper objectMapper = new ObjectMapper();
             if (isRunningOnAndroid) {
                 // on Android get the JSON from R.json ...
-                InputStream[] inputStreams = application.getRunningPlanTemplates();
+                InputStream[] jsonInputStream = application.getRunningPlanTemplates();
                 // convert JSON array to list of running plans templates
-                Iterator<InputStream> inputStreamIterator = Arrays.stream(inputStreams).iterator();
+                Iterator<InputStream> inputStreamIterator = Arrays.stream(jsonInputStream).iterator();
                 while (inputStreamIterator.hasNext()) {
                     RunningPlanTemplate runningPlanTemplate =
                             objectMapper.readValue(inputStreamIterator.next(), RunningPlanTemplate.class);
@@ -414,15 +415,17 @@ public class TemplateLoader {
                 }
             } else {
                 // on JVM read JSON from jar resources
-                // searching in folder resources with '/' at the beginning
+                // searching in folder resources
                 // getting Resource as file object
-                File jsonResourceFile = new File(Objects.requireNonNull(getClass()
-                        .getResource(Global.RUNNING_PLAN_TEMPLATE_INDEX_JSON_RESOURCES)).getFile());
-                if (!jsonResourceFile.exists()) {
-                    throw new SportsLibraryException("Could not load the resource file for running plan template index.");
+                InputStream jsonInputStream = getClass()
+                        .getClassLoader()
+                        .getResourceAsStream(Global.RUNNING_PLAN_TEMPLATE_INDEX_JSON);
+                if (jsonInputStream == null) {
+                    throw new SportsLibraryException("Could not load the resource file for running plan index.");
                 }
                 // convert JSON array to list of available template files
-                List<RunningPlanTemplateFile> runningPlanTemplateFiles = Arrays.asList(objectMapper.readValue(jsonResourceFile, RunningPlanTemplateFile[].class));
+                List<RunningPlanTemplateFile> runningPlanTemplateFiles
+                        = Arrays.asList(objectMapper.readValue(jsonInputStream, RunningPlanTemplateFile[].class));
                 if (runningPlanTemplateFiles.isEmpty()) {
                     // TODO: Logging
                     throw new SportsLibraryException("There are no running plan templates in the index file.");
@@ -430,17 +433,19 @@ public class TemplateLoader {
                 // import the templates determined via the index
                 for (RunningPlanTemplateFile runningPlanTemplateFile : runningPlanTemplateFiles) {
                     // load the respective JSON file of the template
-                    String jsonResourceFileName = Global.JSON_RESOURCES + File.separator + runningPlanTemplateFile.fileName + ".json";
-                    File templateResourceFile = new File(Objects.requireNonNull(getClass()
-                            .getResource(jsonResourceFileName)).getFile());
-                    if (!templateResourceFile.exists()) {
-                        throw new SportsLibraryException("Could not load the resource file for the running plan template "
-                        + jsonResourceFileName
-                        + ".");
+                    String jsonResourceFileName = Global.JSON_RESOURCES
+                            + File.separator
+                            + runningPlanTemplateFile.fileName
+                            + ".json";
+                    InputStream inputStream = this.getClass()
+                            .getClassLoader()
+                            .getResourceAsStream(jsonResourceFileName);
+                    if (inputStream == null) {
+                        throw new SportsLibraryException("Could not load the resource file for running plan template.");
                     }
                     // read a running plan template
                     // convert JSON file to a template object
-                    RunningPlanTemplate runningPlanTemplate = objectMapper.readValue(templateResourceFile, RunningPlanTemplate.class);
+                    RunningPlanTemplate runningPlanTemplate = objectMapper.readValue(inputStream, RunningPlanTemplate.class);
                     // set as template
                     runningPlanTemplate.isTemplate = true;
                     // add to list

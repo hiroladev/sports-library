@@ -11,12 +11,12 @@
 
     <name>Hirola Sports Library</name>
     <description>A java library for sport apps.</description>
-    <url>https://github.com/sports-library</url>
+    <url>https://github.com/hiroladev/sportslibrary</url>
 
     <scm>
-        <connection>scm:git:git://github.com/sports-library.git</connection>
-        <developerConnection>scm:git:ssh://github.com/sports-library.git</developerConnection>
-        <url>https://github.com/hiroladev/sports-library</url>
+        <connection>scm:git:git://github.com/sportslibrary.git</connection>
+        <developerConnection>scm:git:ssh://github.com/sportslibrary.git</developerConnection>
+        <url>https://github.com/hiroladev/sportslibrary</url>
     </scm>
 
     <licenses>
@@ -39,7 +39,7 @@
         <repository>
             <id>github</id>
             <name>GitHub Hiroldev Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/hiroladev/sports-library</url>
+            <url>https://maven.pkg.github.com/hiroladev/sportslibrary</url>
         </repository>
     </distributionManagement>
     <!--

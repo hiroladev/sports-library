@@ -39,7 +39,7 @@ class SportsLibraryTest {
             RunningPlan runningPlan = (RunningPlan) runningPlans.get(0);
             assertNotNull(runningPlan);
             assertTrue(runningPlan.isTemplate());
-            // only 1 user must be exist
+            // only one user must be existed
             List<? extends PersistentObject> users = dataRepository.findAll(User.class);
             assertEquals(users.size(), 1, "More than a user.");
 
