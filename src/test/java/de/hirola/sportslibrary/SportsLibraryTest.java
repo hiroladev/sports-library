@@ -23,7 +23,6 @@ class SportsLibraryTest {
 
     SportsLibrary sportsLibrary;
     DataRepository dataRepository;
-    LogManager logManager = LogManager.getInstance(Global.LIBRARY_PACKAGE_NAME, true);
 
     @Test
     void testLibrary() {

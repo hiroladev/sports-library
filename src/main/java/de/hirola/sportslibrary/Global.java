@@ -3,6 +3,7 @@ package de.hirola.sportslibrary;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.model.*;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +25,18 @@ public final class Global {
     /**
      * Name of library, used as name for database and logging files.
      */
-    public static final String LIBRARY_PACKAGE_NAME = "de.hirola.sports-library";
+    public static final String LIBRARY_PACKAGE_NAME = "de.hirola.sportslibrary";
+
+    public static String JSON_RESOURCES = "json";
+    public static String MOVEMENT_TYPES_JSON_RESOURCES = "json"
+            + File.separator
+            + "movement-types.json";
+    public static String TRAINING_TYPES_JSON_RESOURCES = "json"
+            + File.separator
+            + "training-types.json";
+    public static String RUNNING_PLAN_TEMPLATE_INDEX_JSON_RESOURCES = "json"
+            + File.separator
+            + "index-of-templates.json";
 
     /**
      * A list of all types handled by the database.
