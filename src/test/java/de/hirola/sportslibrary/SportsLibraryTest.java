@@ -42,6 +42,9 @@ class SportsLibraryTest {
         } catch (InstantiationException exception) {
             fail(exception.getMessage());
         }
+
+        // delete all objects
+        sportsLibrary.clearAll();
     }
 
     @Test
@@ -69,7 +72,7 @@ class SportsLibraryTest {
             UUID trackUUID = track.getUUID();
 
             // create a training with track
-            Training training = new Training("Training", null, null, trackUUID, null);
+            Training training = new Training("Training", null, null, null , trackUUID);
 
             // add all objects
             sportsLibrary.add(runningPlan);
@@ -313,7 +316,7 @@ class SportsLibraryTest {
             sportsLibrary.add(track);
 
             // create a training with track
-            Training training = new Training("Test-Training", null, null, trackUUID, null);
+            Training training = new Training("Test-Training", null, null, null, trackUUID);
             UUID trainingUUID = training.getUUID();
             UUID trainingTypeUUID = training.getTrainingTypeUUID();
             // add only the training
@@ -534,16 +537,15 @@ class SportsLibraryTest {
     void testLogging() {
         try {
             File loggingDirectory = initializeLibraryDirectory();
-            LogManager logManager = LogManager.getInstance(loggingDirectory, true);
-            assertTrue(logManager.isDebugMode());
-            Logger.debug("Debug log entry.");
-            List<LogManager.LogContent> logContentList = logManager.getLogContent();
+            sportsLibrary = SportsLibrary.getInstance(loggingDirectory, null);
+            assertTrue(sportsLibrary.isDebugMode());
+            sportsLibrary.debug("Test log");
+            List<LogManager.LogContent> logContentList = sportsLibrary.getLogContent();
             assertNotNull(logContentList, "Exception while getting the content of logfile.");
-            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
             for (LogManager.LogContent logContent : logContentList) {
                 System.out.println(logContent.creationDate + " - " + logContent.contentString);
             }
-        } catch (SportsLibraryException exception) {
+        } catch (InstantiationException | SportsLibraryException exception) {
             fail(exception.getMessage());
         }
     }

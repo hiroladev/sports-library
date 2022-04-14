@@ -27,8 +27,8 @@ import java.util.*;
 final class LogManager {
 
     private static LogManager instance;
-    private boolean isDebugMode;
-    private String logDirString;
+    private final File loggingDirectoy;
+    private final boolean isDebugMode;
     private boolean isLoggingEnabled;
 
     /**
@@ -77,7 +77,7 @@ final class LogManager {
         if (isLoggingEnabled) {
             List<LogContent> logContentList = new ArrayList<>();
             Collection<File> logFiles = FileUtils.listFiles(
-                    new File(logDirString),
+                    loggingDirectoy,
                     new String[]{"log"},
                     false);
             for (File logFile : logFiles) {
@@ -112,10 +112,12 @@ final class LogManager {
         return null;
     }
 
-    private LogManager(@NotNull File logDirectoy, boolean isDebugMode) {
+    private LogManager(@NotNull File loggingDirectoy, boolean isDebugMode) {
+        this.loggingDirectoy = loggingDirectoy;
+        this.isDebugMode = isDebugMode;
         try {
             // set the property for the rolling file logger
-            System.setProperty("tinylog.directory", logDirectoy.getPath());
+            System.setProperty("tinylog.directory", loggingDirectoy.getPath());
         } catch (SecurityException exception) {
             isLoggingEnabled = false;
         }
