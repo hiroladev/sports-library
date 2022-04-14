@@ -4,17 +4,18 @@ import de.hirola.sportslibrary.database.DataRepository;
 import de.hirola.sportslibrary.database.DatabaseManager;
 import de.hirola.sportslibrary.database.DatastoreDelegate;
 import de.hirola.sportslibrary.database.PersistentObject;
-import de.hirola.sportslibrary.model.TrainingType;
-import de.hirola.sportslibrary.model.UUID;
-import de.hirola.sportslibrary.model.User;
+import de.hirola.sportslibrary.model.*;
 import de.hirola.sportslibrary.util.LogManager;
+import de.hirola.sportslibrary.util.RunningPlanTemplate;
 import de.hirola.sportslibrary.util.TemplateLoader;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -29,6 +30,7 @@ import java.util.List;
  */
 public final class SportsLibrary implements DatastoreDelegate {
 
+    private final LogManager logManager;
     private final DataRepository dataRepository;
     private List<DatastoreDelegate> delegates;
     private final User appUser;
@@ -43,8 +45,8 @@ public final class SportsLibrary implements DatastoreDelegate {
      */
     public SportsLibrary(@NotNull String packageName,
                          @Nullable SportsLibraryApplication application) throws SportsLibraryException {
-        // logManager
-        LogManager logManager = LogManager.getInstance(packageName, Global.DEBUG_MODE);
+        // initialize the logManager
+        logManager = LogManager.getInstance(packageName, Global.DEBUG_MODE);
         // lokalen Datenspeicher mit dem Namen der App anlegen / öffnen
         DatabaseManager databaseManager = DatabaseManager.getInstance(packageName, logManager);
         dataRepository = new DataRepository(databaseManager, this, logManager);
@@ -146,6 +148,52 @@ public final class SportsLibrary implements DatastoreDelegate {
             return null;
         }
         return results.get(0).getUUID();
+    }
+
+    /**
+     * Returns a list of all available movement types.
+     * If an error occurred or not types could be found, the list is empty.
+     *
+     * @return A list of all available movement types.
+     */
+    public List<MovementType> getMovementTypes() {
+        List<MovementType> movementTypes = new ArrayList<>();
+        List<? extends PersistentObject> persistentObjects = dataRepository.findAll(MovementType.class);
+        if (persistentObjects.isEmpty()) {
+            return movementTypes;
+        }
+        for (PersistentObject persistentObject : persistentObjects) {
+            if (persistentObject instanceof MovementType) {
+                movementTypes.add((MovementType) persistentObject);
+            }
+        }
+        return movementTypes;
+    }
+
+    /**
+     * Load a running plan from a json file.
+     * The return value is null if the<BR>
+     * <ul>
+     *      <li>file does not exist</li>
+     *      <li>file contains not a valid json with a running plan</li>
+     *      <li>file could not be read</li>
+     * </ul>
+     */
+    @Nullable
+    public RunningPlan loadFromJSON(@NotNull File jsonFile) {
+        return null;
+    }
+
+    /**
+     * Export a given running plan to a json file.
+     *
+     * @param runningPlan to be exported.
+     * @param exportDir for the JSON export
+     * @throws SportsLibraryException if the file could not be exported
+     */
+    public void exportToJSON(@NotNull RunningPlan runningPlan, @NotNull File exportDir) throws SportsLibraryException {
+        TemplateLoader templateLoader = new TemplateLoader(dataRepository, logManager);
+        templateLoader.exportRunningPlanToJSON(runningPlan, exportDir);
     }
 
     @Override

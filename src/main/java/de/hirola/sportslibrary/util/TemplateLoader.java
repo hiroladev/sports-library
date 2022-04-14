@@ -161,23 +161,15 @@ public class TemplateLoader {
      * Exports (saves?) a running plan as a template to a JSON file.
      *
      * @param runningPlan to export or add
-     * @param exportDirPath to the JSON file to export the run plan to
+     * @param exportDir to the JSON file to export the run plan to
      * @throws SportsLibraryException if the file could not be saved or an error occurred during export
      */
-    public void exportRunningPlanToJSON(RunningPlan runningPlan, Path exportDirPath) throws SportsLibraryException {
+    public void exportRunningPlanToJSON(@NotNull RunningPlan runningPlan, @NotNull File exportDir) throws SportsLibraryException {
         try {
-            if (runningPlan == null) {
-                throw new SportsLibraryException("Can't add a null object.");
-            }
-
-            if (exportDirPath == null) {
-                throw new SportsLibraryException("The path must not null.");
-            }
-            // prüfen, ob der Pfad vorhanden und die Datei dort gespeichert werden kann
-            File exportDir = exportDirPath.toFile();
+            // check if the path exists and the file can be saved there
             if (!exportDir.exists() && !exportDir.isDirectory() && !exportDir.canWrite()) {
                 throw new SportsLibraryException("The directory "
-                        + exportDirPath
+                        + exportDir
                         + " doesn't exists or isn't a directory or isn't writable.");
             }
             LocalDate localDate = LocalDate.now();
@@ -186,7 +178,7 @@ public class TemplateLoader {
                     + localDate.format(DateTimeFormatter.ISO_DATE)
                     + ".json";
 
-            Path exportFilePath = Paths.get(exportDirPath.toString(), exportFileName);
+            Path exportFilePath = Paths.get(exportDir.toString(), exportFileName);
             // create object mapper instance
             ObjectMapper ObjectMapper = new ObjectMapper();
             // convert the running plan to JSON file
