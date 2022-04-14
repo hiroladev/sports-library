@@ -1,12 +1,10 @@
 package de.hirola.sportslibrary;
 
-import de.hirola.sportslibrary.database.DataRepository;
-import de.hirola.sportslibrary.database.DatabaseManager;
+import de.hirola.sportslibrary.DataRepository;
+import de.hirola.sportslibrary.DatabaseManager;
 import de.hirola.sportslibrary.database.DatastoreDelegate;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.model.*;
-import de.hirola.sportslibrary.util.LogManager;
-import de.hirola.sportslibrary.util.RunningPlanTemplate;
 import de.hirola.sportslibrary.util.TemplateLoader;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +13,6 @@ import org.tinylog.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -30,66 +27,26 @@ import java.util.List;
  */
 public final class SportsLibrary implements DatastoreDelegate {
 
-    private final LogManager logManager;
+    private static SportsLibrary instance;
     private final DataRepository dataRepository;
+    private final LogManager logManager;
     private List<DatastoreDelegate> delegates;
     private final User appUser;
 
     /**
-     * Create a new library objekt for data management.
+     * Create a singleton library objekt.
      *
-     * @param packageName of app using this library
+     * @param libDirectory for the database and log files of library
      * @param application on Android needed
-     * @throws SportsLibraryException if library could not initialize
-     * @see SportsLibraryApplication
+     * @throws InstantiationException if library could not initialize
      */
-    public SportsLibrary(@NotNull String packageName,
-                         @Nullable SportsLibraryApplication application) throws SportsLibraryException {
-        // initialize the logManager
-        logManager = LogManager.getInstance(packageName, Global.DEBUG_MODE);
-        // lokalen Datenspeicher mit dem Namen der App anlegen / öffnen
-        DatabaseManager databaseManager = DatabaseManager.getInstance(packageName, logManager);
-        dataRepository = new DataRepository(databaseManager, this, logManager);
-        // bei neu angelegtem Datenspeicher diesen mit initialen Werten befüllen
-        if (dataRepository.isEmpty()) {
-            TemplateLoader templateLoader = new TemplateLoader(dataRepository, application, logManager);
-            // alle Templates in Datenspeicher laden
-            templateLoader.loadAllFromJSON();
+    public static SportsLibrary getInstance(@Nullable File libDirectory,
+                                            @Nullable SportsLibraryApplication application)
+            throws InstantiationException {
+        if (instance == null) {
+            instance = new SportsLibrary(libDirectory, application);
         }
-        // create or load the App user
-        List<? extends PersistentObject> users = dataRepository.findAll(User.class);
-        if (users.size() > 1) {
-            // not good
-            if (logManager.isDebugMode()) {
-                Logger.debug("More as one user in the app.");
-            }
-        }
-        if (users.isEmpty()) {
-            // create the App user
-            appUser = new User();
-            dataRepository.add(appUser);
-        } else {
-            // set the App user
-            PersistentObject persistentObject = users.get(0);
-            if (persistentObject instanceof User) {
-                appUser = (User) persistentObject;
-            } else {
-                appUser = new User();
-                if (logManager.isDebugMode()) {
-                    Logger.debug("Couldn't get the user from datastore.");
-                }
-            }
-        }
-    }
-
-    /**
-     * Get the local datastore for the library.
-     *
-     * @return The local datastore for the library
-     * @see DataRepository
-     */
-    public DataRepository getDataRepository() {
-        return dataRepository;
+        return instance;
     }
 
     /**
@@ -151,6 +108,26 @@ public final class SportsLibrary implements DatastoreDelegate {
     }
 
     /**
+     * Returns a list of all available running plans.
+     * If an error occurred or not types could be found, the list is empty.
+     *
+     * @return A list of all available running plans.
+     */
+    public List<RunningPlan> getRunningPlanes() {
+        List<RunningPlan> runningPlans = new ArrayList<>();
+        List<? extends PersistentObject> persistentObjects = dataRepository.findAll(RunningPlan.class);
+        if (persistentObjects.isEmpty()) {
+            return runningPlans;
+        }
+        for (PersistentObject persistentObject : persistentObjects) {
+            if (persistentObject instanceof RunningPlan) {
+                runningPlans.add((RunningPlan) persistentObject);
+            }
+        }
+        return runningPlans;
+    }
+
+    /**
      * Returns a list of all available movement types.
      * If an error occurred or not types could be found, the list is empty.
      *
@@ -168,6 +145,89 @@ public final class SportsLibrary implements DatastoreDelegate {
             }
         }
         return movementTypes;
+    }
+
+    /**
+     * Add a new object.
+     *
+     * @param object to be added
+     * @throws SportsLibraryException if an error occurred while adding
+     */
+    public void add(@NotNull PersistentObject object) throws SportsLibraryException {
+        if  (dataRepository.isOpen()) {
+            dataRepository.add(object);
+        }
+    }
+
+    /**
+     * Save an existing object.
+     *
+     * @param object to be saved
+     * @throws SportsLibraryException if the object not exist or an error occurred while adding
+     */
+    public void update(@NotNull PersistentObject object) throws SportsLibraryException {
+        if  (dataRepository.isOpen()) {
+            dataRepository.update(object);
+        }
+    }
+
+    /**
+     * Removes an existing object from the local datastore.
+     *
+     * @param object to be removed
+     * @throws SportsLibraryException if an error occurred while removing
+     */
+    public void delete(@NotNull PersistentObject object) throws SportsLibraryException {
+        if (dataRepository.isOpen()) {
+            dataRepository.delete(object);
+        }
+    }
+
+    /**
+     * Get an object from given type with given UUID.
+     *
+     * @param withType of object to find
+     * @param uuid of object to find
+     * @return The object from given type and the given UUID or null if the object was not found,
+     *         the datastore is not open or an error occurred while searching.
+     */
+    @Nullable
+    public PersistentObject findByUUID(@NotNull Class<? extends PersistentObject> withType, @NotNull UUID uuid) {
+        if (dataRepository.isOpen()) {
+            return dataRepository.findByUUID(withType, uuid);
+        }
+        return null;
+    }
+
+    /**
+     * Get all objects with a given type. If an error occurred while finding
+     * the objects or the datastore is not open, the list is empty too.
+     *
+     * @param fromType of object to get
+     * @return A list of objects with the given type. The list can be empty.
+     */
+    public List<? extends PersistentObject> findAll(Class<? extends PersistentObject> fromType) {
+        if (dataRepository.isOpen()) {
+            return dataRepository.findAll(fromType);
+        }
+        return new ArrayList<>();
+    }
+
+    /**
+     * Find objects with given name of attribute and value. List can bei empty.
+     *
+     * @param attributeName of object
+     * @param value of attribute
+     * @param fromType of object to find
+     * @return A list of object where the attribute contains the desired value.
+     */
+    public List<? extends PersistentObject> findByAttribute(@NotNull String attributeName,
+                                                            @NotNull Object value,
+                                                            Class<? extends PersistentObject> fromType) {
+        if (dataRepository.isOpen()) {
+            return dataRepository.findByAttribute(attributeName, value, fromType);
+        }
+        return new ArrayList<>();
     }
 
     /**
@@ -192,8 +252,72 @@ public final class SportsLibrary implements DatastoreDelegate {
      * @throws SportsLibraryException if the file could not be exported
      */
     public void exportToJSON(@NotNull RunningPlan runningPlan, @NotNull File exportDir) throws SportsLibraryException {
-        TemplateLoader templateLoader = new TemplateLoader(dataRepository, logManager);
+        TemplateLoader templateLoader = new TemplateLoader(this);
         templateLoader.exportRunningPlanToJSON(runningPlan, exportDir);
+    }
+
+    /**
+     * Delete all objects from the database.
+     */
+    public void clearAll() {
+        if (dataRepository.isOpen()) {
+            dataRepository.clearAll();
+        }
+    }
+
+    /**
+     * Get a flag to determine, whether errors should be logged.
+     * Can only be true, if (file) logging is enabled.
+     *
+     * @return The flag to determine, whether errors should be logged.
+     */
+    public boolean isDebugMode() {
+        return logManager.isDebugMode();
+    }
+
+    /**
+     * Log a given message to the log file.
+     *
+     * @param message to be logged
+     */
+    public void debug(String message) {
+        Logger.debug(message);
+    }
+
+    /**
+     * Log a given message and exception to the log file.
+     *
+     * @param message to be logged
+     * @param exception to be logged
+     */
+    public void debug(String message, Exception exception) {
+        Logger.debug(message, exception);
+    }
+
+    /**
+     * Log a given message and a argument to the log file.
+     *
+     * @param message to be logged
+     * @param argument to be logged
+     */
+    public void debug(String message, Object argument) {
+        Logger.debug(message, argument);
+    }
+
+    /**
+     * Get the content of all log files from the app directory.
+     * The creation date is defined as a key for each log file content.
+     * If logging to file disabled or an error occurred while getting the content from file,
+     * a null value will be returned.
+     *
+     * @return A map containing the creation date and content of each log file.
+     */
+    @Nullable
+    public List<LogManager.LogContent> getLogContent() {
+        if (logManager.isLoggingEnabled()) {
+            return logManager.getLogContent();
+        }
+        return new ArrayList<>();
     }
 
     @Override
@@ -220,6 +344,112 @@ public final class SportsLibrary implements DatastoreDelegate {
             for (DatastoreDelegate delegate : delegates) {
                 delegate.didObjectRemoved(persistentObject);
             }
+        }
+    }
+
+    private SportsLibrary(@Nullable File libraryDirectory,
+                         @Nullable SportsLibraryApplication application) throws InstantiationException {
+        try {
+            // if the parameter is null, set the directory
+            if (libraryDirectory == null) {
+                // the directory is created in the user's home
+                libraryDirectory = initializeLibraryDirectory();
+            }
+            // initialize the logManager
+            logManager = LogManager.getInstance(libraryDirectory, Global.DEBUG_MODE);
+            // lokalen Datenspeicher mit dem Namen der App anlegen / öffnen
+            DatabaseManager databaseManager = DatabaseManager.getInstance(libraryDirectory);
+            dataRepository = new DataRepository(this, databaseManager, this);
+            // bei neu angelegtem Datenspeicher diesen mit initialen Werten befüllen
+            if (dataRepository.isEmpty()) {
+                TemplateLoader templateLoader = new TemplateLoader(this, application);
+                // alle Templates in Datenspeicher laden
+                templateLoader.loadAllFromJSON();
+            }
+            // create or load the App user
+            List<? extends PersistentObject> users = dataRepository.findAll(User.class);
+            if (users.size() > 1) {
+                // not good
+                if (logManager.isDebugMode()) {
+                    Logger.debug("More as one user in the app.");
+                }
+            }
+            if (users.isEmpty()) {
+                // create the App user
+                appUser = new User();
+                dataRepository.add(appUser);
+            } else {
+                // set the App user
+                PersistentObject persistentObject = users.get(0);
+                if (persistentObject instanceof User) {
+                    appUser = (User) persistentObject;
+                } else {
+                    appUser = new User();
+                    if (logManager.isDebugMode()) {
+                        Logger.debug("Couldn't get the user from datastore.");
+                    }
+                }
+            }
+        } catch (SportsLibraryException exception) {
+            throw new InstantiationException(exception.getMessage());
+        }
+    }
+
+    private File initializeLibraryDirectory() throws SportsLibraryException {
+        // build the lib directory name from package name
+        String libraryDirectoryString;
+        File libraryDirectory;
+        String packageName = Global.LIBRARY_PACKAGE_NAME;
+        // build the path, determine if android or jvm
+        // see https://developer.android.com/reference/java/lang/System#getProperties()
+        try {
+            String vendor = System.getProperty("java.vm.vendor"); // can be null
+            if (vendor != null) {
+                if (vendor.equals("The Android Project")) {
+                    // path for local database on Android
+                    libraryDirectoryString = "/data/data"
+                            + File.separatorChar
+                            + packageName;
+                } else {
+                    //  path for local database on JVM
+                    String userHomeDir = System.getProperty("user.home");
+                    libraryDirectoryString = userHomeDir
+                            + File.separatorChar
+                            + packageName;
+                }
+            } else {
+                String errorMessage = "Could not determine the runtime environment.";
+                if (logManager.isDebugMode()) {
+                    Logger.debug(errorMessage);
+                }
+                throw new SportsLibraryException(errorMessage);
+            }
+        } catch (SecurityException exception){
+            String errorMessage = "Could not determine the runtime environment.";
+            if (logManager.isDebugMode()) {
+                Logger.debug(errorMessage, exception);
+            }
+            throw new SportsLibraryException(errorMessage + ": " + exception.getCause().getMessage());
+        }
+        // create the directory object
+        libraryDirectory = new File(libraryDirectoryString);
+        // validate, if the directory exists and can modified
+        if (libraryDirectory.exists()
+                && libraryDirectory.isDirectory()
+                && libraryDirectory.canRead()
+                && libraryDirectory.canExecute()
+                && libraryDirectory.canWrite()) {
+            return libraryDirectory;
+        }
+        // create the directory
+        try {
+            if (libraryDirectory.mkdirs()) {
+                return libraryDirectory;
+            } else {
+                throw new SportsLibraryException("Could not create the directory " + libraryDirectoryString);
+            }
+        } catch (SecurityException exception) {
+            throw new SportsLibraryException("Could not create the directory " + libraryDirectoryString);
         }
     }
 }

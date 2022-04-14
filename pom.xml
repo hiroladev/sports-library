@@ -105,7 +105,7 @@
                             <goal>sign</goal>
                         </goals>
                         <configuration>
-                            <keyname>0xF2C82380</keyname>
+                            <keyname>2C27321780E3F46AA9FD9DCF5C65C3371C5B57A2</keyname>
                         </configuration>
                     </execution>
                 </executions>
@@ -152,7 +152,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.13.2.2</version>
+            <version>2.13.2.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

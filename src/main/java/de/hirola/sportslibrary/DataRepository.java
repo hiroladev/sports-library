@@ -1,10 +1,9 @@
-package de.hirola.sportslibrary.database;
+package de.hirola.sportslibrary;
 
-import de.hirola.sportslibrary.Global;
-import de.hirola.sportslibrary.SportsLibraryException;
+import de.hirola.sportslibrary.database.DatastoreDelegate;
+import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.model.*;
 
-import de.hirola.sportslibrary.util.LogManager;
 import org.dizitart.no2.Nitrite;
 import org.dizitart.no2.exceptions.NotIdentifiableException;
 import org.dizitart.no2.objects.Cursor;
@@ -12,7 +11,6 @@ import org.dizitart.no2.objects.ObjectRepository;
 import org.dizitart.no2.objects.filters.ObjectFilters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.tinylog.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,25 +24,25 @@ import java.util.List;
  * @author Michael Schmidt (Hirola)
  * @since v.0.1
  */
-public final class DataRepository {
+final class DataRepository {
 
     private final int INSERT_ACTION = 0;
     private final int UPDATE_ACTION = 1;
     private final int REMOVE_ACTION = 2;
 
-    private final LogManager logManager;
+    private final SportsLibrary sportsLibrary;
     private final Nitrite database; // we use Nitrite database
     private final DatastoreDelegate delegate;
 
     /**
      * Create the local datastore access layer.
      *
+     * @param sportsLibrary instance
      * @param databaseManager of this library
      * @param delegate to notify on events
-     * @param logManager for data event logging
      */
-    public DataRepository(@NotNull DatabaseManager databaseManager, @NotNull DatastoreDelegate delegate, LogManager logManager) {
-        this.logManager = logManager;
+    public DataRepository(@NotNull SportsLibrary sportsLibrary, @NotNull DatabaseManager databaseManager, @NotNull DatastoreDelegate delegate) {
+        this.sportsLibrary = sportsLibrary;
         this.delegate = delegate;
         database = databaseManager.getDatabase(); // can be null
     }
@@ -178,8 +176,8 @@ public final class DataRepository {
             }
             if (cursor.size() > 1) {
                 // very bad
-                if (logManager.isDebugMode()) {
-                    Logger.debug("findByUUID has more than one result", cursor.size());
+                if (sportsLibrary.isDebugMode()) {
+                    sportsLibrary.debug("findByUUID has more than one result", cursor.size());
                 }
             }
         }
@@ -210,8 +208,8 @@ public final class DataRepository {
      *
      * @param attributeName of object
      * @param value of attribute
-     * @param fromType ob object toe be find
-     * @return A list of object where the attribute contains the desired value. The list can be empty.
+     * @param fromType of object to find
+     * @return A list of object where the attribute contains the desired value.
      */
     public List<? extends PersistentObject> findByAttribute(@NotNull String attributeName,
                                                             @NotNull Object value,
@@ -299,8 +297,8 @@ public final class DataRepository {
             String errorMessage = "Operation "+ action +" with the object from type "
                     + object.getClass().getSimpleName()
                     +" and with id " + object.getUUID() + " failed.";
-            if (logManager.isDebugMode()) {
-                Logger.debug(errorMessage, exception);
+            if (sportsLibrary.isDebugMode()) {
+                sportsLibrary.debug(errorMessage, exception);
             }
             throw new SportsLibraryException(exception);
         }
@@ -331,8 +329,8 @@ public final class DataRepository {
                             rollback(LocationData.class, locationUUIDs);
                             locationUUIDs.clear();
                             String errorMessage = "Location data of new track already exist in the database.";
-                            if (logManager.isDebugMode()) {
-                                Logger.debug(errorMessage);
+                            if (sportsLibrary.isDebugMode()) {
+                                sportsLibrary.debug(errorMessage);
                             }
                             throw new SportsLibraryException(errorMessage);
                         }
@@ -467,8 +465,8 @@ public final class DataRepository {
                                     runningUnitUUIDs.clear();
                                     movementTypeUUIDs.clear();
                                     String errorMessage = "The new running plan contains existing units.";
-                                    if (logManager.isDebugMode()) {
-                                        Logger.debug(errorMessage);
+                                    if (sportsLibrary.isDebugMode()) {
+                                        sportsLibrary.debug(errorMessage);
                                     }
                                     throw new SportsLibraryException(errorMessage);
                                 }
@@ -493,8 +491,8 @@ public final class DataRepository {
                             rollback(RunningUnit.class, runningUnitUUIDs);
                             rollback(MovementType.class, movementTypeUUIDs);
                             String errorMessage = "The new running plan contains existing entries.";
-                            if (logManager.isDebugMode()) {
-                                Logger.debug(errorMessage);
+                            if (sportsLibrary.isDebugMode()) {
+                                sportsLibrary.debug(errorMessage);
                             }
                             throw new SportsLibraryException(errorMessage);
                         }
@@ -586,8 +584,8 @@ public final class DataRepository {
                 }
             }
         } catch (NotIdentifiableException exception) {
-            if (logManager.isDebugMode()) {
-                Logger.debug("Error while rollback.", exception);
+            if (sportsLibrary.isDebugMode()) {
+                sportsLibrary.debug("Error while rollback.", exception);
             }
         }
     }

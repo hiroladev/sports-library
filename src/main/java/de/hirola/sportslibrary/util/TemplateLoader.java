@@ -1,7 +1,7 @@
 package de.hirola.sportslibrary.util;
 
 import de.hirola.sportslibrary.Global;
-import de.hirola.sportslibrary.database.DataRepository;
+import de.hirola.sportslibrary.SportsLibrary;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.SportsLibraryApplication;
 import de.hirola.sportslibrary.SportsLibraryException;
@@ -10,7 +10,6 @@ import de.hirola.sportslibrary.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.tinylog.Logger;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -30,20 +29,15 @@ import java.util.*;
  */
 public class TemplateLoader {
 
-    private final LogManager logManager;
-    private final DataRepository dataRepository;
+    private final SportsLibrary sportsLibrary;
     private final SportsLibraryApplication application; // on Android load json from R.raw
     private final List<RunningPlanTemplate> runningPlanTemplatesImportList;
     private final List<RunningPlan> importedRunningPlans;
     private boolean isRunningOnAndroid;
 
 
-    public TemplateLoader(@NotNull DataRepository dataRepository, @NotNull LogManager logManager) throws SportsLibraryException {
-        if (!dataRepository.isOpen()) {
-            throw new SportsLibraryException("The local datastore is not open. Cannot import templates.");
-        }
-        this.dataRepository = dataRepository;
-        this.logManager = logManager;
+    public TemplateLoader(@NotNull SportsLibrary sportsLibrary) throws SportsLibraryException {
+        this.sportsLibrary = sportsLibrary;
         runningPlanTemplatesImportList = new ArrayList<>();
         importedRunningPlans = new ArrayList<>();
         application = null;
@@ -54,13 +48,9 @@ public class TemplateLoader {
         }
     }
 
-    public TemplateLoader(@NotNull DataRepository dataRepository, @Nullable SportsLibraryApplication application, @NotNull LogManager logManager) throws SportsLibraryException {
-        if (!dataRepository.isOpen()) {
-            throw new SportsLibraryException("The local datastore is not open. Cannot import templates.");
-        }
-        this.dataRepository = dataRepository;
+    public TemplateLoader(@NotNull SportsLibrary sportsLibrary, @Nullable SportsLibraryApplication application) throws SportsLibraryException {
+        this.sportsLibrary = sportsLibrary;
         this.application = application;
-        this.logManager = logManager;
         runningPlanTemplatesImportList = new ArrayList<>();
         importedRunningPlans = new ArrayList<>();
         // determine if android or jvm
@@ -145,7 +135,7 @@ public class TemplateLoader {
      */
     public RunningPlan importRunningPlanFromTemplate(@NotNull RunningPlanTemplate template) throws SportsLibraryException {
         // set running plan at the end of existing plans
-        List<? extends PersistentObject> runningPlans = dataRepository.findAll(RunningPlan.class);
+        List<? extends PersistentObject> runningPlans = sportsLibrary.findAll(RunningPlan.class);
         template.orderNumber = runningPlans.size() + 1;
         // add template to the import list
         runningPlanTemplatesImportList.add(template);
@@ -222,7 +212,7 @@ public class TemplateLoader {
             // Trainingsarten speichern
             try {
                 for (TrainingType trainingType : trainingTypes) {
-                    dataRepository.add(trainingType);
+                    sportsLibrary.add(trainingType);
                 }
             } catch (SportsLibraryException exception) {
                 // TODO: Logging
@@ -265,7 +255,7 @@ public class TemplateLoader {
             // Bewegungsarten speichern
             try {
                 for (MovementType movementType : movementTypes) {
-                    dataRepository.add(movementType);
+                    sportsLibrary.add(movementType);
                 }
             } catch (SportsLibraryException exception) {
                 // TODO: Logging
@@ -285,7 +275,7 @@ public class TemplateLoader {
     // TODO: rollback on error
     private void addRunningPlansFromTemplate() throws SportsLibraryException {
         //  Liste der Bewegungsgarten - notwendig für das Anlegen von Laufplänen
-        List<? extends PersistentObject> listOfObjects = dataRepository.findAll(MovementType.class);
+        List<? extends PersistentObject> listOfObjects = sportsLibrary.findAll(MovementType.class);
         //  Bewegungsarten müssen bereits vorhanden sein, ansonsten können keine Laufpläne angelegt werden
         if (listOfObjects.size() == 0) {
             throw new SportsLibraryException("There are no movement types in local datastore. Try to import movement types first.");
@@ -297,8 +287,8 @@ public class TemplateLoader {
             } catch (ClassCastException exception) {
                 String errorMessage = " The list of movement types contains an object from type "
                         + object.getClass().getSimpleName();
-                if (logManager.isDebugMode()) {
-                    Logger.debug(errorMessage, exception);
+                if (sportsLibrary.isDebugMode()) {
+                    sportsLibrary.debug(errorMessage, exception);
                 }
             }
         }
@@ -328,8 +318,8 @@ public class TemplateLoader {
                                 duration = Integer.parseInt(runningUnitString);
                             } catch (NumberFormatException exception) {
                                 duration = 0;
-                                if (logManager.isDebugMode()) {
-                                    Logger.debug("Duration on running unit was not a number.");
+                                if (sportsLibrary.isDebugMode()) {
+                                    sportsLibrary.debug("Duration on running unit was not a number.");
                                 }
                             }
                         } else {
@@ -367,13 +357,13 @@ public class TemplateLoader {
                         runningPlanTemplate.isTemplate);
                 try {
                     // add the running plan and all related objects
-                    dataRepository.add(runningPlan);
+                    sportsLibrary.add(runningPlan);
                     // add to the imported list
                     importedRunningPlans.add(runningPlan);
                 } catch (SportsLibraryException exception) {
                     String errorMessage = "Error occurred while saving a running plan.";
-                    if (logManager.isDebugMode()) {
-                        Logger.debug(errorMessage, exception);
+                    if (sportsLibrary.isDebugMode()) {
+                        sportsLibrary.debug(errorMessage, exception);
                     }
                     throw new SportsLibraryException(errorMessage + ": " + exception.getMessage());
                 }

@@ -1,4 +1,4 @@
-package de.hirola.sportslibrary.util;
+package de.hirola.sportslibrary;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -24,7 +24,7 @@ import java.util.*;
  * @author Michael Schmidt (Hirola)
  * @since v.0.1
  */
-public final class LogManager {
+final class LogManager {
 
     private static LogManager instance;
     private boolean isDebugMode;
@@ -34,13 +34,13 @@ public final class LogManager {
     /**
      * Get an instance of logger.
      *
-     * @param packageName of the app using this logger
+     * @param loggingDirectoy of the app using this logger
      * @param isDebugMode of logging on or off
      * @return The logger object for logging.
      */
-    public static LogManager getInstance(@NotNull String packageName, boolean isDebugMode) {
+    public static LogManager getInstance(@NotNull File loggingDirectoy, boolean isDebugMode) {
         if (instance == null) {
-            instance = new LogManager(packageName, isDebugMode);
+            instance = new LogManager(loggingDirectoy, isDebugMode);
         }
         return instance;
     }
@@ -112,59 +112,11 @@ public final class LogManager {
         return null;
     }
 
-    private LogManager(@NotNull String packageName, boolean isDebugMode) {
-        // build the database name from package name
-        if (!packageName.contains(".")) {
-            // a primitive check for valid package name
-            isLoggingEnabled = false;
-            this.isDebugMode = false;
-            return;
-        }
-        // build the path, determine if android or jvm
-        // see https://developer.android.com/reference/java/lang/System#getProperties()
+    private LogManager(@NotNull File logDirectoy, boolean isDebugMode) {
         try {
-            String vendor = System.getProperty("java.vm.vendor"); // can be null
-            if (vendor != null) {
-                if (vendor.equals("The Android Project")) {
-                    // path for local database on Android
-                    logDirString = "/data/data"
-                            + File.separatorChar
-                            + packageName;
-                } else {
-                    //  path for local database on JVM
-                    String userHomeDir = System.getProperty("user.home");
-                    logDirString = userHomeDir
-                            + File.separatorChar
-                            + packageName;
-                }
-                this.isDebugMode = isDebugMode;
-
-                try {
-                    // set the property for the rolling file logger
-                    System.setProperty("tinylog.directory", logDirString);
-                } catch (SecurityException exception) {
-                    isLoggingEnabled = false;
-                    return;
-                }
-
-                try {
-                    // create the log dir - if not exists
-                    // TODO: check write access
-                    if (!FileUtils.isDirectory(new File(logDirString))) {
-                        isLoggingEnabled = new File(logDirString).mkdirs();
-                    } else {
-                        isLoggingEnabled = true;
-                    }
-                } catch (SecurityException exception) {
-                    isLoggingEnabled = false;
-                }
-
-            } else {
-                this.isDebugMode = false;
-                isLoggingEnabled = false;
-            }
-        } catch (Exception exception) {
-            this.isDebugMode = false;
+            // set the property for the rolling file logger
+            System.setProperty("tinylog.directory", logDirectoy.getPath());
+        } catch (SecurityException exception) {
             isLoggingEnabled = false;
         }
     }
