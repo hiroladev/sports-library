@@ -27,14 +27,14 @@ public final class Global {
      */
     public static final String LIBRARY_PACKAGE_NAME = "de.hirola.sportslibrary";
 
-    public static String JSON_RESOURCES = "json";
-    public static String MOVEMENT_TYPES_JSON = "json"
+    public static final String JSON_RESOURCES = "json";
+    public static final String MOVEMENT_TYPES_JSON = "json"
             + File.separator
             + "movement-types.json";
-    public static String TRAINING_TYPES_JSON = "json"
+    public static final String TRAINING_TYPES_JSON = "json"
             + File.separator
             + "training-types.json";
-    public static String RUNNING_PLAN_TEMPLATE_INDEX_JSON = "json"
+    public static final String RUNNING_PLAN_TEMPLATE_INDEX_JSON = "json"
             + File.separator
             + "index-of-templates.json";
 

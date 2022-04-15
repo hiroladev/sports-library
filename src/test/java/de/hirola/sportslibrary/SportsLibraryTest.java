@@ -6,7 +6,6 @@ import de.hirola.sportslibrary.model.*;
 import de.hirola.sportslibrary.model.UUID;
 import de.hirola.sportslibrary.util.DateUtil;
 import org.junit.jupiter.api.Test;
-import org.tinylog.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,7 +14,6 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 class SportsLibraryTest {
@@ -143,7 +141,7 @@ class SportsLibraryTest {
             assertNotNull(appUser3, "User not found in database.");
             assertEquals(appUser3.getUUID(), appUser1UUID, "Not the same object.");
             UUID activeRunningPlanUUID = appUser3.getActiveRunningPlanUUID();
-            assertNotEquals("", activeRunningPlanUUID, "Active running plan uuid must be not empty.");
+            assertNotNull(activeRunningPlanUUID, "Active running plan uuid must be not empty.");
             assertEquals(runningPlan1.getUUID(), activeRunningPlanUUID, "User's running plan not saved.");
 
             // test the compare from running plan entry
@@ -587,7 +585,7 @@ class SportsLibraryTest {
         }
         // create the directory object
         libraryDirectory = new File(libraryDirectoryString);
-        // validate, if the directory exists and can modified
+        // validate, if the directory exists and can modify
         if (libraryDirectory.exists()
                 && libraryDirectory.isDirectory()
                 && libraryDirectory.canRead()

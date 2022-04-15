@@ -27,20 +27,20 @@ import java.util.*;
 final class LogManager {
 
     private static LogManager instance;
-    private final File loggingDirectoy;
+    private final File loggingDirectory;
     private final boolean isDebugMode;
     private boolean isLoggingEnabled;
 
     /**
      * Get an instance of logger.
      *
-     * @param loggingDirectoy of the app using this logger
+     * @param loggingDirectory of the app using this logger
      * @param isDebugMode of logging on or off
      * @return The logger object for logging.
      */
-    public static LogManager getInstance(@NotNull File loggingDirectoy, boolean isDebugMode) {
+    public static LogManager getInstance(@NotNull File loggingDirectory, boolean isDebugMode) {
         if (instance == null) {
-            instance = new LogManager(loggingDirectoy, isDebugMode);
+            instance = new LogManager(loggingDirectory, isDebugMode);
         }
         return instance;
     }
@@ -77,7 +77,7 @@ final class LogManager {
         if (isLoggingEnabled) {
             List<LogContent> logContentList = new ArrayList<>();
             Collection<File> logFiles = FileUtils.listFiles(
-                    loggingDirectoy,
+                    loggingDirectory,
                     new String[]{"log"},
                     false);
             for (File logFile : logFiles) {
@@ -112,22 +112,23 @@ final class LogManager {
         return null;
     }
 
-    private LogManager(@NotNull File loggingDirectoy, boolean isDebugMode) {
-        this.loggingDirectoy = loggingDirectoy;
-        this.isDebugMode = isDebugMode;
-        try {
-            // set the property for the rolling file logger
-            System.setProperty("tinylog.directory", loggingDirectoy.getPath());
-        } catch (SecurityException exception) {
-            isLoggingEnabled = false;
-        }
-    }
-
     /**
      * A helper class for the content of log files.
      */
     public static final class LogContent {
         public LocalDate creationDate;
         public String contentString;
+    }
+
+    private LogManager(@NotNull File loggingDirectory, boolean isDebugMode) {
+        this.loggingDirectory = loggingDirectory;
+        this.isDebugMode = isDebugMode;
+        try {
+            // set the property for the rolling file logger
+            System.setProperty("tinylog.directory", loggingDirectory.getPath());
+            isLoggingEnabled = true;
+        } catch (SecurityException exception) {
+            isLoggingEnabled = false;
+        }
     }
 }

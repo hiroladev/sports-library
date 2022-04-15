@@ -59,13 +59,13 @@ class DatabaseManager {
                         .disableAutoCompact()
                         .openOrCreate();
 
-        } catch (SportsLibraryException | NitriteIOException exception) {
+        } catch (NitriteIOException exception) {
             throw new SportsLibraryException("Could not determine the runtime environment. Database is null: "
                     + exception.getMessage());
         }
     }
 
-    private String buildDatabasePath(@NotNull File databaseDirectory) throws SportsLibraryException {
+    private String buildDatabasePath(@NotNull File databaseDirectory) {
         // build the database name from package name
         String packageName = Global.LIBRARY_PACKAGE_NAME;
         int beginIndex = packageName.lastIndexOf('.') + 1;

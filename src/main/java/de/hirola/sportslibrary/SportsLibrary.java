@@ -295,7 +295,7 @@ public final class SportsLibrary implements DatastoreDelegate {
     }
 
     /**
-     * Log a given message and a argument to the log file.
+     * Log a given message and an argument to the log file.
      *
      * @param message to be logged
      * @param argument to be logged
@@ -433,7 +433,7 @@ public final class SportsLibrary implements DatastoreDelegate {
         }
         // create the directory object
         libraryDirectory = new File(libraryDirectoryString);
-        // validate, if the directory exists and can modified
+        // validate, if the directory exists and can modify
         if (libraryDirectory.exists()
                 && libraryDirectory.isDirectory()
                 && libraryDirectory.canRead()

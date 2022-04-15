@@ -36,7 +36,7 @@ public class TemplateLoader {
     private boolean isRunningOnAndroid;
 
 
-    public TemplateLoader(@NotNull SportsLibrary sportsLibrary) throws SportsLibraryException {
+    public TemplateLoader(@NotNull SportsLibrary sportsLibrary) {
         this.sportsLibrary = sportsLibrary;
         runningPlanTemplatesImportList = new ArrayList<>();
         importedRunningPlans = new ArrayList<>();
