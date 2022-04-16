@@ -255,6 +255,13 @@ public class TemplateLoader {
             // Bewegungsarten speichern
             try {
                 for (MovementType movementType : movementTypes) {
+                    if (sportsLibrary.isDebugMode()) {
+                        String debugMessage = "Add movement type with name "
+                                + movementType.getName()
+                                + " and pace: "
+                                + movementType.getPace();
+                        sportsLibrary.debug(debugMessage);
+                    }
                     sportsLibrary.add(movementType);
                 }
             } catch (SportsLibraryException exception) {

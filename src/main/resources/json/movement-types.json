@@ -9,78 +9,78 @@
         "key": "LG",
         "speed": 3.0,
         "pace": 20.0,
-        "colorKeyString": "green"
+        "colorKeyString": "blue"
     },
     {
         "key": "ZG",
         "speed": 5.0,
         "pace": 12.0,
-        "colorKeyString": "green"
+        "colorKeyString": "blue"
     },
     {
         "key": "EL",
         "speed": 8.75,
         "pace": 7.06,
-        "colorKeyString": "green"
+        "colorKeyString": "blue"
     },
     {
         "key": "LL",
         "speed": 9.23,
         "pace": 6.3,
-        "colorKeyString": "green"
+        "colorKeyString": "blue"
     },
     {
         "key": "LDL",
         "speed": 10.00,
         "pace": 6.0,
-        "colorKeyString": "green"
+        "colorKeyString": "blue"
     },
     {
         "key": "LODL",
         "speed": 9.23,
         "pace": 6.3,
-        "colorKeyString": "green"
+        "colorKeyString": "blue"
     },
     {
         "key": "ZDL",
         "speed": 12.00,
         "pace": 5.0,
-        "colorKeyString": "green"
+        "colorKeyString": "blue"
     },
     {
         "key": "TDL",
         "speed": 12.00,
         "pace": 5.0,
-        "colorKeyString": "green"
+        "colorKeyString": "blue"
     },
     {
         "key": "L",
         "speed": 10.00,
         "pace": 6.0,
-        "colorKeyString": "green"
+        "colorKeyString": "blue"
     },
     {
         "key": "FL",
         "speed": 10.91,
         "pace": 5.3,
-        "colorKeyString": "green"
+        "colorKeyString": "blue"
     },
     {
         "key": "SL",
         "speed": 12.00,
         "pace": 5.0,
-        "colorKeyString": "green"
+        "colorKeyString": "blue"
     },
     {
         "key": "SSL",
         "speed": 13.33,
         "pace": 4.3,
-        "colorKeyString": "green"
+        "colorKeyString": "blue"
     },
     {
         "key": "SP",
         "speed": 15.00,
         "pace": 4.0,
-        "colorKeyString": "green"
+        "colorKeyString": "blue"
     }
 ]

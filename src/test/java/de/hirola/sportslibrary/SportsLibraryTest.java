@@ -36,7 +36,18 @@ class SportsLibraryTest {
             // only one user must be existed
             List<? extends PersistentObject> users = sportsLibrary.findAll(User.class);
             assertEquals(users.size(), 1, "More than a user.");
-
+            // movement types from json
+            List<MovementType> movementTypes = sportsLibrary.getMovementTypes();
+            assertEquals(14, movementTypes.size());
+            Optional<MovementType> optional = movementTypes
+                    .stream()
+                    .filter(movementType -> movementType.getKey().equals("FL"))
+                    .findFirst();
+            if (optional.isPresent()) {
+                MovementType movementType = optional.get();
+                assertEquals(5.3, movementType.getPace(), "Pace from json import must be 5.3.");
+                assertEquals("blue", movementType.getColorKeyString(),"Color from json import must be blue.");
+            }
         } catch (InstantiationException exception) {
             fail(exception.getMessage());
         } finally {
@@ -375,7 +386,7 @@ class SportsLibraryTest {
             assertEquals("Laufen", movementType1.getName(), "No name for the key was found.");
             // add a new  movement type
             MovementType movementType2 = new MovementType("Y", "red", 0.0, 0.0);
-            assertEquals("[Resource cannot be found]", movementType2.getName());
+            assertEquals("Y", movementType2.getName());
 
             RunningUnit runningUnit1 = new RunningUnit(30, movementType1);
             RunningUnit runningUnit2 = new RunningUnit(5, movementType2);

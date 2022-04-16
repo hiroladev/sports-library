@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'maven-publish'
 
 group 'de.hirola'
-version 'v.0.1-SNAPSHOT'
+version 'v.0.2-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -39,8 +39,8 @@ publishing {
     publications {
         gpr(MavenPublication) {
             groupId = 'de.hirola'
-            artifactId = 'sports-library'
-            version = '0.0.3-SNAPSHOT'
+            artifactId = 'sportslibrary'
+            version = '0.2-SNAPSHOT'
 
             from(components.java)
         }

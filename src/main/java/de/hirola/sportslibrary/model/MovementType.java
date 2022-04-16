@@ -33,11 +33,10 @@ import java.util.Objects;
        @Index(value = "key", type = IndexType.Unique)
 })
 public class MovementType extends PersistentObject {
-
-    private final ApplicationResources applicationResources = ApplicationResources.getInstance();
     @Id
     private String uuid = UUIDFactory.generateUUID();
     private String key;  // token for the type of moving, e.g. L is running, must be unique
+    private transient  String name; // (localized) name for the movement type, not saved in nitrite
     private String colorKeyString; // the color for the token, dynamically on different platforms
     private double speed; // speed of movement type in km/h
     private double pace; // pace of movement type, user defined in relation to the speed
@@ -45,12 +44,7 @@ public class MovementType extends PersistentObject {
     /**
      * Default constructor for reflection and database management.
      */
-    public MovementType() {
-        key = UUIDFactory.generateUUID();
-        this.colorKeyString = Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR;
-        speed = 0.0;
-        pace = 0.0;
-    }
+    public MovementType() {}
 
     /**
      * Creates a movement type object.
@@ -66,6 +60,7 @@ public class MovementType extends PersistentObject {
         this.colorKeyString = Objects.requireNonNullElse(colorKeyString, Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR);
         this.speed = speed;
         this.pace = pace;
+        name = null;
     }
 
     /**
@@ -82,11 +77,21 @@ public class MovementType extends PersistentObject {
      * The localisation is loading from ressource bundle in this
      * library.
      *
-     * @return The Name for the movement type or "undefined",
+     * @return The Name for the movement type or the key,
      *          if not name for the key was found.
      */
     public String getName() {
-        return applicationResources.getString(Global.MOVEMENT_TYPE_KEY_PREFIX + key);
+        if (name == null) {
+            ApplicationResources applicationResources
+                    = ApplicationResources.getInstance();
+            String nameKey = Global.MOVEMENT_TYPE_KEY_PREFIX + key;
+            if (applicationResources.containsKey(nameKey)) {
+                name = applicationResources.getString(nameKey);
+            } else {
+                name = key;
+            }
+        }
+        return name;
     }
 
 
@@ -129,7 +134,7 @@ public class MovementType extends PersistentObject {
     /**
      * Get the pace for the movement type.
      *
-     * @return Pace for the movement type
+     * @return The Pace for the movement type in min / km.
      */
     public double getPace() {
         return pace;
@@ -138,7 +143,7 @@ public class MovementType extends PersistentObject {
     /**
      * Set the pace for the speed of the movement type.
      *
-     * @param pace of movement type
+     * @param pace of movement type in min / km
      */
     public void setPace(double pace) {
         this.pace = pace;
