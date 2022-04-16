@@ -20,13 +20,12 @@ import java.util.Map;
  */
 public final class Global {
 
-    public static final boolean DEBUG_MODE = true;
-
     /**
      * Name of library, used as name for database and logging files.
      */
     public static final String LIBRARY_PACKAGE_NAME = "de.hirola.sportslibrary";
 
+    public static final String MOVEMENT_TYPE_KEY_PREFIX = "movement.type.name.";
     public static final String JSON_RESOURCES = "json";
     public static final String MOVEMENT_TYPES_JSON = "json"
             + File.separator

@@ -1,5 +1,6 @@
 package de.hirola.sportslibrary;
 
+import de.hirola.sportslibrary.util.LogContent;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.jetbrains.annotations.NotNull;
@@ -68,14 +69,13 @@ final class LogManager {
      * Get the content of all log files from the app directory.
      * The creation date is defined as a key for each log file content.
      * If logging to file disabled or an error occurred while getting the content from file,
-     * a null value will be returned.
+     * an empty list will be returned.
      *
-     * @return A map containing the creation date and content of each log file.
+     * @return A list containing all available log files.
      */
-    @Nullable
     public List<LogContent> getLogContent() {
+        List<LogContent> logContentList = new ArrayList<>();
         if (isLoggingEnabled) {
-            List<LogContent> logContentList = new ArrayList<>();
             Collection<File> logFiles = FileUtils.listFiles(
                     loggingDirectory,
                     new String[]{"log"},
@@ -104,20 +104,11 @@ final class LogManager {
                         String message = "Error occurred while getting content from log file.";
                         Logger.debug(message, exception);
                     }
-                    return null;
                 }
             }
             return logContentList;
         }
-        return null;
-    }
-
-    /**
-     * A helper class for the content of log files.
-     */
-    public static final class LogContent {
-        public LocalDate creationDate;
-        public String contentString;
+        return logContentList;
     }
 
     private LogManager(@NotNull File loggingDirectory, boolean isDebugMode) {

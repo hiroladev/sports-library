@@ -1,10 +1,9 @@
 package de.hirola.sportslibrary;
 
-import de.hirola.sportslibrary.DataRepository;
-import de.hirola.sportslibrary.DatabaseManager;
 import de.hirola.sportslibrary.database.DatastoreDelegate;
 import de.hirola.sportslibrary.database.PersistentObject;
 import de.hirola.sportslibrary.model.*;
+import de.hirola.sportslibrary.util.LogContent;
 import de.hirola.sportslibrary.util.TemplateLoader;
 
 import org.jetbrains.annotations.NotNull;
@@ -13,6 +12,7 @@ import org.tinylog.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -40,13 +40,79 @@ public final class SportsLibrary implements DatastoreDelegate {
      * @param application on Android needed
      * @throws InstantiationException if library could not initialize
      */
-    public static SportsLibrary getInstance(@Nullable File libDirectory,
+    public static SportsLibrary getInstance(boolean debugMode,
+                                            @Nullable File libDirectory,
                                             @Nullable SportsLibraryApplication application)
             throws InstantiationException {
         if (instance == null) {
-            instance = new SportsLibrary(libDirectory, application);
+            instance = new SportsLibrary(debugMode, libDirectory, application);
         }
         return instance;
+    }
+
+    /**
+     * Create or get the directory for the app files. If no package name
+     * given, the package name of this library will be used to create or get
+     * the directory.
+     *
+     * @param  packageName of the app using this library
+     * @return A file object which represents the app directory for the app files, e.g. database ad logs.
+     * @throws SportsLibraryException if the directory could not create or used
+     */
+    public static File initializeAppDirectory(@Nullable String packageName) throws SportsLibraryException {
+        // build the lib directory name from package name
+        String libraryDirectoryString;
+        File libraryDirectory;
+        if (packageName == null) {
+            packageName = Global.LIBRARY_PACKAGE_NAME;
+        }
+        // build the path, determine if android or jvm
+        // see https://developer.android.com/reference/java/lang/System#getProperties()
+        try {
+            String vendor = System.getProperty("java.vm.vendor"); // can be null
+            if (vendor != null) {
+                if (vendor.equals("The Android Project")) {
+                    // path for local database on Android
+                    libraryDirectoryString = "/data/data"
+                            + File.separatorChar
+                            + packageName;
+                } else {
+                    //  path for local database on JVM
+                    String userHomeDir = System.getProperty("user.home");
+                    libraryDirectoryString = userHomeDir
+                            + File.separatorChar
+                            + packageName;
+                }
+            } else {
+                String errorMessage = "Could not determine the runtime environment.";
+                Logger.debug(errorMessage);
+                throw new SportsLibraryException(errorMessage);
+            }
+        } catch (SecurityException exception){
+            String errorMessage = "Could not determine the runtime environment.";
+            Logger.debug(errorMessage, exception);
+            throw new SportsLibraryException(errorMessage + ": " + exception.getCause().getMessage());
+        }
+        // create the directory object
+        libraryDirectory = new File(libraryDirectoryString);
+        // validate, if the directory exists and can modify
+        if (libraryDirectory.exists()
+                && libraryDirectory.isDirectory()
+                && libraryDirectory.canRead()
+                && libraryDirectory.canExecute()
+                && libraryDirectory.canWrite()) {
+            return libraryDirectory;
+        }
+        // create the directory
+        try {
+            if (libraryDirectory.mkdirs()) {
+                return libraryDirectory;
+            } else {
+                throw new SportsLibraryException("Could not create the directory " + libraryDirectoryString);
+            }
+        } catch (SecurityException exception) {
+            throw new SportsLibraryException("Could not create the directory " + libraryDirectoryString);
+        }
     }
 
     /**
@@ -108,12 +174,12 @@ public final class SportsLibrary implements DatastoreDelegate {
     }
 
     /**
-     * Returns a list of all available running plans.
+     * Returns a list of all available running plans, sorted by order number.
      * If an error occurred or not types could be found, the list is empty.
      *
-     * @return A list of all available running plans.
+     * @return A list of all available running plans, sorted by order number.
      */
-    public List<RunningPlan> getRunningPlanes() {
+    public List<RunningPlan> getRunningPlans() {
         List<RunningPlan> runningPlans = new ArrayList<>();
         List<? extends PersistentObject> persistentObjects = dataRepository.findAll(RunningPlan.class);
         if (persistentObjects.isEmpty()) {
@@ -124,7 +190,31 @@ public final class SportsLibrary implements DatastoreDelegate {
                 runningPlans.add((RunningPlan) persistentObject);
             }
         }
+        // sort by order number
+        Collections.sort(runningPlans);
         return runningPlans;
+    }
+
+    /**
+     * Returns a list of all saved trainings, sorted by training date.
+     * If an error occurred or not types could be found, the list is empty.
+     *
+     * @return A list of all saved trainings, sorted by training date.
+     */
+    public List<Training> getTrainings() {
+        List<Training> trainings = new ArrayList<>();
+        List<? extends PersistentObject> persistentObjects = dataRepository.findAll(Training.class);
+        if (persistentObjects.isEmpty()) {
+            return trainings;
+        }
+        for (PersistentObject persistentObject : persistentObjects) {
+            if (persistentObject instanceof Training) {
+                trainings.add((Training) persistentObject);
+            }
+        }
+        // sort by training date
+        Collections.sort(trainings);
+        return trainings;
     }
 
     /**
@@ -308,16 +398,25 @@ public final class SportsLibrary implements DatastoreDelegate {
      * Get the content of all log files from the app directory.
      * The creation date is defined as a key for each log file content.
      * If logging to file disabled or an error occurred while getting the content from file,
-     * a null value will be returned.
+     * an empty list will be returned.
      *
-     * @return A map containing the creation date and content of each log file.
+     * @return A list containing all available log files.
      */
-    @Nullable
-    public List<LogManager.LogContent> getLogContent() {
+    public List<LogContent> getLogContent() {
         if (logManager.isLoggingEnabled()) {
             return logManager.getLogContent();
         }
         return new ArrayList<>();
+    }
+
+    /**
+     * Sends all available debug information to ...
+     * Not implemented yet.
+     *
+     * @return <B>True</B> if the information could be sent successfully.
+     */
+    public boolean sendDebugLogs() {
+        return false;
     }
 
     @Override
@@ -347,16 +446,17 @@ public final class SportsLibrary implements DatastoreDelegate {
         }
     }
 
-    private SportsLibrary(@Nullable File libraryDirectory,
-                         @Nullable SportsLibraryApplication application) throws InstantiationException {
+    private SportsLibrary(boolean debugMode,
+                          @Nullable File libraryDirectory,
+                          @Nullable SportsLibraryApplication application) throws InstantiationException {
         try {
             // if the parameter is null, set the directory
             if (libraryDirectory == null) {
                 // the directory is created in the user's home
-                libraryDirectory = initializeLibraryDirectory();
+                libraryDirectory = initializeAppDirectory(Global.LIBRARY_PACKAGE_NAME);
             }
             // initialize the logManager
-            logManager = LogManager.getInstance(libraryDirectory, Global.DEBUG_MODE);
+            logManager = LogManager.getInstance(libraryDirectory, debugMode);
             // lokalen Datenspeicher mit dem Namen der App anlegen / öffnen
             DatabaseManager databaseManager = DatabaseManager.getInstance(libraryDirectory);
             dataRepository = new DataRepository(this, databaseManager, this);
@@ -395,61 +495,4 @@ public final class SportsLibrary implements DatastoreDelegate {
         }
     }
 
-    private File initializeLibraryDirectory() throws SportsLibraryException {
-        // build the lib directory name from package name
-        String libraryDirectoryString;
-        File libraryDirectory;
-        String packageName = Global.LIBRARY_PACKAGE_NAME;
-        // build the path, determine if android or jvm
-        // see https://developer.android.com/reference/java/lang/System#getProperties()
-        try {
-            String vendor = System.getProperty("java.vm.vendor"); // can be null
-            if (vendor != null) {
-                if (vendor.equals("The Android Project")) {
-                    // path for local database on Android
-                    libraryDirectoryString = "/data/data"
-                            + File.separatorChar
-                            + packageName;
-                } else {
-                    //  path for local database on JVM
-                    String userHomeDir = System.getProperty("user.home");
-                    libraryDirectoryString = userHomeDir
-                            + File.separatorChar
-                            + packageName;
-                }
-            } else {
-                String errorMessage = "Could not determine the runtime environment.";
-                if (logManager.isDebugMode()) {
-                    Logger.debug(errorMessage);
-                }
-                throw new SportsLibraryException(errorMessage);
-            }
-        } catch (SecurityException exception){
-            String errorMessage = "Could not determine the runtime environment.";
-            if (logManager.isDebugMode()) {
-                Logger.debug(errorMessage, exception);
-            }
-            throw new SportsLibraryException(errorMessage + ": " + exception.getCause().getMessage());
-        }
-        // create the directory object
-        libraryDirectory = new File(libraryDirectoryString);
-        // validate, if the directory exists and can modify
-        if (libraryDirectory.exists()
-                && libraryDirectory.isDirectory()
-                && libraryDirectory.canRead()
-                && libraryDirectory.canExecute()
-                && libraryDirectory.canWrite()) {
-            return libraryDirectory;
-        }
-        // create the directory
-        try {
-            if (libraryDirectory.mkdirs()) {
-                return libraryDirectory;
-            } else {
-                throw new SportsLibraryException("Could not create the directory " + libraryDirectoryString);
-            }
-        } catch (SecurityException exception) {
-            throw new SportsLibraryException("Could not create the directory " + libraryDirectoryString);
-        }
-    }
 }

@@ -5,6 +5,7 @@ import de.hirola.sportslibrary.model.*;
 
 import de.hirola.sportslibrary.model.UUID;
 import de.hirola.sportslibrary.util.DateUtil;
+import de.hirola.sportslibrary.util.LogContent;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,13 +19,12 @@ import java.util.*;
 
 class SportsLibraryTest {
 
-    SportsLibrary sportsLibrary;
-
     @Test
     void testLibrary() {
+        SportsLibrary sportsLibrary = null;
         try {
             // empty app name
-            sportsLibrary = SportsLibrary.getInstance(null,null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null);
             assertNotNull(sportsLibrary, "Library not initialize.");
             // test the import from the templates
             // exists 4 running plans in local datastore?
@@ -39,16 +39,19 @@ class SportsLibraryTest {
 
         } catch (InstantiationException exception) {
             fail(exception.getMessage());
+        } finally {
+            // delete all objects
+            if (sportsLibrary != null) {
+                sportsLibrary.clearAll();
+            }
         }
-
-        // delete all objects
-        sportsLibrary.clearAll();
     }
 
     @Test
     void testRelations() {
+        SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(null,null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null);
 
             // user has an active running plan
             RunningPlan runningPlan = new RunningPlan();
@@ -112,16 +115,19 @@ class SportsLibraryTest {
 
         } catch (InstantiationException | SportsLibraryException exception) {
             fail(exception.getMessage());
+        } finally {
+            // delete all objects
+            if (sportsLibrary != null) {
+                sportsLibrary.clearAll();
+            }
         }
-
-        // delete all objects
-        sportsLibrary.clearAll();
     }
 
     @Test
     void testObjects() {
+        SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(null,null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null);
 
             // test user
             User appUser1 = sportsLibrary.getAppUser();
@@ -228,10 +234,12 @@ class SportsLibraryTest {
 
         } catch (InstantiationException | SportsLibraryException exception) {
             fail(exception.getMessage());
+        } finally {
+            // delete all objects
+            if (sportsLibrary != null) {
+                sportsLibrary.clearAll();
+            }
         }
-
-        // delete all objects
-        sportsLibrary.clearAll();
     }
 
     @Test
@@ -246,8 +254,9 @@ class SportsLibraryTest {
 
     @Test
     void testTrackAndLocationsCRUD() {
+        SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(null,null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null);
 
             // create a track with locations
             LocationData locationData1 = new LocationData();
@@ -288,16 +297,19 @@ class SportsLibraryTest {
 
         } catch (InstantiationException | SportsLibraryException exception) {
             fail(exception.getMessage());
+        } finally {
+            // delete all objects
+            if (sportsLibrary != null) {
+                sportsLibrary.clearAll();
+            }
         }
-
-        // delete all objects
-        sportsLibrary.clearAll();
     }
 
     @Test
     void testTrackAndTrainingTypeAndTrainingCRUD() {
+        SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(null,null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null);
 
             // create a track with locations
             LocationData locationData1 = new LocationData();
@@ -342,23 +354,28 @@ class SportsLibraryTest {
 
         } catch (InstantiationException | SportsLibraryException exception) {
             fail(exception.getMessage());
+        } finally {
+            // delete all objects
+            if (sportsLibrary != null) {
+                sportsLibrary.clearAll();
+            }
         }
-
-        // delete all objects
-        sportsLibrary.clearAll();
     }
 
     @Test
     void testRunningPlanCRUD() {
+        SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(null,null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null);
 
             // create a running plan
             // this movement type (with the key 'L') already exists!
             // saving th running plan updates an existing object
-            MovementType movementType1 = new MovementType("L", "Running", "red", 5, 5);
+            MovementType movementType1 = new MovementType("L", "red", 5, 5);
+            assertEquals("Laufen", movementType1.getName(), "No name for the key was found.");
             // add a new  movement type
-            MovementType movementType2 = new MovementType("Y", "Yoga", "red", 0.0, 0.0);
+            MovementType movementType2 = new MovementType("Y", "red", 0.0, 0.0);
+            assertEquals("[Resource cannot be found]", movementType2.getName());
 
             RunningUnit runningUnit1 = new RunningUnit(30, movementType1);
             RunningUnit runningUnit2 = new RunningUnit(5, movementType2);
@@ -430,16 +447,19 @@ class SportsLibraryTest {
 
         } catch (InstantiationException | SportsLibraryException exception) {
             fail(exception.getMessage());
+        } finally {
+            // delete all objects
+            if (sportsLibrary != null) {
+                sportsLibrary.clearAll();
+            }
         }
-
-        // delete all objects
-        sportsLibrary.clearAll();
     }
 
     @Test
     void testUser() {
+        SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(null,null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null);
 
             RunningPlan runningPlan1 = (RunningPlan) sportsLibrary.findAll(RunningPlan.class).get(0);
             UUID runningPlan1UUID = runningPlan1.getUUID();
@@ -482,7 +502,7 @@ class SportsLibraryTest {
             assertTrue(unit4.isCompleted());
 
             // with existing data
-            SportsLibrary sportsLibrary5 = SportsLibrary.getInstance(null,null);
+            SportsLibrary sportsLibrary5 = SportsLibrary.getInstance(true,null,null);
 
             User user5 = sportsLibrary.getAppUser();
             assertNotNull(user5);
@@ -497,16 +517,19 @@ class SportsLibraryTest {
 
         } catch (InstantiationException | SportsLibraryException exception) {
             fail(exception.getMessage());
+        } finally {
+            // delete all objects
+            if (sportsLibrary != null) {
+                sportsLibrary.clearAll();
+            }
         }
-
-        // delete all objects
-        sportsLibrary.clearAll();
     }
 
     @Test
     void testTraining() {
+        SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(null,null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null);
 
             List<? extends PersistentObject> trainingTypes = sportsLibrary.findAll(TrainingType.class);
             assertEquals(3, trainingTypes.size(), "The datastore contains no training types.");
@@ -525,26 +548,34 @@ class SportsLibraryTest {
 
         } catch (InstantiationException |SportsLibraryException exception) {
             fail(exception.getMessage());
+        } finally {
+            // delete all objects
+            if (sportsLibrary != null) {
+                sportsLibrary.clearAll();
+            }
         }
-
-        // delete all objects
-        sportsLibrary.clearAll();
     }
 
     @Test
     void testLogging() {
+        SportsLibrary sportsLibrary = null;
         try {
-            File loggingDirectory = initializeLibraryDirectory();
-            sportsLibrary = SportsLibrary.getInstance(loggingDirectory, null);
+            File loggingDirectory = SportsLibrary.initializeAppDirectory(Global.LIBRARY_PACKAGE_NAME);
+            sportsLibrary = SportsLibrary.getInstance(true, loggingDirectory, null);
             assertTrue(sportsLibrary.isDebugMode());
             sportsLibrary.debug("Test log");
-            List<LogManager.LogContent> logContentList = sportsLibrary.getLogContent();
+            List<LogContent> logContentList = sportsLibrary.getLogContent();
             assertNotNull(logContentList, "Exception while getting the content of logfile.");
-            for (LogManager.LogContent logContent : logContentList) {
+            for (LogContent logContent : logContentList) {
                 System.out.println(logContent.creationDate + " - " + logContent.contentString);
             }
         } catch (InstantiationException | SportsLibraryException exception) {
             fail(exception.getMessage());
+        } finally {
+            // delete all objects
+            if (sportsLibrary != null) {
+                sportsLibrary.clearAll();
+            }
         }
     }
 
@@ -552,56 +583,5 @@ class SportsLibraryTest {
     void testDateUtils() {
         LocalDate monday = DateUtil.getMondayOfActualWeek();
         assertEquals("MONDAY", monday.getDayOfWeek().toString());
-    }
-
-    private File initializeLibraryDirectory() throws SportsLibraryException {
-        // build the lib directory name from package name
-        String libraryDirectoryString;
-        File libraryDirectory;
-        String packageName = Global.LIBRARY_PACKAGE_NAME;
-        // build the path, determine if android or jvm
-        // see https://developer.android.com/reference/java/lang/System#getProperties()
-        try {
-            String vendor = System.getProperty("java.vm.vendor"); // can be null
-            if (vendor != null) {
-                if (vendor.equals("The Android Project")) {
-                    // path for local database on Android
-                    libraryDirectoryString = "/data/data"
-                            + File.separatorChar
-                            + packageName;
-                } else {
-                    //  path for local database on JVM
-                    String userHomeDir = System.getProperty("user.home");
-                    libraryDirectoryString = userHomeDir
-                            + File.separatorChar
-                            + packageName;
-                }
-            } else {
-                throw new SportsLibraryException("Could not determine the runtime environment.");
-            }
-        } catch (SecurityException exception){
-            String errorMessage = "Could not determine the runtime environment.";
-            throw new SportsLibraryException(errorMessage + ": " + exception.getCause().getMessage());
-        }
-        // create the directory object
-        libraryDirectory = new File(libraryDirectoryString);
-        // validate, if the directory exists and can modify
-        if (libraryDirectory.exists()
-                && libraryDirectory.isDirectory()
-                && libraryDirectory.canRead()
-                && libraryDirectory.canExecute()
-                && libraryDirectory.canWrite()) {
-            return libraryDirectory;
-        }
-        // create the directory
-        try {
-            if (libraryDirectory.mkdirs()) {
-                return libraryDirectory;
-            } else {
-                throw new SportsLibraryException("Could not create the directory " + libraryDirectoryString);
-            }
-        } catch (SecurityException exception) {
-            throw new SportsLibraryException("Could not create the directory " + libraryDirectoryString);
-        }
     }
 }

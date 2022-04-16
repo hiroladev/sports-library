@@ -105,7 +105,7 @@
                             <goal>sign</goal>
                         </goals>
                         <configuration>
-                            <keyname>2C27321780E3F46AA9FD9DCF5C65C3371C5B57A2</keyname>
+                            <keyname>F2C82380</keyname>
                         </configuration>
                     </execution>
                 </executions>
