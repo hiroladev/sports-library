@@ -12,7 +12,7 @@ import de.hirola.sportslibrary.database.PersistentObject;
  * @since v.0.1
  */
 public interface DatastoreDelegate {
-    void didObjectAdded(PersistentObject persistentObject);
-    void didObjectUpdated(PersistentObject persistentObject);
-    void didObjectRemoved(PersistentObject persistentObject);
+    default void didObjectAdded(PersistentObject persistentObject) {}
+    default void didObjectUpdated(PersistentObject persistentObject) {}
+    default void didObjectRemoved(PersistentObject persistentObject) {}
 }
