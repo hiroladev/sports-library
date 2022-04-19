@@ -58,30 +58,73 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
     }
 
     /**
-     * Get the (rounded) percentage of completed training sessions.
+     * Get the day (number) of training.
+     * The 1 represents the monday and the 7 the sunday
+     * of a week.
      *
-     * @return The (rounded) percentage of completed training sessions
+     * @return The number of day in the week for the training.
      */
     public int getDay() {
         return day;
     }
 
     /**
-     * Get the (rounded) percentage of completed training sessions.
+     * Set the day (number) of training.
+     * The 1 represents the monday and the 7 the sunday
+     * of a week.
+     * If a number less than zero or greater than 7, the 1
+     * is set as day.
      *
-     * @return The (rounded) percentage of completed training sessions
+     * @param day number of day in the week for the training
+     */
+    public void setDay(int day) {
+        if (day < 1 || day > 7) {
+            this.day = 1;
+        } else {
+            this.day = day;
+        }
+    }
+
+    /**
+     * Get the week (number) of training.
+     *
+     * @return The number of week for the training.
      */
     public int getWeek() {
         return week;
     }
 
     /**
-     * Get the (rounded) percentage of completed training sessions.
+     * Set the week (number) of training.
+     * If the week number less than zero or greater than 52,
+     * the 1 is set as week.
      *
-     * @return The (rounded) percentage of completed training sessions
+     * @param week number of week for the training
+     */
+    public void setWeek(int week) {
+        if (week < 1 || week > 52) {
+            this.week = 1;
+        } else {
+            this.week = week;
+        }
+    }
+
+    /**
+     * Get a list of all running units of this entry.
+     *
+     * @return A list of all running units of this entry.
      */
     public List<RunningUnit> getRunningUnits() {
         return runningUnits;
+    }
+
+    /**
+     * Get a list of all running units of this entry.
+     *
+     * @param runningUnits of this entry.
+     */
+    public void setRunningUnits(@NotNull List<RunningUnit> runningUnits) {
+        this.runningUnits = runningUnits;
     }
 
     /**
@@ -176,8 +219,6 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
     public UUID getUUID() {
         return new UUID(uuid);
     }
-
-    
 
     @Override
     public int compareTo(@NotNull RunningPlanEntry other) {
