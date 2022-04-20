@@ -5,18 +5,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.hirola</groupId>
-    <artifactId>sportslibrary</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <artifactId>sportsapplications</artifactId>
+    <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Hirola Sports Library</name>
     <description>A java library for sport apps.</description>
-    <url>https://github.com/hiroladev/sportslibrary</url>
+    <url>https://github.com/hiroladev/sportsapplications</url>
 
     <scm>
-        <connection>scm:git:git://github.com/sportslibrary.git</connection>
-        <developerConnection>scm:git:ssh://github.com/sportslibrary.git</developerConnection>
-        <url>https://github.com/hiroladev/sportslibrary</url>
+        <connection>scm:git:git://github.com/sportsapplications.git</connection>
+        <developerConnection>scm:git:ssh://github.com/sportsapplicationsy.git</developerConnection>
+        <url>https://github.com/hiroladev/sportsapplications</url>
     </scm>
 
     <licenses>
@@ -34,26 +34,25 @@
             <organizationUrl>https://www.hirola.de</organizationUrl>
         </developer>
     </developers>
-
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <name>GitHub Hiroldev Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/hiroladev/sportslibrary</url>
-        </repository>
-    </distributionManagement>
+   <distributionManagement>
+       <repository>
+           <id>github</id>
+           <name>GitHub Hiroldev Apache Maven Packages</name>
+           <url>https://maven.pkg.github.com/hiroladev/sportsapplications</url>
+       </repository>
+   </distributionManagement>
     <!--
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
-    -->
+<distributionManagement>
+    <snapshotRepository>
+        <id>ossrh</id>
+        <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+        <id>ossrh</id>
+        <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+</distributionManagement>
+-->
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
@@ -109,8 +108,7 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <!--
+            </plugin><!--
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
@@ -121,8 +119,7 @@
                     <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
-            </plugin>
-            -->
+            </plugin> -->
         </plugins>
     </build>
 
@@ -155,6 +152,12 @@
             <version>2.13.2.2</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.13.2</version>
+        </dependency>
+
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
