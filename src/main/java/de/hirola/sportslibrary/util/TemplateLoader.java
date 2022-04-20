@@ -151,28 +151,21 @@ public class TemplateLoader {
      * Exports (saves?) a running plan as a template to a JSON file.
      *
      * @param runningPlan to export or add
-     * @param exportDir to the JSON file to export the run plan to
+     * @param jsonFile to export the running plan
      * @throws SportsLibraryException if the file could not be saved or an error occurred during export
      */
-    public void exportRunningPlanToJSON(@NotNull RunningPlan runningPlan, @NotNull File exportDir) throws SportsLibraryException {
+    public void exportRunningPlanToJSON(@NotNull RunningPlan runningPlan, @NotNull File jsonFile) throws SportsLibraryException {
         try {
             // check if the path exists and the file can be saved there
-            if (!exportDir.exists() && !exportDir.isDirectory() && !exportDir.canWrite()) {
-                throw new SportsLibraryException("The directory "
-                        + exportDir
-                        + " doesn't exists or isn't a directory or isn't writable.");
+            if (!jsonFile.exists() && !jsonFile.isDirectory() && !jsonFile.canWrite()) {
+                throw new SportsLibraryException("The file "
+                        + jsonFile
+                        + " does not exists or is a directory or is not writable.");
             }
-            LocalDate localDate = LocalDate.now();
-            String exportFileName = runningPlan.getName().toLowerCase(Locale.ROOT) +
-                    "+ export-"
-                    + localDate.format(DateTimeFormatter.ISO_DATE)
-                    + ".json";
-
-            Path exportFilePath = Paths.get(exportDir.toString(), exportFileName);
             // create object mapper instance
             ObjectMapper ObjectMapper = new ObjectMapper();
             // convert the running plan to JSON file
-            ObjectMapper.writeValue(exportFilePath.toFile(),runningPlan);
+            ObjectMapper.writeValue(jsonFile, runningPlan);
         } catch (SecurityException | IOException exception) {
             // TODO: Logging
             String errorMessage = "Error occurred while exporting running plans: ".concat(exception.getMessage());
