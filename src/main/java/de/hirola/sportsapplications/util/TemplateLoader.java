@@ -106,21 +106,19 @@ public class TemplateLoader {
     /**
      * Load a plan template to create (complex) plan objects from a json file.
      *
-     * @param jsonInputStream to the template file
-     * @return A template object to create a running plan
+     * @param jsonFile with the template
+     * @return A template object to create a running plan.
      * @throws SportsLibraryException if the template was not found or could not be loaded successfully
      * @see RunningPlanTemplate
      */
-    public RunningPlanTemplate loadRunningPlanTemplateFromJSON(@NotNull InputStream jsonInputStream) throws SportsLibraryException {
-        // aus JSON Objekte erstellen
+    public RunningPlan loadRunningPlanFromJSON(@NotNull File jsonFile) throws SportsLibraryException {
         try {
             // create ObjectMapper instance
             ObjectMapper objectMapper = new ObjectMapper();
-            // convert a JSON to a running plan templates
-            // add to the local list of running plans
-            return objectMapper.readValue(jsonInputStream, RunningPlanTemplate.class);
+            // convert a JSON to a running plan template
+            RunningPlanTemplate template = objectMapper.readValue(jsonFile, RunningPlanTemplate.class);
+            return createRunningPlanFromTemplate(template);
         } catch (IOException exception) {
-            // TODO: Logging
             String errorMessage = "Error occurred while parsing json of running plan template: "
                     + exception;
             throw new SportsLibraryException(errorMessage);
@@ -128,24 +126,25 @@ public class TemplateLoader {
     }
 
     /**
-     * Create a running plan from a plan template object.
-     * @param template for the running plan
-     * @return A running plan, create from a template object
-     * @throws SportsLibraryException if the running plan could not create from template object
-     * @see RunningPlan
+     * Load a plan template to create (complex) plan objects from an input stream.
+     *
+     * @param jsonInputStream to the template file
+     * @return A template object to create a running plan.
+     * @throws SportsLibraryException if the template was not found or could not be loaded successfully
+     * @see RunningPlanTemplate
      */
-    public RunningPlan importRunningPlanFromTemplate(@NotNull RunningPlanTemplate template) throws SportsLibraryException {
-        // set running plan at the end of existing plans
-        List<? extends PersistentObject> runningPlans = sportsLibrary.findAll(RunningPlan.class);
-        template.orderNumber = runningPlans.size() + 1;
-        // add template to the import list
-        runningPlanTemplatesImportList.add(template);
-        // add template to local datastore
-        addRunningPlansFromTemplate();
-        if (importedRunningPlans.size() == 1) {
-            return importedRunningPlans.get(0);
+    public RunningPlan loadRunningPlanFromJSON(@NotNull InputStream jsonInputStream) throws SportsLibraryException {
+        try {
+            // create ObjectMapper instance
+            ObjectMapper objectMapper = new ObjectMapper();
+            // convert a JSON to a running plan
+            RunningPlanTemplate template = objectMapper.readValue(jsonInputStream, RunningPlanTemplate.class);
+            return createRunningPlanFromTemplate(template);
+        } catch (IOException exception) {
+            String errorMessage = "Error occurred while parsing json of running plan template: "
+                    + exception;
+            throw new SportsLibraryException(errorMessage);
         }
-        throw new SportsLibraryException("More than one template was imported.");
     }
 
     /**
@@ -186,6 +185,20 @@ public class TemplateLoader {
             // TODO: Logging
             String errorMessage = "Error occurred while exporting running plans: ".concat(exception.getMessage());
             throw new SportsLibraryException(errorMessage);
+        }
+    }
+
+    // convert a template to a running plan and add it to the data store
+    private void importRunningPlanFromTemplate(@NotNull RunningPlanTemplate template) throws SportsLibraryException {
+        // set running plan at the end of existing plans
+        List<? extends PersistentObject> runningPlans = sportsLibrary.findAll(RunningPlan.class);
+        template.orderNumber = runningPlans.size() + 1;
+        // add template to the import list
+        runningPlanTemplatesImportList.add(template);
+        // add template to local datastore
+        addRunningPlansFromTemplate();
+        if (importedRunningPlans.size() > 1) {
+            throw new SportsLibraryException("More than one template was imported.");
         }
     }
 
@@ -276,90 +289,14 @@ public class TemplateLoader {
         }
     }
 
-    //  Laden von Laufplänen aus Vorlagen (JSON) und Ablegen im Datenspeicher
-    // TODO: rollback on error
+    // create running plans from template and add these to the data store
     private void addRunningPlansFromTemplate() throws SportsLibraryException {
-        //  Liste der Bewegungsgarten - notwendig für das Anlegen von Laufplänen
-        List<? extends PersistentObject> listOfObjects = sportsLibrary.findAll(MovementType.class);
-        //  Bewegungsarten müssen bereits vorhanden sein, ansonsten können keine Laufpläne angelegt werden
-        if (listOfObjects.size() == 0) {
-            throw new SportsLibraryException("There are no movement types in local datastore. Try to import movement types first.");
-        }
-        List<MovementType> movementTypes = new ArrayList<>();
-        for (PersistentObject object : listOfObjects) {
-            try {
-                movementTypes.add((MovementType) object);
-            } catch (ClassCastException exception) {
-                String errorMessage = " The list of movement types contains an object from type "
-                        + object.getClass().getSimpleName();
-                if (sportsLibrary.isDebugMode()) {
-                    sportsLibrary.debug(errorMessage, exception);
-                }
-            }
-        }
-        // Laden der Laufpläne aus JSON
+        // load the templates from json
         loadRunningPlanTemplates();
         //  Templates in Laufpläne umwandeln
         if (runningPlanTemplatesImportList.size() > 0) {
-            for (RunningPlanTemplate runningPlanTemplate : runningPlanTemplatesImportList) {
-                //  aus einer Vorlage einen Laufplan anlegen
-                //  jeder Laufplan enthält für die Wochen und Tage jeweils einen
-                //  Trainingsabschnitt "2:L;3:LG;2:L;3:LG;2:L;3:LG;2:L;3:LG;2:L;3:LG" (unit)
-                ArrayList<RunningPlanEntry> runningPlanEntries = new ArrayList<>();
-                for (RunningPlanTemplateUnit unit : runningPlanTemplate.trainingUnits) {
-                    //  aus String-Array ["20", "ZG"] die einzelnen Elemente extrahieren
-                    //  gerade = Zeit, ungerade = Art der Bewegung, 0,1,2,3
-                    ArrayList<RunningUnit> runningUnits = new ArrayList<>();
-                    //  Bewegungsart über Schlüssel suchen
-                    MovementType movementType = null;
-                    int duration = 0;
-                    int index = 0;
-                    Iterator<String> runningUnitStringsIterator = Arrays.stream(unit.units).iterator();
-                    while (runningUnitStringsIterator.hasNext()) {
-                        String runningUnitString = runningUnitStringsIterator.next();
-                        if ((index % 2) == 0) {
-                            //  gerade Zahl -> Dauer
-                            try {
-                                duration = Integer.parseInt(runningUnitString);
-                            } catch (NumberFormatException exception) {
-                                duration = 0;
-                                if (sportsLibrary.isDebugMode()) {
-                                    sportsLibrary.debug("Duration on running unit was not a number.");
-                                }
-                            }
-                        } else {
-                            //  über das Kürzel nach der Bewegungsart suchen
-                            for (MovementType type : movementTypes) {
-                                if (type.getKey().equalsIgnoreCase(runningUnitString)) {
-                                    movementType = type;
-                                }
-                            }
-                            //  Bewegungsart nicht gefunden?
-                            if (movementType == null) {
-                                // TODO: Logging, ausführlicher Fehler
-                                // Eine notwendige Bewegungsart (Schlüssel) wurde im Datenspeicher nicht gefunden.
-                                throw new SportsLibraryException("A required movement type (key) wasn't found in import.");
-                            }
-                            //  einen Trainingsabschnitt erstellen
-                            RunningUnit runningUnit = new RunningUnit(duration, movementType);
-                            //  den einzelnen Abschnitt (1:L) zur Trainingseinheit hinzufügen
-                            runningUnits.add(runningUnit);
-                        }
-                        //  Schleifen-Index erhöhen
-                        index += 1;
-                    }
-                    // ein Eintrag im Trainingsplan, also das Training eines Tages
-                    RunningPlanEntry runningPlanEntry = new RunningPlanEntry(unit.day, unit.week, runningUnits);
-                    //  den Trainingsplan-Eintrag zur Liste hinzufügen
-                    runningPlanEntries.add(runningPlanEntry);
-                }
-                //  Laufplan anlegen
-                RunningPlan runningPlan = new RunningPlan(
-                        runningPlanTemplate.name,
-                        runningPlanTemplate.remarks,
-                        runningPlanTemplate.orderNumber,
-                        runningPlanEntries,
-                        runningPlanTemplate.isTemplate);
+            for (RunningPlanTemplate template : runningPlanTemplatesImportList) {
+                RunningPlan runningPlan = createRunningPlanFromTemplate(template);
                 try {
                     // add the running plan and all related objects
                     sportsLibrary.add(runningPlan);
@@ -441,5 +378,83 @@ public class TemplateLoader {
                     + exception;
             throw new SportsLibraryException(errorMessage);
         }
+    }
+
+    // convert a template to a running plan
+    private RunningPlan createRunningPlanFromTemplate(@NotNull RunningPlanTemplate template) throws SportsLibraryException {
+        // list of movement types - necessary for creating route plans
+        List<? extends PersistentObject> listOfObjects = sportsLibrary.findAll(MovementType.class);
+        // Movement types must already exist, otherwise no schedules can be created
+        if (listOfObjects.size() == 0) {
+            throw new SportsLibraryException("There are no movement types in local datastore. Try to import movement types first.");
+        }
+        List<MovementType> movementTypes = new ArrayList<>();
+        for (PersistentObject object : listOfObjects) {
+            try {
+                movementTypes.add((MovementType) object);
+            } catch (ClassCastException exception) {
+                String errorMessage = " The list of movement types contains an object from type "
+                        + object.getClass().getSimpleName();
+                if (sportsLibrary.isDebugMode()) {
+                    sportsLibrary.debug(errorMessage, exception);
+                }
+            }
+        }
+        //  Templates in Laufpläne umwandeln
+        ArrayList<RunningPlanEntry> runningPlanEntries = new ArrayList<>();
+        for (RunningPlanTemplateUnit unit : template.trainingUnits) {
+            //  aus String-Array ["20", "ZG"] die einzelnen Elemente extrahieren
+            //  gerade = Zeit, ungerade = Art der Bewegung, 0,1,2,3
+            ArrayList<RunningUnit> runningUnits = new ArrayList<>();
+            //  Bewegungsart über Schlüssel suchen
+            MovementType movementType = null;
+            int duration = 0;
+            int index = 0;
+            Iterator<String> runningUnitStringsIterator = Arrays.stream(unit.units).iterator();
+            while (runningUnitStringsIterator.hasNext()) {
+                String runningUnitString = runningUnitStringsIterator.next();
+                if ((index % 2) == 0) {
+                    //  gerade Zahl -> Dauer
+                    try {
+                        duration = Integer.parseInt(runningUnitString);
+                    } catch (NumberFormatException exception) {
+                        duration = 0;
+                        if (sportsLibrary.isDebugMode()) {
+                            sportsLibrary.debug("Duration on running unit was not a number.");
+                        }
+                    }
+                } else {
+                    //  über das Kürzel nach der Bewegungsart suchen
+                    for (MovementType type : movementTypes) {
+                        if (type.getKey().equalsIgnoreCase(runningUnitString)) {
+                            movementType = type;
+                        }
+                    }
+                    //  Bewegungsart nicht gefunden?
+                    if (movementType == null) {
+                        // TODO: Logging, ausführlicher Fehler
+                        // Eine notwendige Bewegungsart (Schlüssel) wurde im Datenspeicher nicht gefunden.
+                        throw new SportsLibraryException("A required movement type (key) wasn't found in import.");
+                    }
+                    //  einen Trainingsabschnitt erstellen
+                    RunningUnit runningUnit = new RunningUnit(duration, movementType);
+                    //  den einzelnen Abschnitt (1:L) zur Trainingseinheit hinzufügen
+                    runningUnits.add(runningUnit);
+                }
+                //  Schleifen-Index erhöhen
+                index += 1;
+            }
+            // ein Eintrag im Trainingsplan, also das Training eines Tages
+            RunningPlanEntry runningPlanEntry = new RunningPlanEntry(unit.day, unit.week, runningUnits);
+            //  den Trainingsplan-Eintrag zur Liste hinzufügen
+            runningPlanEntries.add(runningPlanEntry);
+        }
+        //  Laufplan anlegen
+        return new RunningPlan(
+                template.name,
+                template.remarks,
+                template.orderNumber,
+                runningPlanEntries,
+                template.isTemplate);
     }
 }
