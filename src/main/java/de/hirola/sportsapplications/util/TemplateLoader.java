@@ -205,9 +205,7 @@ public class TemplateLoader {
                 // on JVM read JSON from jar resources
                 // searching in folder resources
                 // getting Resource as file object
-                InputStream jsonInputStream = getClass()
-                        .getClassLoader()
-                        .getResourceAsStream(Global.TRAINING_TYPES_JSON);
+                InputStream jsonInputStream = getClass().getResourceAsStream(Global.TRAINING_TYPES_JSON);
                 if (jsonInputStream == null) {
                     throw new SportsLibraryException("Could not load the resource file for training types.");
                 }
@@ -252,9 +250,7 @@ public class TemplateLoader {
                 // on JVM read JSON from jar resources
                 // searching in folder resources
                 // getting Resource as file object
-                InputStream jsonInputStream = getClass()
-                        .getClassLoader()
-                        .getResourceAsStream(Global.MOVEMENT_TYPES_JSON);
+                InputStream jsonInputStream = getClass().getResourceAsStream(Global.MOVEMENT_TYPES_JSON);
                 if (jsonInputStream == null) {
                     throw new SportsLibraryException("Could not load the resource file for movement types.");
                 }
@@ -264,13 +260,6 @@ public class TemplateLoader {
             // Bewegungsarten speichern
             try {
                 for (MovementType movementType : movementTypes) {
-                    if (sportsLibrary.isDebugMode()) {
-                        String debugMessage = "Add movement type with name "
-                                + movementType.getName()
-                                + " and pace: "
-                                + movementType.getPace();
-                        sportsLibrary.debug(debugMessage);
-                    }
                     sportsLibrary.add(movementType);
                 }
             } catch (SportsLibraryException exception) {
@@ -415,9 +404,7 @@ public class TemplateLoader {
                 // on JVM read JSON from jar resources
                 // searching in folder resources
                 // getting Resource as file object
-                InputStream jsonInputStream = getClass()
-                        .getClassLoader()
-                        .getResourceAsStream(Global.RUNNING_PLAN_TEMPLATE_INDEX_JSON);
+                InputStream jsonInputStream = getClass().getResourceAsStream(Global.RUNNING_PLAN_TEMPLATE_INDEX_JSON);
                 if (jsonInputStream == null) {
                     throw new SportsLibraryException("Could not load the resource file for running plan index.");
                 }
@@ -432,12 +419,10 @@ public class TemplateLoader {
                 for (RunningPlanTemplateFile runningPlanTemplateFile : runningPlanTemplateFiles) {
                     // load the respective JSON file of the template
                     String jsonResourceFileName = Global.JSON_RESOURCES
-                            + File.separator
+                            + "/"
                             + runningPlanTemplateFile.fileName
                             + ".json";
-                    InputStream inputStream = this.getClass()
-                            .getClassLoader()
-                            .getResourceAsStream(jsonResourceFileName);
+                    InputStream inputStream = this.getClass().getResourceAsStream(jsonResourceFileName);
                     if (inputStream == null) {
                         throw new SportsLibraryException("Could not load the resource file for running plan template.");
                     }

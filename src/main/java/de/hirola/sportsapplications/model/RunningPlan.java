@@ -163,6 +163,16 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
     }
 
     /**
+     * Set the entries (days) of the plan. Overwrites the existing entries.
+     *
+     * @param entries to be added
+     * @see RunningPlanEntry
+     */
+    public void setEntries(List<RunningPlanEntry> entries) {
+        this.entries = entries;
+    }
+
+    /**
      * Add a training entry to the plan.
      *
      * @param runningPlanEntry to be added
