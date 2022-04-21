@@ -12,47 +12,47 @@ import java.util.List;
  * @author Michael Schmidt (Hirola)
  * @since v.0.1
  */
-public class RunningPlanTemplate {
+public class RunningPlanWrapper {
 
     public String name; // name of the template, becomes the name of running plan
     public String remarks;
     public int orderNumber; // number for the order of the plans
     public boolean isTemplate;
-    public final List<RunningPlanTemplateUnit> trainingUnits;
+    public final List<RunningPlanEntryWrapper> runningEntries;
 
     /**
      * Default constructor for import from json.
      */
-    public RunningPlanTemplate() {
+    public RunningPlanWrapper() {
         this.name = "";
         this.remarks = "";
         this.orderNumber = 0;
         this.isTemplate = false;
-        this.trainingUnits = new ArrayList<>();
+        this.runningEntries = new ArrayList<>();
     }
 
-    public RunningPlanTemplate(String name, String remarks, int orderNumber) {
+    public RunningPlanWrapper(String name, String remarks, int orderNumber) {
         this.name = name;
         this.remarks = remarks;
         this.orderNumber = orderNumber;
         this.isTemplate = false;
-        this.trainingUnits = new ArrayList<>();
+        this.runningEntries = new ArrayList<>();
     }
 
-    public RunningPlanTemplate(String name, String remarks, int orderNumber, List<RunningPlanTemplateUnit> trainingUnits) {
+    public RunningPlanWrapper(String name, String remarks, int orderNumber, List<RunningPlanEntryWrapper> runningEntries) {
         this.name = name;
         this.remarks = remarks;
         this.orderNumber = orderNumber;
         this.isTemplate = true;
-        this.trainingUnits = trainingUnits;
+        this.runningEntries = runningEntries;
     }
 
-    public RunningPlanTemplate(String name, String remarks, int orderNumber, boolean isTemplate, List<RunningPlanTemplateUnit> trainingUnits) {
+    public RunningPlanWrapper(String name, String remarks, int orderNumber, boolean isTemplate, List<RunningPlanEntryWrapper> runningEntries) {
         this.name = name;
         this.remarks = remarks;
         this.orderNumber = orderNumber;
         this.isTemplate = isTemplate;
-        this.trainingUnits = trainingUnits;
+        this.runningEntries = runningEntries;
     }
 
     public void setName(String name) {
@@ -83,7 +83,7 @@ public class RunningPlanTemplate {
         isTemplate = template;
     }
 
-    public List<RunningPlanTemplateUnit> getTrainingUnits() {
-        return trainingUnits;
+    public List<RunningPlanEntryWrapper> getRunningEntries() {
+        return runningEntries;
     }
 }

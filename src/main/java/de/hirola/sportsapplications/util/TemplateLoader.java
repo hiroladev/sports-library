@@ -1,6 +1,6 @@
 package de.hirola.sportsapplications.util;
 
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import de.hirola.sportsapplications.Global;
 import de.hirola.sportsapplications.SportsLibrary;
 import de.hirola.sportsapplications.database.PersistentObject;
@@ -9,7 +9,6 @@ import de.hirola.sportsapplications.SportsLibraryException;
 import de.hirola.sportsapplications.model.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,7 +31,7 @@ public class TemplateLoader {
 
     private final SportsLibrary sportsLibrary;
     private final SportsLibraryApplication application; // on Android load json from R.raw
-    private final List<RunningPlanTemplate> runningPlanTemplatesImportList;
+    private final List<RunningPlanWrapper> runningPlanTemplatesImportList;
     private final List<RunningPlan> importedRunningPlans;
     private boolean isRunningOnAndroid;
 
@@ -109,14 +108,16 @@ public class TemplateLoader {
      * @param jsonFile with the template
      * @return A template object to create a running plan.
      * @throws SportsLibraryException if the template was not found or could not be loaded successfully
-     * @see RunningPlanTemplate
+     * @see RunningPlanWrapper
      */
     public RunningPlan loadRunningPlanFromJSON(@NotNull File jsonFile) throws SportsLibraryException {
         try {
             // create ObjectMapper instance
             ObjectMapper objectMapper = new ObjectMapper();
+            // unrecognized field "xxx" (class xxx), not marked as ignorable
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             // convert a JSON to a running plan template
-            RunningPlanTemplate template = objectMapper.readValue(jsonFile, RunningPlanTemplate.class);
+            RunningPlanWrapper template = objectMapper.readValue(jsonFile, RunningPlanWrapper.class);
             return createRunningPlanFromTemplate(template);
         } catch (IOException exception) {
             String errorMessage = "Error occurred while parsing json of running plan template: "
@@ -131,14 +132,16 @@ public class TemplateLoader {
      * @param jsonInputStream to the template file
      * @return A template object to create a running plan.
      * @throws SportsLibraryException if the template was not found or could not be loaded successfully
-     * @see RunningPlanTemplate
+     * @see RunningPlanWrapper
      */
     public RunningPlan loadRunningPlanFromJSON(@NotNull InputStream jsonInputStream) throws SportsLibraryException {
         try {
             // create ObjectMapper instance
             ObjectMapper objectMapper = new ObjectMapper();
+            // unrecognized field "xxx" (class xxx), not marked as ignorable
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             // convert a JSON to a running plan
-            RunningPlanTemplate template = objectMapper.readValue(jsonInputStream, RunningPlanTemplate.class);
+            RunningPlanWrapper template = objectMapper.readValue(jsonInputStream, RunningPlanWrapper.class);
             return createRunningPlanFromTemplate(template);
         } catch (IOException exception) {
             String errorMessage = "Error occurred while parsing json of running plan template: "
@@ -172,15 +175,8 @@ public class TemplateLoader {
                             + exception.getMessage());
                 }
             }
-            // create object mapper instance
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.registerModule(new JavaTimeModule());
-            objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-            // convert the running plan to JSON file
-            //TODO: format the json, not only serialize
-            String jsonFileContent = objectMapper.writeValueAsString(runningPlan);
-            FileUtils.writeStringToFile(jsonFile, jsonFileContent, StandardCharsets.UTF_8);
+            // write in correct format to the json file
+            FileUtils.writeStringToFile(jsonFile, buildJSONStringFromRunningPlan(runningPlan), StandardCharsets.UTF_8);
         } catch (SecurityException | IOException exception) {
             // TODO: Logging
             String errorMessage = "Error occurred while exporting running plans: ".concat(exception.getMessage());
@@ -189,7 +185,7 @@ public class TemplateLoader {
     }
 
     // convert a template to a running plan and add it to the data store
-    private void importRunningPlanFromTemplate(@NotNull RunningPlanTemplate template) throws SportsLibraryException {
+    private void importRunningPlanFromTemplate(@NotNull RunningPlanWrapper template) throws SportsLibraryException {
         // set running plan at the end of existing plans
         List<? extends PersistentObject> runningPlans = sportsLibrary.findAll(RunningPlan.class);
         template.orderNumber = runningPlans.size() + 1;
@@ -295,7 +291,7 @@ public class TemplateLoader {
         loadRunningPlanTemplates();
         //  Templates in Laufpläne umwandeln
         if (runningPlanTemplatesImportList.size() > 0) {
-            for (RunningPlanTemplate template : runningPlanTemplatesImportList) {
+            for (RunningPlanWrapper template : runningPlanTemplatesImportList) {
                 RunningPlan runningPlan = createRunningPlanFromTemplate(template);
                 try {
                     // add the running plan and all related objects
@@ -330,12 +326,12 @@ public class TemplateLoader {
                 // convert JSON array to list of running plans templates
                 Iterator<InputStream> inputStreamIterator = Arrays.stream(jsonInputStream).iterator();
                 while (inputStreamIterator.hasNext()) {
-                    RunningPlanTemplate runningPlanTemplate =
-                            objectMapper.readValue(inputStreamIterator.next(), RunningPlanTemplate.class);
+                    RunningPlanWrapper runningPlanWrapper =
+                            objectMapper.readValue(inputStreamIterator.next(), RunningPlanWrapper.class);
                     // set as template
-                    runningPlanTemplate.isTemplate = true;
+                    runningPlanWrapper.isTemplate = true;
                     // add a template to the local list of running plans
-                    runningPlanTemplatesImportList.add(runningPlanTemplate);
+                    runningPlanTemplatesImportList.add(runningPlanWrapper);
                 }
             } else {
                 // on JVM read JSON from jar resources
@@ -365,11 +361,11 @@ public class TemplateLoader {
                     }
                     // read a running plan template
                     // convert JSON file to a template object
-                    RunningPlanTemplate runningPlanTemplate = objectMapper.readValue(inputStream, RunningPlanTemplate.class);
+                    RunningPlanWrapper runningPlanWrapper = objectMapper.readValue(inputStream, RunningPlanWrapper.class);
                     // set as template
-                    runningPlanTemplate.isTemplate = true;
+                    runningPlanWrapper.isTemplate = true;
                     // add to list
-                    runningPlanTemplatesImportList.add(runningPlanTemplate);
+                    runningPlanTemplatesImportList.add(runningPlanWrapper);
                 }
             }
         } catch (IOException exception) {
@@ -381,7 +377,7 @@ public class TemplateLoader {
     }
 
     // convert a template to a running plan
-    private RunningPlan createRunningPlanFromTemplate(@NotNull RunningPlanTemplate template) throws SportsLibraryException {
+    private RunningPlan createRunningPlanFromTemplate(@NotNull RunningPlanWrapper template) throws SportsLibraryException {
         // list of movement types - necessary for creating route plans
         List<? extends PersistentObject> listOfObjects = sportsLibrary.findAll(MovementType.class);
         // Movement types must already exist, otherwise no schedules can be created
@@ -402,7 +398,7 @@ public class TemplateLoader {
         }
         //  Templates in Laufpläne umwandeln
         ArrayList<RunningPlanEntry> runningPlanEntries = new ArrayList<>();
-        for (RunningPlanTemplateUnit unit : template.trainingUnits) {
+        for (RunningPlanEntryWrapper unit : template.runningEntries) {
             //  aus String-Array ["20", "ZG"] die einzelnen Elemente extrahieren
             //  gerade = Zeit, ungerade = Art der Bewegung, 0,1,2,3
             ArrayList<RunningUnit> runningUnits = new ArrayList<>();
@@ -410,7 +406,7 @@ public class TemplateLoader {
             MovementType movementType = null;
             int duration = 0;
             int index = 0;
-            Iterator<String> runningUnitStringsIterator = Arrays.stream(unit.units).iterator();
+            Iterator<String> runningUnitStringsIterator = Arrays.stream(unit.runningUnits).iterator();
             while (runningUnitStringsIterator.hasNext()) {
                 String runningUnitString = runningUnitStringsIterator.next();
                 if ((index % 2) == 0) {
@@ -456,5 +452,57 @@ public class TemplateLoader {
                 template.orderNumber,
                 runningPlanEntries,
                 template.isTemplate);
+    }
+
+    private String buildJSONStringFromRunningPlan(@NotNull RunningPlan runningPlan) {
+        StringBuilder stringBuilder = new StringBuilder();
+        // running plan meta data
+        stringBuilder.append("{\n");
+        stringBuilder.append("\"name\": \"");
+        stringBuilder.append(runningPlan.getName());
+        stringBuilder.append("\",\n");
+        stringBuilder.append("\"orderNumber\": \"");
+        stringBuilder.append(runningPlan.getOrderNumber());
+        stringBuilder.append("\",\n");
+        stringBuilder.append("\"remarks\": \"");
+        stringBuilder.append(runningPlan.getRemarks());
+        stringBuilder.append("\",\n");
+        stringBuilder.append("\"runningEntries\": [\n");
+        List<RunningPlanEntry> runningPlanEntries = runningPlan.getEntries();
+        int entryCount = 0;
+        for (RunningPlanEntry entry: runningPlan.getEntries()) {
+            entryCount++;
+            // running plan entries
+            stringBuilder.append("{\n");
+            stringBuilder.append("\"week\": \"");
+            stringBuilder.append(entry.getWeek());
+            stringBuilder.append("\",\n");
+            stringBuilder.append("\"day\": \"");
+            stringBuilder.append(entry.getDay());
+            stringBuilder.append("\",\n");
+            stringBuilder.append("\"runningUnits\": [ ");
+            // running units
+            List<RunningUnit> runningUnits = entry.getRunningUnits();
+            int unitCount = 0;
+            for (RunningUnit runningUnit: runningUnits) {
+                unitCount++;
+                stringBuilder.append("\"");
+                stringBuilder.append(runningUnit.getDuration());
+                stringBuilder.append("\", ");
+                MovementType movementType = runningUnit.getMovementType();
+                stringBuilder.append("\"");
+                stringBuilder.append(movementType.getKey());
+                stringBuilder.append("\"");
+                if (unitCount < runningUnits.size()) {
+                    stringBuilder.append(", ");
+                }
+            }
+            stringBuilder.append(" ]\n}");
+            if (entryCount < runningPlanEntries.size()) {
+                stringBuilder.append(",\n");
+            }
+        }
+        stringBuilder.append("]\n}");
+        return stringBuilder.toString();
     }
 }

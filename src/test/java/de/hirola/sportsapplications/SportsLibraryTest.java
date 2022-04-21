@@ -604,12 +604,39 @@ class SportsLibraryTest {
         try {
             sportsLibrary = SportsLibrary.getInstance(true, null, null);
 
-            RunningPlan runningPlan = (RunningPlan) sportsLibrary.findAll(RunningPlan.class).get(0);
+            RunningPlan runningPlan = (RunningPlan) sportsLibrary.findAll(RunningPlan.class).get(3);
             assertNotNull(runningPlan);
-            String pathName = System.getProperty("user.home") + FileSystems.getDefault().getSeparator() + "test.json";
+            String pathName = System.getProperty("user.home")
+                    + FileSystems.getDefault().getSeparator()
+                    + "RunningPlan-Test.json";
             File jsonFile = new File(pathName);
             TemplateLoader templateLoader = new TemplateLoader(sportsLibrary);
             templateLoader.exportRunningPlanToJSON(runningPlan, jsonFile);
+
+        } catch (Exception exception) {
+            fail(exception.getMessage());
+        } finally {
+            // delete all objects
+            if (sportsLibrary != null) {
+                sportsLibrary.clearAll();
+            }
+        }
+    }
+
+    @Test
+    void testJSONImport() {
+        SportsLibrary sportsLibrary = null;
+        try {
+            sportsLibrary = SportsLibrary.getInstance(true, null, null);
+
+            String pathName = System.getProperty("user.home")
+                    + FileSystems.getDefault().getSeparator()
+                    + "RunningPlan-Test.json";
+            File jsonFile = new File(pathName);
+            TemplateLoader templateLoader = new TemplateLoader(sportsLibrary);
+            RunningPlan runningPlan = templateLoader.loadRunningPlanFromJSON(jsonFile);
+            assertNotNull(runningPlan);
+            assertFalse(runningPlan.getEntries().isEmpty());
 
         } catch (Exception exception) {
             fail(exception.getMessage());
