@@ -13,7 +13,7 @@ import java.util.Date;
  * The actual database do not support add as LocalDate.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  *
  */
 public final class DateUtil {

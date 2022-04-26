@@ -11,7 +11,7 @@ import java.io.InputStream;
  * It's create an Exception with "java.nio.file.FileSystemNotFoundException: Provider "jar" not installed".
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  */
 public interface SportsLibraryApplication {
     InputStream getMovementTypeTemplates();

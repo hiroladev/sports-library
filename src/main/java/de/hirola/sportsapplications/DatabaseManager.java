@@ -15,7 +15,7 @@ import java.io.File;
  * This library use the <a href="https://github.com/nitrite/nitrite-java">Nitrite</a> embedded database.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  */
 class DatabaseManager {
 

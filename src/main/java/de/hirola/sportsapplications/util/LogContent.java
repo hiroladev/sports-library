@@ -9,7 +9,7 @@ import java.time.LocalDate;
  * A helper class for the content of a log file.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  */
 public final class LogContent {
     public LocalDate creationDate;

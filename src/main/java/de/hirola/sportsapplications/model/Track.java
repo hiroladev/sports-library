@@ -24,7 +24,7 @@ import java.util.Objects;
  * A track for trainings. Tracks can be imported or recorded.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  */
 
 public class Track extends PersistentObject {

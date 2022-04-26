@@ -26,7 +26,7 @@ import java.util.Objects;
  * a key in the JSON.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  *
  */
 @Indices({

@@ -13,7 +13,7 @@ import java.util.ResourceBundle;
  * Manager for app resources.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  */
 public final class ApplicationResources
 {

@@ -20,7 +20,7 @@ import java.util.Objects;
  * An object represents the type of training, currently bike and running training.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  *
  */
 @Indices({

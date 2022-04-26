@@ -22,7 +22,7 @@ import java.util.*;
  * A running plan entry cannot exist without a running plan.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  */
 
 public class RunningPlanEntry extends PersistentObject implements Comparable<RunningPlanEntry> {

@@ -22,7 +22,7 @@ import java.util.*;
  * Layer for logging of library. Encapsulated the use of logging tools.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  */
 final class LogManager {
 

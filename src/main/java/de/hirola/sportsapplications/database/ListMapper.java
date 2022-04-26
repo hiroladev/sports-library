@@ -18,7 +18,7 @@ import java.util.List;
  * A helper class to handle lists with embedded objects in the database.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  */
 public final class ListMapper {
 

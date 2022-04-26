@@ -1,22 +1,22 @@
-apply plugin: 'java'
+apply plugin: 'java-library'
 apply plugin: 'maven-publish'
 
 group 'de.hirola'
-version 'v.0.1-SNAPSHOT'
+version '0.1-SNAPSHOT'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation 'org.tinylog:tinylog-impl:2.5.0-M1.1'
-    implementation 'org.tinylog:tinylog-api:2.5.0-M1.1'
-    implementation 'org.dizitart:nitrite:3.4.4'
-    implementation 'org.slf4j:slf4j-simple:1.7.36'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.2'
-    implementation 'org.jetbrains:annotations:23.0.0'
-    implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
+    api 'org.tinylog:tinylog-impl:2.5.0-M1.1'
+    api 'org.tinylog:tinylog-api:2.5.0-M1.1'
+    api 'org.dizitart:nitrite:3.4.4'
+    api 'org.slf4j:slf4j-simple:1.7.36'
+    api 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
+    api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.2'
+    api 'org.jetbrains:annotations:23.0.0'
+    api group: 'commons-io', name: 'commons-io', version: '2.11.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
 }

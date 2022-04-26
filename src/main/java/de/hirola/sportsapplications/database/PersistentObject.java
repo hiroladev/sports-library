@@ -11,7 +11,7 @@ import org.dizitart.no2.mapper.Mappable;
  * Objects of this type can be managed in the data store.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  */
 public abstract class PersistentObject implements Mappable {
     public abstract UUID getUUID();

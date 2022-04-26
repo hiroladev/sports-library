@@ -21,11 +21,12 @@ import java.util.*;
  *
  * Represents a running plan. Plans are included as templates,
  * which I kindly took from his with the permission of
- * Mr. Christian Zangl ([lauftipps.ch](https://lauftipps.ch/trainingsplaene/alle-trainingsplaene-auf-einen-blick)).
+ * Mr. Christian Zangl
+ * (<a href="https://lauftipps.ch/trainingsplaene/alle-trainingsplaene-auf-einen-blick">lauftipps.ch</a>).
  * Users can create their own plans.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  *
  */
 

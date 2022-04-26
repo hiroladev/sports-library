@@ -7,7 +7,7 @@ package de.hirola.sportsapplications.database;
  * Delegate for datastore events. Update the ui without view model.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  */
 public interface DatastoreDelegate {
     default void didObjectAdded(PersistentObject persistentObject) {}

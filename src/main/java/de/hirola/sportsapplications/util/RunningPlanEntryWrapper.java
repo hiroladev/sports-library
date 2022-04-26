@@ -7,7 +7,7 @@ package de.hirola.sportsapplications.util;
  * Mapping object for RunningPlanUnit to import from JSON.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  */
 public class RunningPlanEntryWrapper {
 

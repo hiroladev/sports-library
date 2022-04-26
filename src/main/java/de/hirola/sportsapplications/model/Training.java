@@ -22,7 +22,7 @@ import java.util.Objects;
  * The user can store additional information for each training session.
  *
  * @author Michael Schmidt (Hirola)
- * @since v.0.1
+ * @since v0.1
  *
  */
 public class Training extends PersistentObject implements Comparable<Training> {
