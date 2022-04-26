@@ -26,7 +26,7 @@ class SportsLibraryTest {
         SportsLibrary sportsLibrary = null;
         try {
             // empty app name
-            sportsLibrary = SportsLibrary.getInstance(true, null, null);
+            sportsLibrary = SportsLibrary.getInstance(true, new Locale("de"), null, null);
             assertNotNull(sportsLibrary, "Library not initialize.");
             // test the import from the templates
             // exists 4 running plans in local datastore?
@@ -49,6 +49,7 @@ class SportsLibraryTest {
                 MovementType movementType = optional.get();
                 assertEquals(5.3, movementType.getPace(), "Pace from json import must be 5.3.");
                 assertEquals("blue", movementType.getColorKeyString(),"Color from json import must be blue.");
+                assertEquals("Flottes Laufen", movementType.getName());
             }
         } catch (InstantiationException exception) {
             fail(exception.getMessage());
@@ -64,7 +65,7 @@ class SportsLibraryTest {
     void testRelations() {
         SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(true, null, null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null, null);
 
             // user has an active running plan
             RunningPlan runningPlan = new RunningPlan();
@@ -140,8 +141,7 @@ class SportsLibraryTest {
     void testObjects() {
         SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(true, null, null);
-
+            sportsLibrary = SportsLibrary.getInstance(true, null, null, null);
             // test user
             User appUser1 = sportsLibrary.getAppUser();
             UUID appUser1UUID = appUser1.getUUID();
@@ -269,7 +269,7 @@ class SportsLibraryTest {
     void testTrackAndLocationsCRUD() {
         SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(true, null, null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null, null);
 
             // create a track with locations
             LocationData locationData1 = new LocationData();
@@ -322,7 +322,7 @@ class SportsLibraryTest {
     void testTrackAndTrainingTypeAndTrainingCRUD() {
         SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(true, null, null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null, null);
 
             // create a track with locations
             LocationData locationData1 = new LocationData();
@@ -379,7 +379,7 @@ class SportsLibraryTest {
     void testRunningPlanCRUD() {
         SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(true, null, null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null, null);
 
             // create a running plan
             // this movement type (with the key 'L') already exists!
@@ -472,7 +472,7 @@ class SportsLibraryTest {
     void testUser() {
         SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(true, null, null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null, null);
 
             RunningPlan runningPlan1 = (RunningPlan) sportsLibrary.findAll(RunningPlan.class).get(0);
             UUID runningPlan1UUID = runningPlan1.getUUID();
@@ -515,7 +515,7 @@ class SportsLibraryTest {
             assertTrue(unit4.isCompleted());
 
             // with existing data
-            SportsLibrary sportsLibrary5 = SportsLibrary.getInstance(true,null,null);
+            SportsLibrary sportsLibrary5 = SportsLibrary.getInstance(true,null,null, null);
 
             User user5 = sportsLibrary.getAppUser();
             assertNotNull(user5);
@@ -542,7 +542,7 @@ class SportsLibraryTest {
     void testTraining() {
         SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(true, null, null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null, null);
 
             List<? extends PersistentObject> trainingTypes = sportsLibrary.findAll(TrainingType.class);
             assertEquals(3, trainingTypes.size(), "The datastore contains no training types.");
@@ -574,7 +574,7 @@ class SportsLibraryTest {
         SportsLibrary sportsLibrary = null;
         try {
             File loggingDirectory = SportsLibrary.initializeAppDirectory(Global.LIBRARY_PACKAGE_NAME);
-            sportsLibrary = SportsLibrary.getInstance(true, loggingDirectory, null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, loggingDirectory, null);
             assertTrue(sportsLibrary.isDebugMode());
             sportsLibrary.debug("Test log");
             List<LogContent> logContentList = sportsLibrary.getLogContent();
@@ -602,7 +602,7 @@ class SportsLibraryTest {
     void testJSONExport() {
         SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(true, null, null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null, null);
 
             RunningPlan runningPlan = (RunningPlan) sportsLibrary.findAll(RunningPlan.class).get(3);
             assertNotNull(runningPlan);
@@ -627,7 +627,7 @@ class SportsLibraryTest {
     void testJSONImport() {
         SportsLibrary sportsLibrary = null;
         try {
-            sportsLibrary = SportsLibrary.getInstance(true, null, null);
+            sportsLibrary = SportsLibrary.getInstance(true, null, null, null);
 
             String pathName = System.getProperty("user.home")
                     + FileSystems.getDefault().getSeparator()

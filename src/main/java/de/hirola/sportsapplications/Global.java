@@ -3,11 +3,7 @@ package de.hirola.sportsapplications;
 import de.hirola.sportsapplications.database.PersistentObject;
 import de.hirola.sportsapplications.model.*;
 
-import java.nio.file.FileSystems;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Copyright 2021 by Michael Schmidt, Hirola Consulting
@@ -24,6 +20,8 @@ public final class Global {
      * Name of library, used as name for database and logging files.
      */
     public static final String LIBRARY_PACKAGE_NAME = "de.hirola.sportsapplications";
+    public static final String ROOT_RESOURCE_BUNDLE_BASE_NAME = SportsLibrary.class.getSimpleName();
+    public static final Locale DEFAULT_LOCALE = new Locale("en");
 
     public static final String MOVEMENT_TYPE_KEY_PREFIX = "movement.type.name.";
     public static final String JSON_RESOURCES = "/json";
@@ -157,23 +155,23 @@ public final class Global {
     /**
      * User settings keys
      */
-    public static final class PreferencesKeys {
-        // sollen Trainings (Tracks) gespeichert werden?
-        // boolean
-        public static final String lastUsedDatabasePath = "last_used_database_path";
-        public static final String saveTrainings = "save_trainings";
-        public static final String userTrainingLevel = "user_training_level";
-        public static final String userBirthday = "user_birthday";
-        public static final String userMaxPulse = "user_max_pulse";
-        public static final String userEmailAddress = "user_email_address";
-        public static final String userGender = "user_gender";
-        public static final String useLocationData = "use_location_data";
-        public static final String useFineLocationData = "use_fine_location_data";
-        public static final String useNotifications = "use_notifications";
-        public static final String useSync = "use_sync";
-        public static final String hideTemplates = "hide_templates";
-        public static final String debugMode = "debug_mode";
-        public static final String sendDebugLog = "send_debug_log";
+    public static final class UserPreferencesKeys {
+        public static final String USER_ROOT_NODE = SportsLibrary.class.getName();
+        public static final String USED_LOCALE = "used_locale";
+        public static final String LAST_USED_DATABASE = "last_used_database";
+        public static final String SAVE_TRAINING = "save_trainings";
+        public static final String USER_TRAINING_LEVEL = "user_training_level";
+        public static final String USER_BIRTHDAY = "user_birthday";
+        public static final String USER_MAX_PULSE = "user_max_pulse";
+        public static final String USER_EMAIL_ADDRESS = "user_email_address";
+        public static final String USER_GENDER = "user_gender";
+        public static final String USE_LOCATIONS = "use_locations";
+        public static final String USE_FINE_LOCATIONS = "use_fine_locations";
+        public static final String USE_NOTIFICATION = "use_notifications";
+        public static final String USE_SYNC = "use_sync";
+        public static final String HIDE_TEMPLATES = "hide_templates";
+        public static final String DEBUG_MODE = "debug_mode";
+        public static final String SEND_DEBUG_LOG = "send_debug_log";
     }
 
     // Vorgaben für Farben und Texte (ohne Lokalisierung)

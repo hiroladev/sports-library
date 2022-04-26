@@ -1,10 +1,13 @@
 package de.hirola.sportsapplications.util;
 
+import de.hirola.sportsapplications.Global;
 import de.hirola.sportsapplications.SportsLibrary;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.prefs.Preferences;
 
 /**
  * Copyright 2022 by Michael Schmidt, Hirola Consulting
@@ -19,7 +22,7 @@ public final class ApplicationResources
 {
 	private static ApplicationResources instance = null;
 	private static final String RESOURCE_NOT_FOUND = "[Resource cannot be found]";
-	private final ResourceBundle resourceBundle;
+	private ResourceBundle resourceBundle;
 
 	public static ApplicationResources getInstance() {
 		if (instance == null) {
@@ -54,6 +57,24 @@ public final class ApplicationResources
 	}
 
 	private ApplicationResources() {
-		resourceBundle = ResourceBundle.getBundle(SportsLibrary.class.getSimpleName());
+		try {
+			// get the local to use from user prefs
+			Preferences userPreferences = Preferences.userRoot().node(Global.UserPreferencesKeys.USER_ROOT_NODE);
+			String localeString = userPreferences.get(Global.UserPreferencesKeys.USED_LOCALE,
+					Global.DEFAULT_LOCALE.toLanguageTag());
+			Locale locale;
+			if (localeString.contains("_") && localeString.length() == 5) {
+				// language and country
+				String language = localeString.substring(0, 2).toLowerCase(Locale.ROOT);
+				String country  = localeString.substring(2, 5).toUpperCase(Locale.ROOT);
+				locale = new Locale(language, country);
+			} else {
+				// only the language
+				locale = new Locale(localeString);
+			}
+			resourceBundle = ResourceBundle.getBundle(Global.ROOT_RESOURCE_BUNDLE_BASE_NAME, locale);
+		} catch (MissingResourceException exception) {
+			resourceBundle = ResourceBundle.getBundle(Global.ROOT_RESOURCE_BUNDLE_BASE_NAME);
+		}
 	}
 }

@@ -3,6 +3,7 @@ package de.hirola.sportsapplications;
 import de.hirola.sportsapplications.database.DatastoreDelegate;
 import de.hirola.sportsapplications.database.PersistentObject;
 import de.hirola.sportsapplications.model.*;
+import de.hirola.sportsapplications.util.ApplicationResources;
 import de.hirola.sportsapplications.util.LogContent;
 import de.hirola.sportsapplications.util.TemplateLoader;
 
@@ -14,6 +15,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.prefs.Preferences;
 
 /**
  * Copyright 2021 by Michael Schmidt, Hirola Consulting
@@ -35,17 +38,22 @@ public final class SportsLibrary implements DatastoreDelegate {
 
     /**
      * Create a singleton library objekt.
+     * The package name of the library is used as the path for the library data if no directory is passed.
+     * The folder is created in the user's directory.
+     * If the passed locale is null, then "en" is used as the default locale.
      *
+     * @param locale used by the library
      * @param libDirectory for the database and log files of library
      * @param application on Android needed
      * @throws InstantiationException if library could not initialize
      */
     public static SportsLibrary getInstance(boolean debugMode,
+                                            @Nullable Locale locale,
                                             @Nullable File libDirectory,
                                             @Nullable SportsLibraryApplication application)
             throws InstantiationException {
         if (instance == null) {
-            instance = new SportsLibrary(debugMode, libDirectory, application);
+            instance = new SportsLibrary(debugMode, locale, libDirectory, application);
         }
         return instance;
     }
@@ -447,9 +455,18 @@ public final class SportsLibrary implements DatastoreDelegate {
     }
 
     private SportsLibrary(boolean debugMode,
+                          @Nullable Locale locale,
                           @Nullable File libraryDirectory,
                           @Nullable SportsLibraryApplication application) throws InstantiationException {
         try {
+            // if locale is null the default (english) locale is used
+            Preferences userPreferences = Preferences.userRoot().node(Global.UserPreferencesKeys.USER_ROOT_NODE);
+            if (locale == null) {
+                userPreferences.put(Global.UserPreferencesKeys.USED_LOCALE,
+                        Global.DEFAULT_LOCALE.toLanguageTag());
+            } else {
+                userPreferences.put(Global.UserPreferencesKeys.USED_LOCALE, locale.toLanguageTag());
+            }
             // if the parameter is null, set the directory
             if (libraryDirectory == null) {
                 // the directory is created in the user's home
@@ -464,7 +481,7 @@ public final class SportsLibrary implements DatastoreDelegate {
             if (dataRepository.isEmpty()) {
                 TemplateLoader templateLoader = new TemplateLoader(this, application);
                 // alle Templates in Datenspeicher laden
-                templateLoader.loadAllFromJSON();
+                templateLoader.addAllFromJSON();
             }
             // create or load the App user
             List<? extends PersistentObject> users = dataRepository.findAll(User.class);

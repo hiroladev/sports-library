@@ -70,7 +70,7 @@ public class TemplateLoader {
      *
      * @throws SportsLibraryException if no templates were found or could not be loaded successfully
      */
-    public void loadAllFromJSON() throws SportsLibraryException {
+    public void addAllFromJSON() throws SportsLibraryException {
         addMovementTypesFromTemplate();
         addTrainingTypesFromTemplate();
         addRunningPlansFromTemplate();
@@ -82,7 +82,7 @@ public class TemplateLoader {
      * @param typeOf objects of this type should be loaded from templates
      * @throws SportsLibraryException if no templates were found or could not be loaded successfully
      */
-    public void loadFromJSON(@NotNull Class<? extends PersistentObject> typeOf) throws SportsLibraryException {
+    public void addFromJSON(@NotNull Class<? extends PersistentObject> typeOf) throws SportsLibraryException {
         if (isRunningOnAndroid && application == null) {
             throw new SportsLibraryException("For using this method under Android, the application must not be null. " +
                     "Please initialize the template loader with the constructor (DataRepository, SportsLibraryApplication)");
@@ -103,7 +103,7 @@ public class TemplateLoader {
     }
 
     /**
-     * Load a plan template to create (complex) plan objects from a json file.
+     * Load a plan template from a json file and create a running plan object .
      *
      * @param jsonFile with the template
      * @return A template object to create a running plan.
