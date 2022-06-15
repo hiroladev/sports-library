@@ -1,7 +1,6 @@
 package de.hirola.sportsapplications.util;
 
-import org.jetbrains.annotations.NotNull;
-
+import javax.validation.constraints.Null;
 import java.time.*;
 import java.util.Date;
 
@@ -18,11 +17,19 @@ import java.util.Date;
  */
 public final class DateUtil {
 
-    public static Date getDateFromLocalDate(@NotNull LocalDate date){
+    @Null
+    public static Date getDateFromLocalDate(LocalDate date) {
+        if (date == null) {
+            return null;
+        }
         return Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 
-    public static LocalDate getLocalDateFromDate(@NotNull Date date){
+    @Null
+    public static LocalDate getLocalDateFromDate(Date date) {
+        if (date == null) {
+            return null;
+        }
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 

@@ -120,23 +120,11 @@ public final class Global {
 
     // Programm-Vorgaben (Wertebereiche)
     public static final class Defaults {
-        /**
-         * Default color for movement types
-         */
-        public static final String DEFAULT_MOVEMENT_TYPE_COLOR = "green";
-        // Beginn der GPS-Aufzeichnung ab Anzahl von Location-Updates. Erhöhung der Genauigkeit.
-        public static final int locationUpdatesRecordsBeginsAt = 5;
-        // nach wie viel Sekunden soll ein Track gespeichert werden
-        public static final int trackSaveInterval = 15;
-        // Zeitspanne in Sekunden, um welche die "gemessene" Trainingszeit von der berechneten Trainingszeit
-        // nach "unten" abweichen kann.
-        public static final int activityTimeDifferenz = 900;
-        // Toleranzbereich **X** beim Lauftraining
-        // **X** < Messwert < **X**
-        public static final double movementTolerance = 2.0;
+        //Default color for movement types
+        public static final String DEFAULT_MOVEMENT_TYPE_COLOR = "blue";
 
-        // Der Maximal-Puls wird nach der Formel 220 (Männer) bzw. 226 (Frauen) - Alter berechnet.
-        // 2 = Frau, 3 = Mann
+        // The maximum heart rate is calculated using the formula 220 (men) or 226 (women) - age.
+        // 2 = female, 3 = male
         public static final Map<Integer, Integer> valuesForCalculateMaxPulse;
         static {
             valuesForCalculateMaxPulse = new HashMap<>();
@@ -144,12 +132,10 @@ public final class Global {
             valuesForCalculateMaxPulse.put(3, 220);
         }
 
-        // Aktuelles Jahr - falls es über Kalender und Datum nicht ermittelt werden kann.
-        public static final int actualYear = 2022;
-        // Anzahl an anzuzeigenden Trainingswochen bei Laufplänen, wenn noch kein Startdatum gewählt wurde.
-        // Aktuell 3 Monate.
-        public static final int numberOfSelectableTrainingStartWeeks = 12;
+        public static final String TRAINING_DEFAULT_IMAGE_NAME = "training-default.png";
+        public static final String GPX_LINK_TYPE = "text/html";
 
+        public static final int NUMBER_OF_SELECTABLE_TRAINING_START_WEEKS = 12;
     }
 
     /**
@@ -167,7 +153,7 @@ public final class Global {
         public static final String USER_GENDER = "user_gender";
         public static final String USE_LOCATIONS = "use_locations";
         public static final String USE_FINE_LOCATIONS = "use_fine_locations";
-        public static final String USE_NOTIFICATION = "use_notifications";
+        public static final String USE_NOTIFICATIONS = "use_notifications";
         public static final String USE_SYNC = "use_sync";
         public static final String HIDE_TEMPLATES = "hide_templates";
         public static final String DEBUG_MODE = "debug_mode";

@@ -5,7 +5,7 @@ import de.hirola.sportsapplications.util.UUIDFactory;
 import org.dizitart.no2.Document;
 import org.dizitart.no2.mapper.NitriteMapper;
 import org.dizitart.no2.objects.Id;
-import org.jetbrains.annotations.NotNull;
+import javax.validation.constraints.NotNull;
 
 import java.util.Objects;
 
@@ -75,7 +75,7 @@ public class RunningUnit extends PersistentObject {
      *
      * @param movementType type of movement for the unit
      */
-    public void setMovementType(MovementType movementType) {
+    public void setMovementType(@NotNull MovementType movementType) {
         this.movementType = movementType;
     }
 

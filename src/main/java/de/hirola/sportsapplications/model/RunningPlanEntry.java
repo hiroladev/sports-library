@@ -7,7 +7,7 @@ import de.hirola.sportsapplications.util.UUIDFactory;
 import org.dizitart.no2.Document;
 import org.dizitart.no2.mapper.NitriteMapper;
 import org.dizitart.no2.objects.Id;
-import org.jetbrains.annotations.NotNull;
+import javax.validation.constraints.NotNull;
 
 import java.util.*;
 

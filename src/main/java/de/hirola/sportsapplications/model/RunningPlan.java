@@ -8,8 +8,8 @@ import de.hirola.sportsapplications.util.UUIDFactory;
 import org.dizitart.no2.Document;
 import org.dizitart.no2.mapper.NitriteMapper;
 import org.dizitart.no2.objects.Id;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -35,9 +35,8 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
     @Id
     private String uuid = UUIDFactory.generateUUID();
     private String name;
-    private String remarks;
-    // Order number of plan, "Build-Up Training" starts with a low-numbered run plan
-    private int orderNumber;
+    private String remarks; // can be null
+    private int orderNumber; // "Build-Up Training" starts with a low-numbered run plan
     private Date startDate;
     private boolean isTemplate; // templates must be not changed
     private List<RunningPlanEntry> entries; // training day with different units
@@ -65,14 +64,23 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
      * @param entries of plan
      * @param isTemplate can the plan be changed or deleted
      */
-    public RunningPlan(@NotNull String name, @Nullable String remarks, int orderNumber, @NotNull List<RunningPlanEntry> entries, boolean isTemplate) {
+    public RunningPlan(@NotNull String name, @Null String remarks, int orderNumber, @NotNull List<RunningPlanEntry> entries, boolean isTemplate) {
         this.name = name;
-        this.remarks = Objects.requireNonNullElse(remarks, "No description available.");
+        this.remarks = remarks;
         this.orderNumber = orderNumber;
         this.entries = entries;
         this.isTemplate = isTemplate;
         startDate = DateUtil.getDateFromNow();
         adjustStartDate();
+    }
+
+    /**
+     * Mark the running plan as template.
+     *
+     * @param isTemplate <b>True</b> if the plan is a template
+     */
+    public void setAsTemplate(boolean isTemplate) {
+        this.isTemplate = isTemplate;
     }
 
     /**
@@ -89,7 +97,7 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
      *
      * @param name of the plan
      */
-    public void setName(String name) {
+    public void setName(@NotNull String name) {
         this.name = name;
     }
 
@@ -98,8 +106,8 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
      *
      * @return Remarks of the plan.
      */
-    public String getRemarks() {
-        return remarks;
+    public Optional<String> getRemarks() {
+        return Optional.ofNullable(remarks);
     }
 
     /**
@@ -144,7 +152,7 @@ public class RunningPlan extends PersistentObject implements Comparable<RunningP
      *
      * @param startDate of the plan
      */
-    public void setStartDate(LocalDate startDate) {
+    public void setStartDate(@NotNull LocalDate startDate) {
         // change the date only if running plan not active
         this.startDate = DateUtil.getDateFromLocalDate(startDate);
         if (!isActive()) {

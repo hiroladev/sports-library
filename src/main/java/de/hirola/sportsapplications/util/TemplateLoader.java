@@ -1,5 +1,6 @@
 package de.hirola.sportsapplications.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import de.hirola.sportsapplications.Global;
 import de.hirola.sportsapplications.SportsLibrary;
@@ -10,8 +11,10 @@ import de.hirola.sportsapplications.model.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.apache.commons.io.IOUtils;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -48,7 +51,7 @@ public class TemplateLoader {
         }
     }
 
-    public TemplateLoader(@NotNull SportsLibrary sportsLibrary, @Nullable SportsLibraryApplication application) throws SportsLibraryException {
+    public TemplateLoader(@NotNull SportsLibrary sportsLibrary, @Null SportsLibraryApplication application) throws SportsLibraryException {
         this.sportsLibrary = sportsLibrary;
         this.application = application;
         runningPlanTemplatesImportList = new ArrayList<>();
@@ -62,6 +65,53 @@ public class TemplateLoader {
         }
         if (isRunningOnAndroid && application == null) {
             throw new SportsLibraryException("The application must be not null.");
+        }
+    }
+
+    /**
+     * Checks whether it is a valid JSON file.
+     * Does not check whether a running plan template is included.
+     *
+     * @param inputStream with the template to be checked
+     * @return <b>True</b> if a valid template.
+     */
+    public boolean isValidTemplate(@NotNull InputStream inputStream) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
+            objectMapper.enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
+            InputStream copyOfInputStream = IOUtils.toBufferedInputStream(inputStream);
+            objectMapper.readTree(copyOfInputStream);
+            return true;
+        } catch (IOException var4) {
+            if (this.sportsLibrary.isDebugMode()) {
+                this.sportsLibrary.debug(var4, "Not a valid json format.");
+            }
+
+            return false;
+        }
+    }
+
+    /**
+     * Checks whether it is a valid JSON file.
+     * Does not check whether a running plan template is included.
+     *
+     * @param jsonFile with the template to be checked
+     * @return <b>True</b> if a valid template.
+     */
+    public boolean isValidTemplate(@NotNull File jsonFile) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
+            objectMapper.enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
+            objectMapper.readTree(jsonFile);
+            return true;
+        } catch (IOException var3) {
+            if (this.sportsLibrary.isDebugMode()) {
+                this.sportsLibrary.debug(var3, "Not a valid json format.");
+            }
+
+            return false;
         }
     }
 
@@ -505,4 +555,21 @@ public class TemplateLoader {
         stringBuilder.append("]\n}");
         return stringBuilder.toString();
     }
+    private boolean isValidJSON(String json) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
+            objectMapper.enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
+            objectMapper.readTree(json);
+            return true;
+        } catch (JsonProcessingException var4) {
+            if (this.sportsLibrary.isDebugMode()) {
+                String errorMessage = "The string " + json + " is not a valid format.";
+                this.sportsLibrary.debug(var4, errorMessage);
+            }
+
+            return false;
+        }
+    }
+
 }

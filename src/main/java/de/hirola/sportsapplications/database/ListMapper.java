@@ -4,8 +4,8 @@ import de.hirola.sportsapplications.SportsLibraryException;
 import org.dizitart.no2.Document;
 import org.dizitart.no2.mapper.Mappable;
 import org.dizitart.no2.mapper.NitriteMapper;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -22,9 +22,9 @@ import java.util.List;
  */
 public final class ListMapper {
 
-    @Nullable
+    @Null
     public static <T extends Mappable> List<Document> toDocumentsList(@NotNull NitriteMapper mapper,
-                                                                      @Nullable List<T> elementsList)  {
+                                                                      @Null List<T> elementsList)  {
         List<Document> documentsList = null;
         if (elementsList != null)
         {
@@ -37,9 +37,9 @@ public final class ListMapper {
         return documentsList;
     }
 
-    @Nullable
+    @Null
     public static <T extends Mappable> List<T> toElementsList(@NotNull NitriteMapper mapper,
-                                                              @Nullable List<Document> documentsList,
+                                                              @Null List<Document> documentsList,
                                                               Class<T> typeOfElement) throws SportsLibraryException {
         List<T> elementsList = null;
         if (documentsList != null) {

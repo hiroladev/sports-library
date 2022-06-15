@@ -9,11 +9,12 @@ import org.dizitart.no2.exceptions.NotIdentifiableException;
 import org.dizitart.no2.objects.Cursor;
 import org.dizitart.no2.objects.ObjectRepository;
 import org.dizitart.no2.objects.filters.ObjectFilters;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Copyright 2021 by Michael Schmidt, Hirola Consulting
@@ -160,7 +161,7 @@ final class DataRepository {
      * @return The object from given type and the given UUID or null if the object was not found
      *         or an error occurred while searching
      */
-    @Nullable
+    @Null
     public PersistentObject findByUUID(@NotNull Class<? extends PersistentObject> withType, @NotNull UUID uuid) {
         if (isOpen()) {
             ObjectRepository<? extends PersistentObject> repository = database.getRepository(withType);
@@ -309,14 +310,14 @@ final class DataRepository {
         // create or get the repositories
         ObjectRepository<Track> trackRepository = database.getRepository(Track.class);
         ObjectRepository<LocationData> locationsRepository = database.getRepository(LocationData.class);
-        List<LocationData> locations = track.getLocations();
+        List<LocationData> locationDataList = track.getLocations();
         try {
             switch (action) {
                 case INSERT_ACTION:
                     // rollback on error
                     List<UUID> locationUUIDs = new ArrayList<>();
-                    // add locations
-                    for (LocationData locationData : locations) {
+                    // add locationData
+                    for (LocationData locationData : locationDataList) {
                         UUID locationUUID = locationData.getUUID();
                         if (findByUUID(Track.class, locationUUID) == null) {
                             // insert
@@ -324,11 +325,11 @@ final class DataRepository {
                             // save for rollback
                             locationUUIDs.add(locationUUID);
                         } else {
-                            // existing location cannot be added to a new track
+                            // existing locationData cannot be added to a new track
                             // rollback
                             rollback(LocationData.class, locationUUIDs);
                             locationUUIDs.clear();
-                            String errorMessage = "Location data of new track already exist in the database.";
+                            String errorMessage = "LocationData data of new track already exist in the database.";
                             if (sportsLibrary.isDebugMode()) {
                                 sportsLibrary.debug(errorMessage);
                             }
@@ -340,10 +341,10 @@ final class DataRepository {
                     return;
 
                 case UPDATE_ACTION:
-                    // update locations
-                    for (LocationData locationData : locations) {
+                    // update locationData
+                    for (LocationData locationData : locationDataList) {
                         if (findByUUID(Track.class, locationData.getUUID()) == null) {
-                            // insert a new location in the list
+                            // insert a new locationData in the list
                             locationsRepository.insert(locationData);
                         } else {
                             // update
@@ -355,10 +356,10 @@ final class DataRepository {
                     return;
 
                 case REMOVE_ACTION:
-                    // remove locations
-                    for (LocationData locationData : locations) {
+                    // remove locationData
+                    for (LocationData locationData : locationDataList) {
                         if (findByUUID(LocationData.class, locationData.getUUID()) != null) {
-                            // remove the location
+                            // remove the locationData
                             locationsRepository.remove(locationData);
                         }
                     }
@@ -375,20 +376,20 @@ final class DataRepository {
     private void doActionWithTraining(int action, @NotNull Training training) throws SportsLibraryException {
         // create or get the repositories
         ObjectRepository<Training> trainingRepository = database.getRepository(Training.class);
-        UUID trainingTypeUUID = training.getTrainingTypeUUID();
-        UUID trackUUID = training.getTrackUUID();
+        Optional<UUID> trainingTypeUUID = training.getTrainingTypeUUID();
+        Optional<UUID> trackUUID = training.getTrackUUID();
         try {
             switch (action) {
                 case INSERT_ACTION:
                     // type must be existed before saving
-                    if (trainingTypeUUID != null) {
-                        if (findByUUID(TrainingType.class, trainingTypeUUID) == null) {
+                    if (trainingTypeUUID.isPresent()) {
+                        if (findByUUID(TrainingType.class, trainingTypeUUID.get()) == null) {
                             throw new SportsLibraryException("The type of the training must be existed before inserting.");
                         }
                     }
                     // track must be existed before saving
-                    if (trackUUID != null) {
-                        if (findByUUID(Track.class, trackUUID) == null) {
+                    if (trackUUID.isPresent()) {
+                        if (findByUUID(Track.class, trackUUID.get()) == null) {
                             // track must be existed before saving
                             throw new SportsLibraryException("The track of the training must be existed before inserting.");
                         }
@@ -399,14 +400,14 @@ final class DataRepository {
 
                 case UPDATE_ACTION:
                     // training type must be existed before saving
-                    if (trainingTypeUUID != null) {
-                        if (findByUUID(TrainingType.class, trainingTypeUUID) == null) {
+                    if (trainingTypeUUID.isPresent()) {
+                        if (findByUUID(TrainingType.class, trainingTypeUUID.get()) == null) {
                             throw new SportsLibraryException("The type of the training must be existed before inserting.");
                         }
                     }
                     // track must be existed before saving
-                    if (trackUUID != null) {
-                        if (findByUUID(Track.class, trackUUID) == null) {
+                    if (trackUUID.isPresent()) {
+                        if (findByUUID(Track.class, trackUUID.get()) == null) {
                             // track must be existed before saving
                             throw new SportsLibraryException("The track of the training must be existed before inserting.");
                         }

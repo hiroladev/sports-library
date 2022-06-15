@@ -1,8 +1,7 @@
 package de.hirola.sportsapplications.util;
 
 import de.hirola.sportsapplications.Global;
-import de.hirola.sportsapplications.SportsLibrary;
-import org.jetbrains.annotations.NotNull;
+import javax.validation.constraints.NotNull;
 
 import java.util.Locale;
 import java.util.MissingResourceException;

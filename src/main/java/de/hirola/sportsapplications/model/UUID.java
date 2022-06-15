@@ -1,6 +1,6 @@
 package de.hirola.sportsapplications.model;
 
-import org.jetbrains.annotations.NotNull;
+import javax.validation.constraints.NotNull;
 
 import java.io.Serializable;
 import java.util.Objects;

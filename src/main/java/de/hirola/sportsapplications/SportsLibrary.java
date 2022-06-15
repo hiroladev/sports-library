@@ -3,19 +3,16 @@ package de.hirola.sportsapplications;
 import de.hirola.sportsapplications.database.DatastoreDelegate;
 import de.hirola.sportsapplications.database.PersistentObject;
 import de.hirola.sportsapplications.model.*;
-import de.hirola.sportsapplications.util.ApplicationResources;
+import de.hirola.sportsapplications.model.UUID;
 import de.hirola.sportsapplications.util.LogContent;
 import de.hirola.sportsapplications.util.TemplateLoader;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import org.tinylog.Logger;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.prefs.Preferences;
 
 /**
@@ -48,9 +45,9 @@ public final class SportsLibrary implements DatastoreDelegate {
      * @throws InstantiationException if library could not initialize
      */
     public static SportsLibrary getInstance(boolean debugMode,
-                                            @Nullable Locale locale,
-                                            @Nullable File libDirectory,
-                                            @Nullable SportsLibraryApplication application)
+                                            @Null Locale locale,
+                                            @Null File libDirectory,
+                                            @Null SportsLibraryApplication application)
             throws InstantiationException {
         if (instance == null) {
             instance = new SportsLibrary(debugMode, locale, libDirectory, application);
@@ -67,7 +64,7 @@ public final class SportsLibrary implements DatastoreDelegate {
      * @return A file object which represents the app directory for the app files, e.g. database ad logs.
      * @throws SportsLibraryException if the directory could not create or used
      */
-    public static File initializeAppDirectory(@Nullable String packageName) throws SportsLibraryException {
+    public static File initializeAppDirectory(@Null String packageName) throws SportsLibraryException {
         // build the lib directory name from package name
         String libraryDirectoryString;
         File libraryDirectory;
@@ -166,7 +163,7 @@ public final class SportsLibrary implements DatastoreDelegate {
      * @return The uuid of training type with given name or null.
      * @see TrainingType
      */
-    @Nullable
+    @Null
     public UUID getUuidForTrainingType(String name) {
         List<? extends PersistentObject> results =
                 dataRepository.findByAttribute("name", name, TrainingType.class);
@@ -289,7 +286,7 @@ public final class SportsLibrary implements DatastoreDelegate {
      * @return The object from given type and the given UUID or null if the object was not found,
      *         the datastore is not open or an error occurred while searching.
      */
-    @Nullable
+    @Null
     public PersistentObject findByUUID(@NotNull Class<? extends PersistentObject> withType, @NotNull UUID uuid) {
         if (dataRepository.isOpen()) {
             return dataRepository.findByUUID(withType, uuid);
@@ -337,7 +334,7 @@ public final class SportsLibrary implements DatastoreDelegate {
      *      <li>file could not be read</li>
      * </ul>
      */
-    @Nullable
+    @Null
     public RunningPlan loadFromJSON(@NotNull File jsonFile) {
         return null;
     }
@@ -455,18 +452,13 @@ public final class SportsLibrary implements DatastoreDelegate {
     }
 
     private SportsLibrary(boolean debugMode,
-                          @Nullable Locale locale,
-                          @Nullable File libraryDirectory,
-                          @Nullable SportsLibraryApplication application) throws InstantiationException {
+                          @Null Locale locale,
+                          @Null File libraryDirectory,
+                          @Null SportsLibraryApplication application) throws InstantiationException {
         try {
             // if locale is null the default (english) locale is used
             Preferences userPreferences = Preferences.userRoot().node(Global.UserPreferencesKeys.USER_ROOT_NODE);
-            if (locale == null) {
-                userPreferences.put(Global.UserPreferencesKeys.USED_LOCALE,
-                        Global.DEFAULT_LOCALE.toLanguageTag());
-            } else {
-                userPreferences.put(Global.UserPreferencesKeys.USED_LOCALE, locale.toLanguageTag());
-            }
+            userPreferences.put(Global.UserPreferencesKeys.USED_LOCALE, Objects.requireNonNullElse(locale, Global.DEFAULT_LOCALE).toLanguageTag());
             // if the parameter is null, set the directory
             if (libraryDirectory == null) {
                 // the directory is created in the user's home

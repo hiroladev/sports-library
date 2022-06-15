@@ -10,8 +10,8 @@ import org.dizitart.no2.mapper.NitriteMapper;
 import org.dizitart.no2.objects.Id;
 import org.dizitart.no2.objects.Index;
 import org.dizitart.no2.objects.Indices;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 
 import java.util.Objects;
 
@@ -54,7 +54,7 @@ public class MovementType extends PersistentObject {
      * @param speed for the type
      * @param pace for the type
      */
-    public MovementType(@NotNull String key, @Nullable String colorKeyString,
+    public MovementType(@NotNull String key, @Null String colorKeyString,
                         double speed, double pace) {
         this.key = key;
         this.colorKeyString = Objects.requireNonNullElse(colorKeyString, Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR);

@@ -5,19 +5,22 @@ import de.hirola.sportsapplications.model.*;
 
 import de.hirola.sportsapplications.model.UUID;
 import de.hirola.sportsapplications.util.DateUtil;
+import de.hirola.sportsapplications.util.GPXManager;
 import de.hirola.sportsapplications.util.LogContent;
 import de.hirola.sportsapplications.util.TemplateLoader;
+import io.jenetics.jpx.GPX;
+import io.jenetics.jpx.TrackSegment;
+import io.jenetics.jpx.WayPoint;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.FileSystems;
-import java.time.DayOfWeek;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 class SportsLibraryTest {
 
@@ -78,12 +81,12 @@ class SportsLibraryTest {
             LocationData locationData2 = new LocationData();
 
             // add to a list
-            List<LocationData> locations = new ArrayList<>(2);
-            locations.add(locationData1);
-            locations.add(locationData2);
+            List<LocationData> locationData = new ArrayList<>(2);
+            locationData.add(locationData1);
+            locationData.add(locationData2);
 
-            // create a track with locations
-            Track track = new Track("Test-Track",null, locations);
+            // create a track with locationData
+            Track track = new Track("Test-Track",null, locationData);
             UUID trackUUID = track.getUUID();
 
             // create a training with track
@@ -100,12 +103,12 @@ class SportsLibraryTest {
             assertNotNull(object1, "Find no object with given UUID.");
             List<? extends PersistentObject> result = sportsLibrary.findAll(User.class);
             assertFalse(result.isEmpty(), "No results from datastore");
-            UUID activeRunningPlanUUID = user.getActiveRunningPlanUUID();
-            assert activeRunningPlanUUID != null;
+            Optional<UUID> activeRunningPlanUUID = user.getActiveRunningPlanUUID();
+            assert activeRunningPlanUUID.isPresent();
             assertNotEquals("", activeRunningPlanUUID.toString(), "Active running plan from user must not be null.");
-            assertEquals(runningPlanUUID, activeRunningPlanUUID, "Active running plan uuid is wrong");
+            assertEquals(runningPlanUUID, activeRunningPlanUUID.get(), "Active running plan uuid is wrong");
 
-            // track and locations test
+            // track and locationData test
             PersistentObject object2 = sportsLibrary.findByUUID(Track.class, track.getUUID());
             assertNotNull(object2, "Find no object with given UUID.");
             if (object2 instanceof Track) {
@@ -122,7 +125,8 @@ class SportsLibraryTest {
                 Training trainingFromDB = (Training) object3;
                 assertNotNull(object3, "Training must not be null");
                 assertNotNull(((Training) object3).getTrackUUID(), "Track must not be null");
-                assertEquals(trainingFromDB.getTrackUUID(), track.getUUID(), "Not the same track.");
+                assertTrue(trainingFromDB.getTrackUUID().isPresent());
+                assertEquals(trainingFromDB.getTrackUUID().get(), track.getUUID(), "Not the same track.");
             } else {
                 fail("Wrong type of object.");
             }
@@ -159,9 +163,9 @@ class SportsLibraryTest {
             User appUser3 = (User) sportsLibrary.findByUUID(User.class, appUser1UUID);
             assertNotNull(appUser3, "User not found in database.");
             assertEquals(appUser3.getUUID(), appUser1UUID, "Not the same object.");
-            UUID activeRunningPlanUUID = appUser3.getActiveRunningPlanUUID();
+            Optional<UUID> activeRunningPlanUUID = appUser3.getActiveRunningPlanUUID();
             assertNotNull(activeRunningPlanUUID, "Active running plan uuid must be not empty.");
-            assertEquals(runningPlan1.getUUID(), activeRunningPlanUUID, "User's running plan not saved.");
+            assertEquals(runningPlan1.getUUID(), activeRunningPlanUUID.get(), "User's running plan not saved.");
 
             // test the compare from running plan entry
             RunningPlanEntry runningPlanEntry1 = new RunningPlanEntry(1,1, new ArrayList<>());
@@ -271,17 +275,17 @@ class SportsLibraryTest {
         try {
             sportsLibrary = SportsLibrary.getInstance(true, null, null, null);
 
-            // create a track with locations
+            // create a track with locationData
             LocationData locationData1 = new LocationData();
             LocationData locationData2 = new LocationData();
             UUID location1UUID = locationData1.getUUID();
             UUID location2UUID = locationData2.getUUID();
 
             // add to a list
-            List<LocationData> locations = new ArrayList<>(2);
-            locations.add(locationData1);
-            locations.add(locationData2);
-            Track track = new Track("Test-Track",null, locations);
+            List<LocationData> locationData = new ArrayList<>(2);
+            locationData.add(locationData1);
+            locationData.add(locationData2);
+            Track track = new Track("Test-Track",null, locationData);
             UUID trackUUID = track.getUUID();
 
             // add only the track
@@ -299,7 +303,7 @@ class SportsLibraryTest {
 
             }
 
-            // remove the track, locations should be deleted
+            // remove the track, locationData should be deleted
             sportsLibrary.delete(track);
             PersistentObject deletedTrack = sportsLibrary.findByUUID(Track.class, trackUUID);
             assertNull(deletedTrack, "Track was not deleted");
@@ -324,24 +328,24 @@ class SportsLibraryTest {
         try {
             sportsLibrary = SportsLibrary.getInstance(true, null, null, null);
 
-            // create a track with locations
+            // create a track with locationData
             LocationData locationData1 = new LocationData();
             LocationData locationData2 = new LocationData();
             UUID location1UUID = locationData1.getUUID();
             UUID location2UUID = locationData2.getUUID();
 
             // add to a list
-            List<LocationData> locations = new ArrayList<>(2);
-            locations.add(locationData1);
-            locations.add(locationData2);
-            Track track = new Track("Test-Track",null, locations);
+            List<LocationData> locationData = new ArrayList<>(2);
+            locationData.add(locationData1);
+            locationData.add(locationData2);
+            Track track = new Track("Test-Track",null, locationData);
             UUID trackUUID = track.getUUID();
             sportsLibrary.add(track);
 
             // create a training with track
             Training training = new Training("Test-Training", null, null, null, trackUUID);
             UUID trainingUUID = training.getUUID();
-            UUID trainingTypeUUID = training.getTrainingTypeUUID();
+            Optional<UUID> trainingTypeUUID = training.getTrainingTypeUUID();
             // add only the training
             sportsLibrary.add(training);
 
@@ -354,11 +358,11 @@ class SportsLibraryTest {
             assertEquals(2, savedLocations.size(), "LocationData not saved.");
             for (PersistentObject p : savedLocations) {
                 if (!p.getUUID().equals(location1UUID) && !p.getUUID().equals(location2UUID)) {
-                    fail("Different UUID from locations.");
+                    fail("Different UUID from locationData.");
                 }
             }
 
-            // remove the training, type of training, track and locations should be NOT deleted
+            // remove the training, type of training, track and locationData should be NOT deleted
             sportsLibrary.delete(training);
             PersistentObject notDeletedTrack = sportsLibrary.findByUUID(Track.class, trackUUID);
             assertNotNull(notDeletedTrack, "Track was deleted.");
@@ -384,8 +388,8 @@ class SportsLibraryTest {
             // create a running plan
             // this movement type (with the key 'L') already exists!
             // saving th running plan updates an existing object
-            MovementType movementType1 = new MovementType("L", "red", 5, 5);
-            assertEquals("Laufen", movementType1.getName(), "No name for the key was found.");
+            MovementType movementType1 = new MovementType("L", null, 5, 5);
+            assertEquals("Running", movementType1.getName(), "No name for the key was found.");
             // add a new  movement type
             MovementType movementType2 = new MovementType("Y", "red", 0.0, 0.0);
             assertEquals("Y", movementType2.getName());
@@ -406,14 +410,19 @@ class SportsLibraryTest {
             RunningPlan runningPlan = new RunningPlan("Test-Plan", null,1,runningPlanEntries, false);
             UUID runningPlanUUID = runningPlan.getUUID();
 
-            // color is green by default
-            MovementType movementType1beforeUpdated = (MovementType) sportsLibrary.findByUUID(MovementType.class, new UUID("L"));
-            assertNotNull(movementType1beforeUpdated, "No movement type with key / uuid 'L'.");
-            assertEquals(Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR, movementType1beforeUpdated.getColorKeyString(),
-                    "Default color not " + Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR + ".");
-
-            // add only the runningPlan should throw an error because the movement typ with key 'L'
+            // add the running plan to local datastore - new movement type should be added
             sportsLibrary.add(runningPlan);
+
+            List<MovementType> movementTypes = sportsLibrary.getMovementTypes()
+                    .stream()
+                    .filter(movementType -> movementType.getKey().compareToIgnoreCase("L") == 0)
+                    .collect(Collectors.toList());
+            assertEquals(1,movementTypes.size(), "More than one movement type with key 'L'.");
+
+            MovementType movementType1beforeUpdated = (MovementType) sportsLibrary.findByUUID(MovementType.class, new UUID("Y"));
+            assertNotNull(movementType1beforeUpdated, "No movement type with key / uuid 'Y'.");
+            assertEquals("red", movementType1beforeUpdated.getColorKeyString(),
+                    "The color must be red.");
 
             // checks
             PersistentObject savedRunningPlan = sportsLibrary.findByUUID(RunningPlan.class, runningPlanUUID);
@@ -424,9 +433,6 @@ class SportsLibraryTest {
             assertNotNull(savedRunningUnit1, "RunningUnit 1 was not saved.");
             PersistentObject savedRunningUnit2 = sportsLibrary.findByUUID(RunningUnit.class, runningUnit2UUID);
             assertNotNull(savedRunningUnit2, "RunningUnit 2 was not saved.");
-            // movement type with key 'L' has now a new color
-            assertEquals(Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR, movementType1beforeUpdated.getColorKeyString(),
-                    "Default color not " + Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR + ".");
             PersistentObject savedMovementType2 = sportsLibrary.findByUUID(MovementType.class, new UUID("Y"));
             assertNotNull(savedMovementType2, "Movement type 2 was not saved.");
 
@@ -484,11 +490,12 @@ class SportsLibraryTest {
 
             User user2 = sportsLibrary.getAppUser();
             assertNotNull(user2);
-            UUID runningPlan2UUID = user2.getActiveRunningPlanUUID();
+            Optional<UUID> runningPlan2UUID = user2.getActiveRunningPlanUUID();
             assertNotNull(runningPlan2UUID, "Active running plan uuid must be not null.");
-            assertEquals(runningPlan1UUID, runningPlan2UUID);
+            assertTrue(runningPlan2UUID.isPresent());
+            assertEquals(runningPlan1UUID, runningPlan2UUID.get());
 
-            RunningPlan runningPlan2 = (RunningPlan) sportsLibrary.findByUUID(RunningPlan.class, runningPlan2UUID);
+            RunningPlan runningPlan2 = (RunningPlan) sportsLibrary.findByUUID(RunningPlan.class, runningPlan2UUID.get());
             assertNotNull(runningPlan2);
             RunningUnit unit1 = runningPlan2.getEntries().get(0).getRunningUnits().get(0);
             assertNotNull(unit1);
@@ -507,7 +514,7 @@ class SportsLibraryTest {
 
             User user3 = sportsLibrary.getAppUser();
             assertNotNull(user3);
-            UUID runningPlan4UUID = user3.getActiveRunningPlanUUID();
+            Optional<UUID> runningPlan4UUID = user3.getActiveRunningPlanUUID();
             assertNotNull(runningPlan4UUID, "Active running plan uuid must be not null.");
             RunningUnit unit4 = runningPlan3.getEntries().get(0).getRunningUnits().get(0);
             assertNotNull(unit4);
@@ -519,10 +526,9 @@ class SportsLibraryTest {
 
             User user5 = sportsLibrary.getAppUser();
             assertNotNull(user5);
-            UUID runningPlanUUID = user5.getActiveRunningPlanUUID();
-            assertNotNull(runningPlanUUID);
-
-            RunningPlan runningPlan5 = (RunningPlan) sportsLibrary5.findByUUID(RunningPlan.class, runningPlanUUID);
+            Optional<UUID> runningPlanUUID = user5.getActiveRunningPlanUUID();
+            assertTrue(runningPlanUUID.isPresent());
+            RunningPlan runningPlan5 = (RunningPlan) sportsLibrary5.findByUUID(RunningPlan.class, runningPlanUUID.get());
             assertNotNull(runningPlan5);
             RunningUnit unit5 = runningPlan5.getEntries().get(0).getRunningUnits().get(0);
             assertNotNull(unit5);
@@ -645,6 +651,88 @@ class SportsLibraryTest {
             if (sportsLibrary != null) {
                 sportsLibrary.clearAll();
             }
+        }
+    }
+
+    @Test
+    void testGPXImport() {
+        SportsLibrary sportsLibrary = null;
+        try {
+            sportsLibrary = SportsLibrary.getInstance(true, null, null, null);
+
+            // import the gpx
+            String pathName = System.getProperty("user.home")
+                    + FileSystems.getDefault().getSeparator()
+                    + "Test.gpx";
+            File gpxFile = new File(pathName);
+            GPXManager.importGPX(sportsLibrary, gpxFile);
+            // get the track from library
+            List<? extends PersistentObject> tracks = sportsLibrary.findAll(Track.class);
+            assertEquals(1, tracks.size(), "Track was not added to the datastore.");
+
+        } catch (Exception exception) {
+            fail(exception.getMessage());
+        } finally {
+            // delete all objects
+            if (sportsLibrary != null) {
+                sportsLibrary.clearAll();
+            }
+        }
+    }
+
+    @Test
+    void testGPXExport() {
+        // time stamp in ISO 8601 format
+        String timeStamp1InISO8601Format = "2018-08-08T10:02:44Z";
+        String timeStamp2InISO8601Format = "2018-08-08T10:03:17Z";
+        // create a simple track object with 2 track points
+        List<LocationData> locationData = new ArrayList<>();
+        LocationData locationData1 = new LocationData(50.967010525102694, 14.251019814996281);
+        locationData1.setElevation(293.6364548339844);
+        locationData1.setTimeStamp(Instant.parse(timeStamp1InISO8601Format).toEpochMilli());
+        locationData.add(locationData1);
+        LocationData locationData2 = new LocationData(50.966995525102696, 14.25085681499628);
+        locationData2.setElevation(287.6724548339844);
+        locationData2.setTimeStamp(Instant.parse(timeStamp2InISO8601Format).toEpochMilli());
+        locationData.add(locationData2);
+        Track track = new Track();
+        track.setName("Track 1");
+        track.setDescription("Sample track export");
+        track.setLocations(locationData);
+
+        // export as GPX
+        String pathName = System.getProperty("user.home")
+                + FileSystems.getDefault().getSeparator()
+                + "Export.gpx";
+        File gpxFile = new File(pathName);
+        try {
+            GPXManager.exportGPX(track, gpxFile);
+        } catch (IOException exception) {
+            fail(exception.getMessage());
+        }
+        // read the exported file
+        try {
+            Optional<io.jenetics.jpx.Track> optionalTrack = GPX.read(gpxFile.getPath()).tracks().findFirst();
+            if (optionalTrack.isPresent()) {
+                Optional<TrackSegment> optionalTrackSegment = optionalTrack.get().segments().findFirst();
+                if (optionalTrackSegment.isPresent()) {
+                    List<WayPoint> wayPoints = optionalTrackSegment.get().getPoints();
+                    assertEquals(2, wayPoints.size(), "The track should contain two waypoints.");
+                    WayPoint wayPoint = wayPoints.get(0);
+                   Optional<ZonedDateTime> optionalTimestamp = wayPoint.getTime();
+                   if (optionalTimestamp.isPresent()) {
+                       assertEquals(timeStamp1InISO8601Format, optionalTimestamp.get().toString(), "Wrong time stamp.");
+                   } else {
+                       fail("The waypoint contains no time stamp.");
+                   }
+                } else {
+                    fail("The track contains no segments.");
+                }
+            } else {
+                fail("The export file contains no tracks.");
+            }
+        } catch (IOException exception) {
+            fail(exception.getMessage());
         }
     }
 }

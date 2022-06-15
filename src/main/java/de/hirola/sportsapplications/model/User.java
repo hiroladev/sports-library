@@ -9,14 +9,15 @@ import org.dizitart.no2.mapper.NitriteMapper;
 import org.dizitart.no2.objects.Id;
 import org.dizitart.no2.objects.Index;
 import org.dizitart.no2.objects.Indices;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Copyright 2021 by Michael Schmidt, Hirola Consulting
@@ -47,9 +48,6 @@ public class User extends PersistentObject {
      * Default constructor for reflection and database management.
      */
     public User() {
-        firstName = "";
-        lastName = "Athlete";
-        birthday = Date.from(Instant.now());
         gender = 0;
         trainingLevel = 0;
         maxPulse = 0;
@@ -61,8 +59,8 @@ public class User extends PersistentObject {
      *
      * @return The first name of the user
      */
-    public String getFirstName() {
-        return firstName;
+    public Optional<String> getFirstName() {
+        return Optional.ofNullable(firstName);
     }
 
     /**
@@ -79,8 +77,8 @@ public class User extends PersistentObject {
      *
      * @return The last name of the user
      */
-    public String getLastName() {
-        return lastName;
+    public Optional<String> getLastName() {
+        return Optional.ofNullable(lastName);
     }
 
     /**
@@ -114,13 +112,13 @@ public class User extends PersistentObject {
     /**
      * Get the birthday of the user. The year ist need to calculate the max pulse.
      *
-     * @return The birthday of the user
+     * @return The birthday of the user.
      */
-    public LocalDate getBirthday() {
-        return birthday
+    public Optional<LocalDate> getBirthday() {
+        return Optional.ofNullable(birthday
                 .toInstant()
                 .atZone(ZoneId.systemDefault())
-                .toLocalDate();
+                .toLocalDate());
     }
 
     /**
@@ -197,11 +195,11 @@ public class User extends PersistentObject {
     /**
      * Get the uuid of active running plan or null if not plan assigned.
      *
-     * @return The uuid if the active running plan or an empty string.
+     * @return The uuid if the active running plan.
      */
-    @Nullable
-    public UUID getActiveRunningPlanUUID() {
-        return activeRunningPlanUUID;
+    @Null
+    public Optional<UUID> getActiveRunningPlanUUID() {
+        return Optional.ofNullable(activeRunningPlanUUID);
     }
 
     /**
@@ -209,7 +207,7 @@ public class User extends PersistentObject {
      *
      * @param uuid of the active running plan
      */
-    public void setActiveRunningPlanUUID(UUID uuid) {
+    public void setActiveRunningPlanUUID(@NotNull UUID uuid) {
         activeRunningPlanUUID = uuid;
     }
 

@@ -1,5 +1,6 @@
 package de.hirola.sportsapplications.model;
 
+import de.hirola.sportsapplications.Global;
 import de.hirola.sportsapplications.database.PersistentObject;
 import de.hirola.sportsapplications.util.UUIDFactory;
 import org.dizitart.no2.Document;
@@ -8,10 +9,11 @@ import org.dizitart.no2.mapper.NitriteMapper;
 import org.dizitart.no2.objects.Id;
 import org.dizitart.no2.objects.Index;
 import org.dizitart.no2.objects.Indices;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Copyright 2021 by Michael Schmidt, Hirola Consulting
@@ -45,7 +47,7 @@ public class TrainingType extends PersistentObject {
     public TrainingType() {
         name = UUIDFactory.generateTrainingType();
         //TODO: default image for JVM and Android in resources
-        imageName = "training-default";
+        imageName = Global.Defaults.TRAINING_DEFAULT_IMAGE_NAME;
         speed = 0.0;
     }
 
@@ -57,10 +59,10 @@ public class TrainingType extends PersistentObject {
      * @param remarks of type
      * @param speed of type
      */
-    public TrainingType(@NotNull String name, @Nullable String remarks, @Nullable String imageName, double speed) {
+    public TrainingType(@NotNull String name, @Null String remarks, @Null String imageName, double speed) {
         this.name = name;
-        this.remarks = Objects.requireNonNullElse(remarks, "");
-        this.imageName = Objects.requireNonNullElse(imageName, "training-default");
+        this.remarks = remarks;
+        this.imageName = Objects.requireNonNullElse(imageName, Global.Defaults.TRAINING_DEFAULT_IMAGE_NAME);
         this.speed = speed;
     }
 
@@ -105,8 +107,8 @@ public class TrainingType extends PersistentObject {
      *
      * @return The remarks of the training type
      */
-    public String getRemarks() {
-        return remarks;
+    public Optional<String> getRemarks() {
+        return Optional.ofNullable(remarks);
     }
 
     /**

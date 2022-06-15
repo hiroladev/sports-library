@@ -2,8 +2,8 @@ package de.hirola.sportsapplications;
 
 import org.dizitart.no2.Nitrite;
 import org.dizitart.no2.exceptions.NitriteIOException;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 
 import java.io.File;
 
@@ -43,7 +43,7 @@ class DatabaseManager {
      *
      * @return The manger for data management
      */
-    @Nullable
+    @Null
     public Nitrite getDatabase() {
         return database;
     }

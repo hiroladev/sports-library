@@ -3,7 +3,7 @@ package de.hirola.sportsapplications;
 import de.hirola.sportsapplications.util.LogContent;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
-import org.jetbrains.annotations.NotNull;
+import javax.validation.constraints.NotNull;
 import org.tinylog.Logger;
 
 import java.io.File;
