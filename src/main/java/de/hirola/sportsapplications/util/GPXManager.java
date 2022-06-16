@@ -42,7 +42,7 @@ public final class GPXManager {
         final ApplicationResources applicationResources = ApplicationResources.getInstance();
         if (importFile.exists()) {
             if (importFile.isFile() && importFile.canRead()) {
-                // reading the gpx file using the jpx-library
+                // reading the gpx file using the jpx library
                 GPX gpx = GPX.read(importFile.getPath());
                 // read metadata - create track remarks
                 Optional<Metadata> optionalMetadata = gpx.getMetadata();

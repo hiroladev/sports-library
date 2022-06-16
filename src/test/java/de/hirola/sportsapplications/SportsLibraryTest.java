@@ -4,10 +4,7 @@ import de.hirola.sportsapplications.database.PersistentObject;
 import de.hirola.sportsapplications.model.*;
 
 import de.hirola.sportsapplications.model.UUID;
-import de.hirola.sportsapplications.util.DateUtil;
-import de.hirola.sportsapplications.util.GPXManager;
-import de.hirola.sportsapplications.util.LogContent;
-import de.hirola.sportsapplications.util.TemplateLoader;
+import de.hirola.sportsapplications.util.*;
 import io.jenetics.jpx.GPX;
 import io.jenetics.jpx.TrackSegment;
 import io.jenetics.jpx.WayPoint;
@@ -733,6 +730,30 @@ class SportsLibraryTest {
             }
         } catch (IOException exception) {
             fail(exception.getMessage());
+        }
+    }
+
+    @Test
+    void testICALImport() {
+        SportsLibrary sportsLibrary = null;
+        try {
+            sportsLibrary = SportsLibrary.getInstance(true, null, null, null);
+
+            // import the gpx
+            String pathName = System.getProperty("user.home")
+                    + FileSystems.getDefault().getSeparator()
+                    + "flex5.ics";
+            File iCALFile = new File(pathName);
+            ICALManager.importICAL(sportsLibrary, iCALFile);
+
+
+        } catch (Exception exception) {
+            fail(exception.getMessage());
+        } finally {
+            // delete all objects
+            if (sportsLibrary != null) {
+                sportsLibrary.clearAll();
+            }
         }
     }
 }
