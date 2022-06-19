@@ -16,14 +16,11 @@ import java.util.*;
  */
 public final class Global {
 
-    /**
-     * Name of library, used as name for database and logging files.
-     */
     public static final String LIBRARY_PACKAGE_NAME = "de.hirola.sportsapplications";
     public static final String ROOT_RESOURCE_BUNDLE_BASE_NAME = SportsLibrary.class.getSimpleName();
     public static final Locale DEFAULT_LOCALE = new Locale("en");
-
     public static final String MOVEMENT_TYPE_KEY_PREFIX = "movement.type.name.";
+    public static final String NULL_MOVEMENT_TYPE_KEY = "N";
     public static final String JSON_RESOURCES = "/json";
     public static final String MOVEMENT_TYPES_JSON = "/json"
             + "/"
@@ -34,6 +31,17 @@ public final class Global {
     public static final String RUNNING_PLAN_TEMPLATE_INDEX_JSON = "/json"
             + "/"
             + "index-of-templates.json";
+
+    public static final class ICALPattern {
+        public static final String WEEK_PATTERN= "Lauftraining: Woche";
+        public static final String DAY_PATTERN= "- Lauf Nummer:";
+        public static final String TYPE_OF_RUNNING_STRING_PATTERN= "Lauf #";
+        public static final String DURATION_PATTERN = "Dauer: ";
+        public static final String PULSE_PATTERN = "Puls:";
+        public static final String PULSE_SEPARATOR_PATTERN = "bis";
+        public static final String PACE_PATTERN = "Tempo: ";
+        public static final String DISTANCE_PATTERN = "Distanz: ";
+    }
 
     /**
      * A list of all types handled by the database.

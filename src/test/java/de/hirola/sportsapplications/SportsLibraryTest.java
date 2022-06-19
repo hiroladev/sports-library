@@ -161,7 +161,7 @@ class SportsLibraryTest {
             assertNotNull(appUser3, "User not found in database.");
             assertEquals(appUser3.getUUID(), appUser1UUID, "Not the same object.");
             Optional<UUID> activeRunningPlanUUID = appUser3.getActiveRunningPlanUUID();
-            assertNotNull(activeRunningPlanUUID, "Active running plan uuid must be not empty.");
+            assertTrue(activeRunningPlanUUID.isPresent(), "Active running plan uuid must be not empty.");
             assertEquals(runningPlan1.getUUID(), activeRunningPlanUUID.get(), "User's running plan not saved.");
 
             // test the compare from running plan entry
@@ -742,10 +742,9 @@ class SportsLibraryTest {
             // import the gpx
             String pathName = System.getProperty("user.home")
                     + FileSystems.getDefault().getSeparator()
-                    + "flex5.ics";
+                    + "flex.ics";
             File iCALFile = new File(pathName);
             ICALManager.importICAL(sportsLibrary, iCALFile);
-
 
         } catch (Exception exception) {
             fail(exception.getMessage());

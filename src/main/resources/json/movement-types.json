@@ -1,5 +1,11 @@
 [
     {
+        "key": "N",
+        "speed": 0.0,
+        "pace": 0.0,
+        "colorKeyString": "green"
+    },
+    {
         "key": "P",
         "speed": 0.0,
         "pace": 0.0,

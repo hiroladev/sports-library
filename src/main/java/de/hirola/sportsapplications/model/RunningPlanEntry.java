@@ -3,12 +3,14 @@ package de.hirola.sportsapplications.model;
 import de.hirola.sportsapplications.SportsLibraryException;
 import de.hirola.sportsapplications.database.ListMapper;
 import de.hirola.sportsapplications.database.PersistentObject;
+import de.hirola.sportsapplications.util.DateUtil;
 import de.hirola.sportsapplications.util.UUIDFactory;
 import org.dizitart.no2.Document;
 import org.dizitart.no2.mapper.NitriteMapper;
 import org.dizitart.no2.objects.Id;
 import javax.validation.constraints.NotNull;
 
+import java.time.LocalDate;
 import java.util.*;
 
 /**
@@ -31,6 +33,9 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
     private String uuid = UUIDFactory.generateUUID();
     private int week; // number of week, begins with 1
     private int day; // day of week, begins with 1 (monday)
+    private Date runningDate; // for flex plans, can be change from the user
+    private long duration; // for flex plans
+    private double distance; // for flex plans
     private List<RunningUnit> runningUnits; // units if training day
 
     /**
@@ -44,7 +49,7 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
     }
 
     /**
-     * Create a running plan entry.
+     * Create a running plan entry for start templates.
      *
      * @param day of entry
      * @param week of entry
@@ -55,6 +60,25 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
         this.day = day;
         this.week = week;
         this.runningUnits = runningUnits;
+        duration = 0L;
+    }
+
+    /**
+     * Create a running plan entry with a running date and a duration.
+     * Required for flex plans (iCAL import).
+     *
+     * @param date of running entry
+     * @param duration of running entry
+     * @param distance of running entry
+     * @param runningUnits of running entry
+     */
+    public RunningPlanEntry (@NotNull LocalDate date, long duration, double distance, @NotNull List<RunningUnit> runningUnits) {
+        this.runningDate = DateUtil.getDateFromLocalDate(date);
+        this.duration = duration;
+        this.distance = distance;
+        this.runningUnits = runningUnits;
+        day = 0;
+        week = 0;
     }
 
     /**
@@ -109,6 +133,74 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
         }
     }
 
+
+    /**
+     * Get the date of running.
+     *
+     * @return The date of running.
+     */
+    public Optional<LocalDate> getRunningDate() {
+        return Optional.ofNullable(DateUtil.getLocalDateFromDate(runningDate));
+    }
+
+    /**
+     * Set the date of running.
+     *
+     * @param date of running
+     */
+    public void setRunningDate(LocalDate date) {
+        this.runningDate = DateUtil.getDateFromLocalDate(date);
+    }
+
+    /**
+     * Get the distance of running entry.
+     *
+     * @return The distance of running entry.
+     */
+    public double getDistance() {
+        return distance;
+    }
+
+    /**
+     * Set the distance of running entry.
+     *
+     * @param distance of running entry
+     */
+    public void setDistance(double distance) {
+        this.distance = distance;
+    }
+
+    /**
+     * The total duration of the training session in minutes,
+     * i.e. the sum of the individual training sections.
+     * If a duration is specified and is greater than 0 and greater than
+     * the calculated duration, then this is returned.
+     *
+     * @return Sum of the individual training sections in minutes or the fixed duration.
+     */
+    public long getDuration() {
+        long calculatedDuration = runningUnits.stream().map(RunningUnit::getDuration).reduce(0L, Long::sum);
+        // duration is not set
+        if (duration == 0L) {
+            return calculatedDuration;
+        }
+        // duration is set
+        if (calculatedDuration == 0L || calculatedDuration < duration) {
+            return duration;
+        }
+        return 0L;
+    }
+
+    /**
+     * Set the duration of running plan entry.
+     * Required for flex plans (iCAL import).
+     *
+     * @param duration of running plan entry
+     */
+    public void setDuration(long duration) {
+        this.duration = duration;
+    }
+
     /**
      * Get a list of all running units of this entry.
      *
@@ -126,17 +218,6 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
     public void setRunningUnits(@NotNull List<RunningUnit> runningUnits) {
         this.runningUnits = runningUnits;
     }
-
-    /**
-     * The total duration of the training session in minutes,
-     * i.e. the sum of the individual training sections.
-     *
-     * @return Sum of the individual training sections in minutes
-     */
-    public long getDuration() {
-        return runningUnits.stream().map(RunningUnit::getDuration).reduce(0L, Long::sum);
-    }
-
     /**
      * Indicates whether the run plan entry (training day) has been completed.
      * Is automatically true if all training sections are completed.
@@ -174,6 +255,9 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
         document.put("uuid", uuid);
         document.put("week", week);
         document.put("day", day);
+        document.put("runningDate", runningDate);
+        document.put("duration", duration);
+        document.put("distance", distance);
 
         if (runningUnits != null) {
             document.put("runningUnits", ListMapper.toDocumentsList(mapper, runningUnits));
@@ -188,6 +272,9 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
             uuid = (String) document.get("uuid");
             week = (int) document.get("week");
             day = (int) document.get("day");
+            runningDate = (Date) document.get("runningDate");
+            duration = (long) document.get("duration");
+            distance = (double) document.get("distance");
 
             try {
                 @SuppressWarnings("unchecked")

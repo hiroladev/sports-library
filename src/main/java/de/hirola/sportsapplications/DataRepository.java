@@ -473,12 +473,15 @@ final class DataRepository {
                                 }
 
                                 // insert a new movement type
-                                MovementType movementType = unit.getMovementType();
-                                UUID uuid = movementType.getUUID();
-                                if (findByUUID(MovementType.class, uuid) == null) {
-                                    movementTypeRepository.insert(movementType);
-                                    // save for rollback
-                                    movementTypeUUIDs.add(uuid);
+                                Optional<MovementType> optionalMovementType = unit.getMovementType();
+                                if (optionalMovementType.isPresent()) {
+                                    MovementType movementType = optionalMovementType.get();
+                                    UUID uuid = movementType.getUUID();
+                                    if (findByUUID(MovementType.class, uuid) == null) {
+                                        movementTypeRepository.insert(movementType);
+                                        // save for rollback
+                                        movementTypeUUIDs.add(uuid);
+                                    }
                                 }
                             }
                             // insert the entry
@@ -510,9 +513,12 @@ final class DataRepository {
                             List<RunningUnit> units = entry.getRunningUnits();
                             for (RunningUnit unit : units) {
                                 // insert a new movement type
-                                MovementType movementType = unit.getMovementType();
-                                if (findByUUID(MovementType.class, movementType.getUUID()) == null) {
-                                    movementTypeRepository.insert(movementType);
+                                Optional<MovementType> optionalMovementType = unit.getMovementType();
+                                if (optionalMovementType.isPresent()) {
+                                    MovementType movementType = optionalMovementType.get();
+                                    if (findByUUID(MovementType.class, movementType.getUUID()) == null) {
+                                        movementTypeRepository.insert(movementType);
+                                    }
                                 }
                                 // insert the new unit
                                 runningUnitRepository.insert(unit);
@@ -525,9 +531,12 @@ final class DataRepository {
                             List<RunningUnit> units = entry.getRunningUnits();
                             for (RunningUnit unit : units) {
                                 // insert a new movement type
-                                MovementType movementType = unit.getMovementType();
-                                if (findByUUID(MovementType.class, movementType.getUUID()) == null) {
-                                    movementTypeRepository.insert(movementType);
+                                Optional<MovementType> optionalMovementType = unit.getMovementType();
+                                if (optionalMovementType.isPresent()) {
+                                    MovementType movementType = optionalMovementType.get();
+                                    if (findByUUID(MovementType.class, movementType.getUUID()) == null) {
+                                        movementTypeRepository.insert(movementType);
+                                    }
                                 }
                                 if (findByUUID(RunningUnit.class, unit.getUUID()) == null) {
                                     // insert the unit
