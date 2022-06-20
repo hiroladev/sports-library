@@ -36,7 +36,7 @@ public class RunningUnit extends PersistentObject {
     private String typeOfRunString; // for flex plans
     private int lowerPulseLimit;
     private int upperPulseLimit;
-    private double pace; //  running speed (kilometers) in minutes
+    private double pace; //  running speed minutes / kilometer
 
     /**
      * Default constructor for reflection and database management.

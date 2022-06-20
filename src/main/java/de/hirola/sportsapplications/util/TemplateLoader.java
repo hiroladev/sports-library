@@ -491,7 +491,7 @@ public class TemplateLoader {
                 index += 1;
             }
             // ein Eintrag im Trainingsplan, also das Training eines Tages
-            RunningPlanEntry runningPlanEntry = new RunningPlanEntry(unit.day, unit.week, runningUnits);
+            RunningPlanEntry runningPlanEntry = new RunningPlanEntry(unit.week, unit.day, runningUnits);
             //  den Trainingsplan-Eintrag zur Liste hinzufügen
             runningPlanEntries.add(runningPlanEntry);
         }

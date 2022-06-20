@@ -39,7 +39,8 @@ public final class Global {
         public static final String DURATION_PATTERN = "Dauer: ";
         public static final String PULSE_PATTERN = "Puls:";
         public static final String PULSE_SEPARATOR_PATTERN = "bis";
-        public static final String PACE_PATTERN = "Tempo: ";
+        public static final String PACE_PATTERN = "Tempo:";
+        public static final String PACE_UNIT_PATTERN = "min|km";
         public static final String DISTANCE_PATTERN = "Distanz: ";
     }
 

@@ -9,6 +9,7 @@ import org.dizitart.no2.Document;
 import org.dizitart.no2.mapper.NitriteMapper;
 import org.dizitart.no2.objects.Id;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -36,6 +37,7 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
     private Date runningDate; // for flex plans, can be change from the user
     private long duration; // for flex plans
     private double distance; // for flex plans
+    private String remarks; // for flex plans
     private List<RunningUnit> runningUnits; // units if training day
 
     /**
@@ -56,29 +58,35 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
      * @param runningUnits of entry
      * @see RunningUnit
      */
-    public RunningPlanEntry (int day, int week, @NotNull List<RunningUnit> runningUnits) {
-        this.day = day;
+    public RunningPlanEntry (int week, int day, @NotNull List<RunningUnit> runningUnits) {
         this.week = week;
+        this.day = day;
         this.runningUnits = runningUnits;
         duration = 0L;
+        distance = 0.0;
     }
 
     /**
      * Create a running plan entry with a running date and a duration.
      * Required for flex plans (iCAL import).
      *
-     * @param date of running entry
-     * @param duration of running entry
-     * @param distance of running entry
-     * @param runningUnits of running entry
+     * @param week of training
+     * @param day of training
+     * @param date of training
+     * @param duration of running plan entry
+     * @param distance of running plan entry
+     * @param remarks of running plan entry
+     * @param runningUnits of running plan entry
      */
-    public RunningPlanEntry (@NotNull LocalDate date, long duration, double distance, @NotNull List<RunningUnit> runningUnits) {
+    public RunningPlanEntry (int week, int day, @Null LocalDate date, long duration, double distance,
+                             @Null String remarks, @NotNull List<RunningUnit> runningUnits) {
+        this.week = week;
+        this.day = day;
         this.runningDate = DateUtil.getDateFromLocalDate(date);
         this.duration = duration;
         this.distance = distance;
+        this.remarks = remarks;
         this.runningUnits = runningUnits;
-        day = 0;
-        week = 0;
     }
 
     /**
@@ -202,6 +210,26 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
     }
 
     /**
+     * Get the remarks for the running plan entry.
+     * If the running plan entry is created by importing an iCAL file,
+     * the remarks will contain the complete description of the event.
+     *
+     * @return The remarks for the running plan entry.
+     */
+    public Optional<String> getRemarks() {
+        return Optional.ofNullable(remarks);
+    }
+
+    /**
+     * Set the remarks for the running plan entry.
+     *
+     * @param remarks for the running plan entry
+     */
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
+
+    /**
      * Get a list of all running units of this entry.
      *
      * @return A list of all running units of this entry.
@@ -256,6 +284,7 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
         document.put("week", week);
         document.put("day", day);
         document.put("runningDate", runningDate);
+        document.put("remarks", remarks);
         document.put("duration", duration);
         document.put("distance", distance);
 
@@ -273,6 +302,7 @@ public class RunningPlanEntry extends PersistentObject implements Comparable<Run
             week = (int) document.get("week");
             day = (int) document.get("day");
             runningDate = (Date) document.get("runningDate");
+            remarks = (String) document.get("remarks");
             duration = (long) document.get("duration");
             distance = (double) document.get("distance");
 

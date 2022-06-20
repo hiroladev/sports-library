@@ -166,9 +166,9 @@ class SportsLibraryTest {
 
             // test the compare from running plan entry
             RunningPlanEntry runningPlanEntry1 = new RunningPlanEntry(1,1, new ArrayList<>());
-            RunningPlanEntry runningPlanEntry2 = new RunningPlanEntry(2,1, new ArrayList<>());
-            RunningPlanEntry runningPlanEntry3 = new RunningPlanEntry(3,2, new ArrayList<>());
-            RunningPlanEntry runningPlanEntry4 = new RunningPlanEntry(7,2, new ArrayList<>());
+            RunningPlanEntry runningPlanEntry2 = new RunningPlanEntry(1,2, new ArrayList<>());
+            RunningPlanEntry runningPlanEntry3 = new RunningPlanEntry(2,3, new ArrayList<>());
+            RunningPlanEntry runningPlanEntry4 = new RunningPlanEntry(2,7, new ArrayList<>());
             List<RunningPlanEntry> entries1 = new ArrayList<>(4);
             entries1.add(runningPlanEntry3);
             entries1.add(runningPlanEntry2);
@@ -745,7 +745,17 @@ class SportsLibraryTest {
                     + "flex.ics";
             File iCALFile = new File(pathName);
             ICALManager.importICAL(sportsLibrary, iCALFile);
-
+            List<RunningPlan> runningPlans = sportsLibrary.getRunningPlans();
+            assertEquals(5, runningPlans.size(), "Running plan from ical was not imported.");
+            RunningPlan importedRunningPlan = runningPlans.get(4);
+            System.out.println(importedRunningPlan.getName());
+            List<RunningPlanEntry> entries = importedRunningPlan.getEntries();
+            for (RunningPlanEntry entry: entries) {
+                System.out.println(entry.getDuration() + " " + entry.getDistance());
+                if (entry.getRunningUnits().size() > 0) {
+                    System.out.println(" " + entry.getRunningUnits().get(0).getPace());
+                }
+            }
         } catch (Exception exception) {
             fail(exception.getMessage());
         } finally {
