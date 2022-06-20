@@ -36,7 +36,7 @@ public class RunningUnit extends PersistentObject {
     private String typeOfRunString; // for flex plans
     private int lowerPulseLimit;
     private int upperPulseLimit;
-    private double pace; //  running speed minutes / kilometer
+    private long pace; //  running speed minutes / kilometer in seconds
 
     /**
      * Default constructor for reflection and database management.
@@ -59,7 +59,7 @@ public class RunningUnit extends PersistentObject {
         this.movementType = movementType;
         lowerPulseLimit = 0;
         upperPulseLimit = 0;
-        pace = 0.0;
+        pace = 0L;
         isCompleted = false;
     }
 
@@ -72,7 +72,7 @@ public class RunningUnit extends PersistentObject {
      * @param lowerPulseLimit of the running unit
      * @param upperPulseLimit of the running unit
      */
-    public RunningUnit(@NotNull String typeOfRunString, double pace, int lowerPulseLimit, int upperPulseLimit) {
+    public RunningUnit(@NotNull String typeOfRunString, long pace, int lowerPulseLimit, int upperPulseLimit) {
         this.typeOfRunString = typeOfRunString;
         this.pace = pace;
         this.lowerPulseLimit = lowerPulseLimit;
@@ -152,9 +152,6 @@ public class RunningUnit extends PersistentObject {
      * @param lowerPulseLimit of the heart rate range during exercise.
      */
     public void setLowerPulseLimit(int lowerPulseLimit) {
-        if (lowerPulseLimit > 0 && lowerPulseLimit > upperPulseLimit) {
-            return;
-        }
         this.lowerPulseLimit = lowerPulseLimit;
     }
 
@@ -173,27 +170,24 @@ public class RunningUnit extends PersistentObject {
      * @param upperPulseLimit of the heart rate range during exercise
      */
     public void setUpperPulseLimit(int upperPulseLimit) {
-        if (upperPulseLimit > 0 && upperPulseLimit < lowerPulseLimit) {
-            return;
-        }
         this.upperPulseLimit = upperPulseLimit;
     }
 
     /**
      * Get the pace for the running unit.
      *
-     * @return The pace of the running unit in minutes for 1 kilometer.
+     * @return The pace of the running unit in seconds for 1 kilometer.
      */
-    public double getPace() {
+    public long getPace() {
         return pace;
     }
 
     /**
      * Set the pace for the running unit.
      *
-     * @param pace of the running unit in minutes for 1 kilometer
+     * @param pace of the running unit in seconds for 1 kilometer
      */
-    public void setPace(double pace) {
+    public void setPace(long pace) {
         this.pace = pace;
     }
 
@@ -242,7 +236,7 @@ public class RunningUnit extends PersistentObject {
             duration = (long) document.get("duration");
             lowerPulseLimit = (int) document.get("lowerPulseLimit");
             upperPulseLimit = (int) document.get("upperPulseLimit");
-            pace = (double) document.get("pace");
+            pace = (long) document.get("pace");
 
             Document movementTypeDocument = (Document) document.get("movementType");
             if (movementTypeDocument != null) {

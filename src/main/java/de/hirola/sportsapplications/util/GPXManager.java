@@ -23,7 +23,7 @@ import java.util.Optional;
  * Copyright 2022 by Michael Schmidt, Hirola Consulting
  * This software us licensed under the AGPL-3.0 or later.
  *
- * A util class for managing GPX files-
+ * An util class for managing GPX files-
  *
  * @author Michael Schmidt (Hirola)
  * @since v0.1

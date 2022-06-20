@@ -754,6 +754,8 @@ class SportsLibraryTest {
                 System.out.println(entry.getDuration() + " " + entry.getDistance());
                 if (entry.getRunningUnits().size() > 0) {
                     System.out.println(" " + entry.getRunningUnits().get(0).getPace());
+                    System.out.println(" " + entry.getRunningUnits().get(0).getLowerPulseLimit()
+                            + " : " + entry.getRunningUnits().get(0).getUpperPulseLimit());
                 }
             }
         } catch (Exception exception) {

@@ -22,9 +22,7 @@ import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,57 +48,9 @@ public final class ICALManager {
      * @throws ValidationException has the file not a valid format
      */
     public static void importICAL(@NotNull SportsLibrary sportsLibrary, @NotNull File importFile)
-            throws IOException, ValidationException {
-        final ApplicationResources applicationResources = ApplicationResources.getInstance();
-        if (importFile.exists()) {
-            if (importFile.isFile() && importFile.canRead()) {
-                try {
-                    // reading the iCAL file using the ical4j library
-                    final FileInputStream fin = new FileInputStream(importFile.getPath());
-                    final CalendarBuilder builder = new CalendarBuilder();
-                    final Calendar runningPlanCalendar = builder.build(fin);
-                    runningPlanCalendar.validate();
-                    final ComponentList<CalendarComponent> components = runningPlanCalendar.getComponents();
-
-                    // get the name and remarks for the running plan
-                    // e.g. "10-km-Trainingsplan Flex10 (lauftipps.ch/LT273)"
-                    String name = applicationResources.getString("ical.event.runningplan.name");
-                    String remarks = applicationResources.getString("ical.event.runningplan.remarks");
-                    if (components.size() > 0) {
-                        final VEvent event = (VEvent) components.get(0);
-                        event.validate();
-                        final String description = event.getDescription().getValue();
-                        final int startIndexOfRemarks =  description.indexOf('(');
-                        final int startIndexOfNewLine =  description.indexOf('\n');
-                        if (startIndexOfNewLine > -1 && startIndexOfRemarks > - 1) {
-                            name = description.substring(0, startIndexOfRemarks - 1); // "10-km-Trainingsplan Flex10"
-                            remarks = description.substring(startIndexOfRemarks + 1, startIndexOfNewLine - 1); // "lauftipps.ch/LT273"
-                        } else if (startIndexOfNewLine > -1 ){
-                            name = description.substring(0, startIndexOfNewLine); // "10-km-Trainingsplan Flex10 (lauftipps.ch/LT273)"
-                        }
-                    }
-                    // try to extract the data from event
-                    final List<RunningPlanEntry> entries = new ArrayList<>();
-                    for (CalendarComponent component: components) {
-                        final VEvent event = (VEvent) component;
-                        event.validate();
-                        entries.add(getDataFromEvent(sportsLibrary, event));
-                    }
-                    // create running plan
-                    final RunningPlan runningPlan = new RunningPlan(name, remarks, 99, entries, false);
-                    // add to local datastore
-                    sportsLibrary.add(runningPlan);
-                } catch (ParserException exception) {
-                    throw new IOException("Error while loading the iCAL.", exception);
-                } catch (SportsLibraryException exception) {
-                    throw new IOException("Error while adding the imported running plan to local datastore.", exception);
-                }
-            } else {
-                throw new IOException("The file " + importFile + " is not a file or could not be read.");
-            }
-        } else {
-            throw new IOException("The file " + importFile + " does not exist.");
-        }
+            throws SportsLibraryException, ValidationException {
+        RunningPlan runningPlan = loadRunningPlanFromICAL(sportsLibrary, importFile);
+        sportsLibrary.add(runningPlan);
     }
 
     /**
@@ -114,7 +64,7 @@ public final class ICALManager {
     public static void exportICAL(@NotNull RunningPlan runningPlan,
                                   @NotNull File exportFile) throws IOException {
         final ApplicationResources applicationResources = ApplicationResources.getInstance();
-        File parentDirectory = exportFile.getParentFile();
+        final File parentDirectory = exportFile.getParentFile();
         if (parentDirectory.exists()) {
             if (parentDirectory.isDirectory() && parentDirectory.canWrite()) {
                 throw new IOException("Sorry - Not implemented yet.");
@@ -123,6 +73,75 @@ public final class ICALManager {
             }
         } else {
             throw new IOException("The file " + exportFile + " does not exist.");
+        }
+    }
+
+    public static RunningPlan loadRunningPlanFromICAL(@NotNull SportsLibrary sportsLibrary, @NotNull File importFile)
+            throws SportsLibraryException, ValidationException {
+        final ApplicationResources applicationResources = ApplicationResources.getInstance();
+        if (importFile.exists()) {
+            if (importFile.isFile() && importFile.canRead()) {
+                try {
+                    // reading the iCAL file using the ical4j library
+                    final FileInputStream fin = new FileInputStream(importFile.getPath());
+                    final CalendarBuilder builder = new CalendarBuilder();
+                    final Calendar runningPlanCalendar = builder.build(fin);
+                    runningPlanCalendar.validate();
+                    final ComponentList<CalendarComponent> components = runningPlanCalendar.getComponents();
+                    final int numberOfEvents = components.size(); // should be equal to the number of running plan entries
+                    // get the name and remarks for the running plan
+                    // e.g. "10-km-Trainingsplan Flex10 (lauftipps.ch/LT273)"
+                    String name = applicationResources.getString("ical.event.runningplan.name");
+                    String remarks = applicationResources.getString("ical.event.runningplan.remarks");
+                    if (numberOfEvents > 0) {
+                        final VEvent event = (VEvent) components.get(0);
+                        event.validate();
+                        final String description = event.getDescription().getValue();
+                        final int startIndexOfRemarks =  description.indexOf('(');
+                        final int startIndexOfNewLine =  description.indexOf('\n');
+                        if (startIndexOfNewLine > -1 && startIndexOfRemarks > - 1) {
+                            name = description.substring(0, startIndexOfRemarks - 1); // "10-km-Trainingsplan Flex10"
+                            remarks = description.substring(startIndexOfRemarks + 1, startIndexOfNewLine - 1); // "lauftipps.ch/LT273"
+                        } else if (startIndexOfNewLine > -1 ){
+                            name = description.substring(0, startIndexOfNewLine); // "10-km-Trainingsplan Flex10 (lauftipps.ch/LT273)"
+                        }
+                    } else {
+                        throw new SportsLibraryException("The iCAL file contains no events.");
+                    }
+                    // try to extract the data from event
+                    final List<RunningPlanEntry> entries = new ArrayList<>();
+                    for (CalendarComponent component: components) {
+                        final VEvent event = (VEvent) component;
+                        event.validate();
+                        entries.add(getDataFromEvent(sportsLibrary, event));
+                    }
+                    if (entries.size() != numberOfEvents) {
+                        // import failed - number running plan entries must be same as number of events
+                        if (sportsLibrary.isDebugMode()) {
+                            sportsLibrary.debug("The number of running plan entries is not equal the numbers of events.");
+                        }
+                        throw new SportsLibraryException("Error while importing the iCAl. The parsing was not correct.");
+                    }
+                    // create running plan
+                    return new RunningPlan(name, remarks, 99, entries, false);
+                } catch (ParserException exception) {
+                    String errorMessage = "Error while loading the iCAL.";
+                    if (sportsLibrary.isDebugMode()) {
+                        sportsLibrary.debug(exception, "iCAL parsing error");
+                    }
+                    throw new SportsLibraryException(errorMessage + " " + exception.getMessage());
+                } catch (IOException exception) {
+                    String errorMessage = "Error while reading the import file.";
+                    if (sportsLibrary.isDebugMode()) {
+                        sportsLibrary.debug(exception, errorMessage);
+                    }
+                    throw new SportsLibraryException();
+                }
+            } else {
+                throw new SportsLibraryException("The file " + importFile + " is not a file or could not be read.");
+            }
+        } else {
+            throw new SportsLibraryException("The file " + importFile + " does not exist.");
         }
     }
 
@@ -235,7 +254,7 @@ public final class ICALManager {
         int startIndexOfNewLineForRunningString = 0, startIndexOfNewLineForPulseString = 0, startIndexOfNewLineForPaceString = 0;
         String typeOfRunningString, completePulseString, completePaceString;
         while (true) {
-            RunningUnit runningUnit = new RunningUnit();
+            final RunningUnit runningUnit = new RunningUnit();
             // running information
             int startIndexOfTypeOfRunningString = description.indexOf(Global.ICALPattern.TYPE_OF_RUNNING_STRING_PATTERN, startIndexOfNewLineForRunningString);
             startIndexOfNewLineForRunningString =  description.indexOf('\n', startIndexOfTypeOfRunningString);
@@ -274,10 +293,10 @@ public final class ICALManager {
         }
 
         // get the training day from event
-        DtStart eventStartDate = event.getStartDate();
-        Date date = eventStartDate.getDate();
-        TimeZone timeZone = eventStartDate.getTimeZone();
-        LocalDate runningDate = date.toInstant().atZone(timeZone.toZoneId()).toLocalDate();
+        final DtStart eventStartDate = event.getStartDate();
+        final Date date = eventStartDate.getDate();
+        final TimeZone timeZone = eventStartDate.getTimeZone();
+        final LocalDate runningDate = date.toInstant().atZone(timeZone.toZoneId()).toLocalDate();
         // create a running plan entry
         return new RunningPlanEntry(week, day, runningDate, duration, distance, description, runningUnits);
     }
@@ -291,19 +310,28 @@ public final class ICALManager {
             pulseValues[1] = 0;
             return pulseValues;
         }
-        int startIndexOfOfPulseValues = completePulseString.lastIndexOf(":") + 1; // 115 bis 121
-        int startIndexOfPulseSeparatorPattern = completePulseString.indexOf(Global.ICALPattern.PULSE_SEPARATOR_PATTERN);
-        if (startIndexOfOfPulseValues == 0 || startIndexOfPulseSeparatorPattern == -1) {
+        String pulseValuesString = "";
+        int startIndexOfOfPulseValues = completePulseString.lastIndexOf(":") + 2;
+        if (startIndexOfOfPulseValues > 0) {
+            pulseValuesString = completePulseString.substring(startIndexOfOfPulseValues);
+        } else {
             pulseValues[0] = 0;
             pulseValues[1] = 0;
             return pulseValues;
         }
-        final String lowerPulseLimitString = completePulseString.substring(0,startIndexOfPulseSeparatorPattern - 1);
-        final String upperPulseLimitString = completePulseString.substring(startIndexOfPulseSeparatorPattern + 1);
+        int startIndexOfPulseSeparatorPattern = pulseValuesString.indexOf(Global.ICALPattern.PULSE_SEPARATOR_PATTERN);
+        if (startIndexOfPulseSeparatorPattern == -1) {
+            pulseValues[0] = 0;
+            pulseValues[1] = 0;
+            return pulseValues;
+        }
+        final String lowerPulseLimitString = pulseValuesString.substring(0,startIndexOfPulseSeparatorPattern - 1);
+        final String upperPulseLimitString = pulseValuesString.substring(startIndexOfPulseSeparatorPattern
+                + Global.ICALPattern.PULSE_SEPARATOR_PATTERN.length()
+                + 1);
         try {
             pulseValues[0] = Integer.parseInt(lowerPulseLimitString);
             pulseValues[1] = Integer.parseInt(upperPulseLimitString);
-            System.out.println(lowerPulseLimitString + " - " + upperPulseLimitString);
             return pulseValues;
         } catch (NumberFormatException exception) {
             pulseValues[0] = 0;
@@ -312,24 +340,28 @@ public final class ICALManager {
         }
     }
 
-    private static double getPaceFromString(@NotNull String completePaceString) {
+    private static long getPaceFromString(@NotNull String completePaceString) {
         // get the pace from string e.g. "Tempo 2a: 08:59 min|km"
         int indexOfPaceString = completePaceString.indexOf(Global.ICALPattern.PACE_PATTERN);
         if (indexOfPaceString == -1) { // pace string was not found
-            return 0.0;
+            return 0L;
         }
         int startIndexOfOfPaceValue = completePaceString.indexOf(":") + 1; // 08:59 min|km
         int endIndexOfOfPaceValue = completePaceString.indexOf(Global.ICALPattern.PACE_UNIT_PATTERN);
         if (startIndexOfOfPaceValue > 0 && endIndexOfOfPaceValue > -1) {
-            String paceString = completePaceString.substring(startIndexOfOfPaceValue, endIndexOfOfPaceValue);
-            // e.g. paceString means 8 minutes and 59 seconds
-
+            final String paceString = completePaceString.substring(startIndexOfOfPaceValue, endIndexOfOfPaceValue - 1); // 08:59
             try {
-                return Double.parseDouble(paceString);
+                // 08:59 -> convert in seconds
+                final int separatorIndex = paceString.indexOf(":");
+                final String minutesString = paceString.substring(1, separatorIndex);
+                final String secondsString = paceString.substring(separatorIndex + 1);
+                long paceInSeconds = Long.parseLong(minutesString) * 60;
+                paceInSeconds += Long.parseLong(secondsString) % 60;
+                return paceInSeconds;
             } catch (NumberFormatException exception) {
-                return 0.0;
+                return 0L;
             }
         }
-        return 0.0;
+        return 0L;
     }
 }
