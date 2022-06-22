@@ -44,7 +44,13 @@ public class MovementType extends PersistentObject {
     /**
      * Default constructor for reflection and database management.
      */
-    public MovementType() {}
+    public MovementType() {
+        this.key = Global.UNDEFINED_MOVEMENT_TYPE_KEY;
+        this.colorKeyString = Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR;
+        this.speed = 0.0;
+        this.pace = 0.0;
+        name = "";
+    }
 
     /**
      * Creates a movement type object.
@@ -60,7 +66,7 @@ public class MovementType extends PersistentObject {
         this.colorKeyString = Objects.requireNonNullElse(colorKeyString, Global.Defaults.DEFAULT_MOVEMENT_TYPE_COLOR);
         this.speed = speed;
         this.pace = pace;
-        name = null;
+        name = "";
     }
 
     /**

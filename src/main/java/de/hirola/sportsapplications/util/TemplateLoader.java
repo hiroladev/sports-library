@@ -539,15 +539,8 @@ public class TemplateLoader {
                 stringBuilder.append("\"");
                 stringBuilder.append(runningUnit.getDuration());
                 stringBuilder.append("\", ");
-                Optional<MovementType> movementType = runningUnit.getMovementType();
                 stringBuilder.append("\"");
-                if (movementType.isPresent()) {
-                    stringBuilder.append(movementType.get().getKey());
-                } else {
-                    // flex templates has no movement types and
-                    // are exported in iCAL format
-                    stringBuilder.append(Global.NULL_MOVEMENT_TYPE_KEY);
-                }
+                stringBuilder.append(runningUnit.getMovementType().getKey());
                 stringBuilder.append("\"");
                 if (unitCount < runningUnits.size()) {
                     stringBuilder.append(", ");

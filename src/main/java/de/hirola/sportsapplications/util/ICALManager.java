@@ -44,7 +44,7 @@ public final class ICALManager {
      *
      * @param sportsLibrary in which the track import should become
      * @param importFile with data in iCAL format
-     * @throws IOException if the iCAL file not read or the data could not be imported.
+     * @throws SportsLibraryException if the iCAL file not read or the data could not be imported.
      * @throws ValidationException has the file not a valid format
      */
     public static void importICAL(@NotNull SportsLibrary sportsLibrary, @NotNull File importFile)
@@ -260,7 +260,7 @@ public final class ICALManager {
             startIndexOfNewLineForRunningString =  description.indexOf('\n', startIndexOfTypeOfRunningString);
             if (startIndexOfTypeOfRunningString > -1 && startIndexOfNewLineForRunningString > -1) {
                 typeOfRunningString = description.substring(startIndexOfTypeOfRunningString, startIndexOfNewLineForRunningString);
-                runningUnit.setTypeOfRunString(typeOfRunningString);
+                runningUnit.setRunningInfos(typeOfRunningString);
                 // get the next occurrences of "Lauf:"
                 startIndexOfNewLineForRunningString+=1;
             } else {
@@ -297,6 +297,10 @@ public final class ICALManager {
         final Date date = eventStartDate.getDate();
         final TimeZone timeZone = eventStartDate.getTimeZone();
         final LocalDate runningDate = date.toInstant().atZone(timeZone.toZoneId()).toLocalDate();
+        // if the entry contains only on unit - set the duration from entry to unit
+        if (runningUnits.size() == 1) {
+            runningUnits.get(0).setDuration(duration);
+        }
         // create a running plan entry
         return new RunningPlanEntry(week, day, runningDate, duration, distance, description, runningUnits);
     }
@@ -310,7 +314,7 @@ public final class ICALManager {
             pulseValues[1] = 0;
             return pulseValues;
         }
-        String pulseValuesString = "";
+        String pulseValuesString;
         int startIndexOfOfPulseValues = completePulseString.lastIndexOf(":") + 2;
         if (startIndexOfOfPulseValues > 0) {
             pulseValuesString = completePulseString.substring(startIndexOfOfPulseValues);

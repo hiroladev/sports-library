@@ -20,7 +20,7 @@ public final class Global {
     public static final String ROOT_RESOURCE_BUNDLE_BASE_NAME = SportsLibrary.class.getSimpleName();
     public static final Locale DEFAULT_LOCALE = new Locale("en");
     public static final String MOVEMENT_TYPE_KEY_PREFIX = "movement.type.name.";
-    public static final String NULL_MOVEMENT_TYPE_KEY = "N";
+    public static final String UNDEFINED_MOVEMENT_TYPE_KEY = "N";
     public static final String JSON_RESOURCES = "/json";
     public static final String MOVEMENT_TYPES_JSON = "/json"
             + "/"

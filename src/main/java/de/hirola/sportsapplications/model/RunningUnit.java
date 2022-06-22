@@ -33,7 +33,7 @@ public class RunningUnit extends PersistentObject {
     private boolean isCompleted;
     private long duration; // duration in minutes
     private MovementType movementType;
-    private String typeOfRunString; // for flex plans
+    private String runningInfos; // for flex plans
     private int lowerPulseLimit;
     private int upperPulseLimit;
     private long pace; //  running speed minutes / kilometer in seconds
@@ -42,9 +42,11 @@ public class RunningUnit extends PersistentObject {
      * Default constructor for reflection and database management.
      */
     public RunningUnit() {
-        super();
-        duration = 0;
         movementType = new MovementType();
+        runningInfos = "";
+        lowerPulseLimit = 0;
+        upperPulseLimit = 0;
+        pace = 0L;
         isCompleted = false;
     }
 
@@ -57,27 +59,10 @@ public class RunningUnit extends PersistentObject {
     public RunningUnit(int duration, @NotNull MovementType movementType) {
         this.duration = duration;
         this.movementType = movementType;
+        runningInfos = "";
         lowerPulseLimit = 0;
         upperPulseLimit = 0;
         pace = 0L;
-        isCompleted = false;
-    }
-
-    /**
-     * Create a running unit without a movement type.
-     * Required for flex plans (iCAL import).
-     *
-     * @param typeOfRunString with running instructions.
-     * @param pace of the running unit
-     * @param lowerPulseLimit of the running unit
-     * @param upperPulseLimit of the running unit
-     */
-    public RunningUnit(@NotNull String typeOfRunString, long pace, int lowerPulseLimit, int upperPulseLimit) {
-        this.typeOfRunString = typeOfRunString;
-        this.pace = pace;
-        this.lowerPulseLimit = lowerPulseLimit;
-        this.upperPulseLimit = upperPulseLimit;
-        this.duration = 0;
         isCompleted = false;
     }
 
@@ -86,8 +71,8 @@ public class RunningUnit extends PersistentObject {
      *
      * @return Type of movement for the unit
      */
-    public Optional<MovementType> getMovementType() {
-        return Optional.ofNullable(movementType);
+    public MovementType getMovementType() {
+        return movementType;
     }
 
     /**
@@ -105,18 +90,18 @@ public class RunningUnit extends PersistentObject {
      *
      * @return A string with running instructions.
      */
-    public Optional<String> getTypeOfRunString() {
-        return Optional.ofNullable(typeOfRunString);
+    public String getRunningInfos() {
+        return runningInfos;
     }
 
     /**
      * Set a string for the type(s) of movement while running.
      * Required for flex plans (iCAL import).
      *
-     * @param typeOfRunString with running instructions
+     * @param runningInfos with running instructions
      */
-    public void setTypeOfRunString(@NotNull String typeOfRunString) {
-        this.typeOfRunString = typeOfRunString;
+    public void setRunningInfos(@NotNull String runningInfos) {
+        this.runningInfos = runningInfos;
     }
 
     /**
@@ -215,7 +200,7 @@ public class RunningUnit extends PersistentObject {
         document.put("uuid", uuid);
         document.put("isCompleted", isCompleted);
         document.put("duration", duration);
-        document.put("typeOfRunString", typeOfRunString);
+        document.put("typeOfRunString", runningInfos);
         document.put("lowerPulseLimit", lowerPulseLimit);
         document.put("upperPulseLimit", upperPulseLimit);
         document.put("pace", pace);
